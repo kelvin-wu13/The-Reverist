@@ -154,6 +154,7 @@ MonoBehaviour:
   gridWidth: 8
   gridHeight: 4
   tileSize: 1.5
+  gridOffset: {x: -5, y: -2}
   tilePrefab: {fileID: 4395440584865474771, guid: 7d8b92515ce168e4d86e642493b963ab, type: 3}
   tileSet:
     playerTileSprite: {fileID: 98574469, guid: 33e94ba750406d040817989f48033882, type: 3}
@@ -170,7 +171,7 @@ Transform:
   m_GameObject: {fileID: 334597317}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -6.06, y: -2.69, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -485,9 +486,14 @@ MonoBehaviour:
   crosshair: {fileID: 1557569857}
   tileGrid: {fileID: 334597318}
   spellQQPrefab: {fileID: 0}
-  spellEEPrefab: {fileID: 0}
   spellQEPrefab: {fileID: 0}
+  spellQWPrefab: {fileID: 0}
+  spellEEPrefab: {fileID: 0}
   spellEQPrefab: {fileID: 0}
+  spellEWPrefab: {fileID: 0}
+  spellWWPrefab: {fileID: 0}
+  spellWQPrefab: {fileID: 0}
+  spellWEPrefab: {fileID: 0}
   showDebugLogs: 1
   firstSpell: 0
 --- !u!1660057539 &9223372036854775807

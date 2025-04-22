@@ -6,6 +6,7 @@ public enum SpellType
 {
     None,
     Q,
+    W,
     E
 }
 
@@ -13,9 +14,14 @@ public enum SpellCombination
 {
     None,
     QQ, // Q pressed twice
-    EE, // E pressed twice
     QE, // Q then E
-    EQ  // E then Q
+    QW, // E then W
+    WW, // W pressed twice
+    WQ, // E then W
+    WE, // E then W
+    EE, // E pressed twice
+    EQ,  // E then Q
+    EW // E then W
 }
 
 // Base State class for the State Pattern
@@ -104,9 +110,14 @@ public class SpellCast : MonoBehaviour
     
     [Header("Spell Settings")]
     [SerializeField] private GameObject spellQQPrefab;
-    [SerializeField] private GameObject spellEEPrefab;
     [SerializeField] private GameObject spellQEPrefab;
+    [SerializeField] private GameObject spellQWPrefab;
+    [SerializeField] private GameObject spellEEPrefab;
     [SerializeField] private GameObject spellEQPrefab;
+    [SerializeField] private GameObject spellEWPrefab;
+    [SerializeField] private GameObject spellWWPrefab;
+    [SerializeField] private GameObject spellWQPrefab;
+    [SerializeField] private GameObject spellWEPrefab;
     
     [Header("UI Feedback")]
     public bool showDebugLogs = true;
@@ -168,6 +179,10 @@ public class SpellCast : MonoBehaviour
         {
             currentState.ProcessInput(SpellType.E);
         }
+        else if (Input.GetKeyDown(KeyCode.W))
+        {
+            currentState.ProcessInput(SpellType.W);
+        }
     }
     
     public void ChangeState(SpellCastState newState)
@@ -183,11 +198,21 @@ public class SpellCast : MonoBehaviour
     
     public SpellCombination GetSpellCombination(SpellType first, SpellType second)
     {
+        //Q SPELL COMBINATION
         if (first == SpellType.Q && second == SpellType.Q) return SpellCombination.QQ;
-        if (first == SpellType.E && second == SpellType.E) return SpellCombination.EE;
         if (first == SpellType.Q && second == SpellType.E) return SpellCombination.QE;
+        if (first == SpellType.Q && second == SpellType.W) return SpellCombination.QW;
+
+        //E SPEL COMBINATION
+        if (first == SpellType.E && second == SpellType.E) return SpellCombination.EE;
         if (first == SpellType.E && second == SpellType.Q) return SpellCombination.EQ;
+        if (first == SpellType.E && second == SpellType.W) return SpellCombination.EW;
         
+        //W SPELL COMBINATION
+        if (first == SpellType.W && second == SpellType.W) return SpellCombination.WW;
+        if (first == SpellType.W && second == SpellType.Q) return SpellCombination.WQ;
+        if (first == SpellType.W && second == SpellType.E) return SpellCombination.WE;
+
         return SpellCombination.None;
     }
     
@@ -207,17 +232,37 @@ public class SpellCast : MonoBehaviour
                 spellPrefab = spellQQPrefab;
                 spellName = "Q+Q Spell";
                 break;
-            case SpellCombination.EE:
-                spellPrefab = spellEEPrefab;
-                spellName = "E+E Spell";
-                break;
             case SpellCombination.QE:
-                spellPrefab = spellQEPrefab;
+                spellPrefab = spellEEPrefab;
                 spellName = "Q+E Spell";
                 break;
-            case SpellCombination.EQ:
+            case SpellCombination.QW:
+                spellPrefab = spellQEPrefab;
+                spellName = "Q+W Spell";
+                break;
+            case SpellCombination.EE:
                 spellPrefab = spellEQPrefab;
+                spellName = "E+E Spell";
+                break;
+            case SpellCombination.EQ:
+                spellPrefab = spellQQPrefab;
                 spellName = "E+Q Spell";
+                break;
+            case SpellCombination.EW:
+                spellPrefab = spellEEPrefab;
+                spellName = "E+W Spell";
+                break;
+            case SpellCombination.WW:
+                spellPrefab = spellQEPrefab;
+                spellName = "W+W Spell";
+                break;
+            case SpellCombination.WQ:
+                spellPrefab = spellEQPrefab;
+                spellName = "W+Q Spell";
+                break;
+            case SpellCombination.WE:
+                spellPrefab = spellEQPrefab;
+                spellName = "W+E Spell";
                 break;
         }
         
@@ -254,7 +299,7 @@ public class SpellCast : MonoBehaviour
 // Optional helper class to be attached to spell prefabs
 public class Spell : MonoBehaviour
 {
-    [SerializeField] private float lifetime = 1.0f;
+    [SerializeField] private float lifetime = 2.0f;
     [SerializeField] private ParticleSystem spellEffect;
     
     private Vector2Int targetGridPosition;
@@ -280,13 +325,28 @@ public class Spell : MonoBehaviour
             case SpellCombination.QQ:
                 // Example: Single target damage
                 break;
-            case SpellCombination.EE:
+            case SpellCombination.QE:
                 // Example: Area damage
                 break;
-            case SpellCombination.QE:
+            case SpellCombination.QW:
                 // Example: Status effect
                 break;
+            case SpellCombination.EE:
+                // Example: Movement or utility
+                break;
             case SpellCombination.EQ:
+                // Example: Single target damage
+                break;
+            case SpellCombination.EW:
+                // Example: Area damage
+                break;
+            case SpellCombination.WW:
+                // Example: Status effect
+                break;
+            case SpellCombination.WQ:
+                // Example: Movement or utility
+                break;
+            case SpellCombination.WE:
                 // Example: Movement or utility
                 break;
         }

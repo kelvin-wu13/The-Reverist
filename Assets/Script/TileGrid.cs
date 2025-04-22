@@ -22,6 +22,7 @@ public class TileGrid : MonoBehaviour
     [SerializeField] public int gridWidth = 8;
     [SerializeField] public int gridHeight = 4;
     [SerializeField] private float tileSize = 1f;
+    [SerializeField] private Vector2 gridOffset = Vector2.zero;
     [SerializeField] private GameObject tilePrefab;
     [SerializeField] private TileSet tileSet;
     [SerializeField] private Transform enemyParent;
@@ -49,7 +50,7 @@ public class TileGrid : MonoBehaviour
         {
             for (int y = 0; y < gridHeight; y++)
             {
-                Vector3 position = new Vector3(x * tileSize, y * tileSize, 0);
+                Vector3 position = new Vector3(x * tileSize + gridOffset.x, y * tileSize + gridOffset.y, 0);
                 GameObject tile = Instantiate(tilePrefab, position, Quaternion.identity, transform);
                 tile.name = $"Tile_{x}_{y}";
                 
@@ -130,13 +131,13 @@ public class TileGrid : MonoBehaviour
     
     public Vector3 GetWorldPosition(Vector2Int gridPosition)
     {
-        return new Vector3(gridPosition.x * tileSize, gridPosition.y * tileSize, 0);
+        return new Vector3(gridPosition.x * tileSize + gridOffset.x, gridPosition.y * tileSize + gridOffset.y, 0);
     }
     
     public Vector2Int GetGridPosition(Vector3 worldPosition)
     {
-        int x = Mathf.FloorToInt(worldPosition.x / tileSize);
-        int y = Mathf.FloorToInt(worldPosition.y / tileSize);
+        int x = Mathf.FloorToInt((worldPosition.x - gridOffset.x) / tileSize);
+        int y = Mathf.FloorToInt((worldPosition.y - gridOffset.y) / tileSize);
         
         return new Vector2Int(x, y);
     }
