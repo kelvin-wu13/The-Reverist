@@ -495,7 +495,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1.5001256, y: 0.16627127, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1532281402}
@@ -516,7 +516,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bulletPrefab: {fileID: 1404709197675397035, guid: 2c82f63fd4b27be4b8e35b98be74f926, type: 3}
   bulletSpawnPoint: {fileID: 1532281402}
-  shootCooldown: 0.5
+  shootCooldown: 0.2
   bulletSpeed: 20
   bulletDamage: 10
   tileGrid: {fileID: 334597318}

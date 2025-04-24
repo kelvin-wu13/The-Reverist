@@ -43,6 +43,12 @@ public class Enemy : MonoBehaviour
 
         currentgridPosition = tileGrid.GetGridPosition(transform.position);
         targetPosition = transform.position;
+
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponent<SpriteRenderer>();
+
+        if (spriteRenderer == null)
+            originalColor = spriteRenderer.color;
     }
 
     public void TakeDamage(int damage)
@@ -51,7 +57,7 @@ public class Enemy : MonoBehaviour
 
         currentHealth -= damage;
 
-        StartCoroutine(FlashColor());
+        //StartCoroutine(FlashColor());
 
         if (currentHealth <= 0)
         {
