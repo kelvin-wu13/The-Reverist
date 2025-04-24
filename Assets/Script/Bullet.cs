@@ -75,30 +75,15 @@ public class Bullet : MonoBehaviour
     
     private void CheckForEnemyHit(Vector2Int gridPosition)
     {
-        // This is where you would implement your enemy detection logic
-        // For example, you might have a method to get all enemies at a grid position:
-        
-        // Example (pseudocode):
-        // Enemy enemy = EnemyManager.GetEnemyAt(gridPosition);
-        // if (enemy != null)
-        // {
-        //     enemy.TakeDamage(damage);
-        //     SpawnHitEffect();
-        //     DestroyBullet();
-        // }
         
         // For demonstration purposes, we can detect if we're in an enemy tile area
         if (IsEnemyTilePosition(gridPosition))
         {
-            // Check for actual enemy game objects at this position
-            // This would need to be implemented based on your enemy system
-            
-            // For demonstration:
             RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.zero, 0.1f, LayerMask.GetMask("Enemy"));
             if (hit.collider != null)
             {
                 // Deal damage to the enemy
-                // hit.collider.GetComponent<Enemy>()?.TakeDamage(damage);
+                hit.collider.GetComponent<Enemy>()?.TakeDamage(damage);
                 
                 Debug.Log("Hit enemy at position: " + gridPosition);
                 
@@ -198,7 +183,7 @@ public class Bullet : MonoBehaviour
         if (collision.gameObject.CompareTag("Enemy"))
         {
             // Deal damage to the enemy
-            // collision.GetComponent<Enemy>()?.TakeDamage(damage);
+            collision.GetComponent<Enemy>()?.TakeDamage(damage);
             
             // Visual effect
             SpawnHitEffect();

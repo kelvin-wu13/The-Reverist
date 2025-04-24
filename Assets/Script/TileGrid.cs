@@ -19,16 +19,20 @@ public class TileSet
 
 public class TileGrid : MonoBehaviour
 {
+
+    [Header("Grid Setting")] 
     [SerializeField] public int gridWidth = 8;
     [SerializeField] public int gridHeight = 4;
     [SerializeField] private float tileSize = 1f;
-    [SerializeField] private Vector2 gridOffset = Vector2.zero;
+
+    [Header("Tile Reference")]
     [SerializeField] private GameObject tilePrefab;
     [SerializeField] private TileSet tileSet;
-    [SerializeField] private Transform enemyParent;
-    [SerializeField] private GameObject enemyPrefab;
+    // [SerializeField] private Transform enemyParent;
+    // [SerializeField] private GameObject enemyPrefab;
     
-    private TileType[,] grid;
+    [SerializeField] private Vector2 gridOffset = Vector2.zero;
+    public TileType[,] grid;
     private GameObject[,] tileObjects;
 
     private void Awake()
@@ -88,7 +92,7 @@ public class TileGrid : MonoBehaviour
                 SetTileType(new Vector2Int(x, y), TileType.Enemy);
                 
                 // Optionally, spawn enemy characters on their tiles
-                // SpawnEnemy(new Vector2Int(x, y));
+                //SpawnEnemy(new Vector2Int(x, y));
             }
         }
     }
@@ -143,12 +147,16 @@ public class TileGrid : MonoBehaviour
     }
     
     // Example method to spawn an enemy at a specific grid position
-    private void SpawnEnemy(Vector2Int gridPosition)
-    {
-        if (IsValidGridPosition(gridPosition) && grid[gridPosition.x, gridPosition.y] == TileType.Enemy)
-        {
-            // This is where you would instantiate your enemy prefab
-            // GameObject enemy = Instantiate(enemyPrefab, GetWorldPosition(gridPosition), Quaternion.identity, enemyParent);
-        }
-    }
+    // public void SpawnEnemy(Vector2Int gridPosition)
+    // {
+    //     if (IsValidGridPosition(gridPosition) && grid[gridPosition.x, gridPosition.y] == TileType.Enemy)
+    //     {
+    //         GameObject enemy = Instantiate(enemyPrefab, GetWorldPosition(gridPosition), Quaternion.identity, enemyParent);
+    //         Enemy enemyScript = enemy.GetComponent<Enemy>();
+    //         if (enemyScript == null)
+    //         {
+    //             enemyScript = enemy.AddComponent<Enemy>();
+    //         }
+    //     }
+    // }
 }
