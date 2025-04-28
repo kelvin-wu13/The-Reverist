@@ -12,7 +12,6 @@ public class PlayerCrosshair : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private int distanceFromPlayer = 4;
     [SerializeField] private Color crosshairColor = Color.yellow;
-    [SerializeField] private float blinkSpeed = 1.5f;
     
     // Direction tracking
     private Vector2Int playerFacingDirection = Vector2Int.right; // Default facing right
@@ -89,7 +88,6 @@ public class PlayerCrosshair : MonoBehaviour
         if (crosshairRenderer != null)
         {
             Color color = crosshairRenderer.color;
-            color.a = 0.5f + Mathf.PingPong(Time.time * blinkSpeed, 0.5f);
             crosshairRenderer.color = color;
         }
     }
