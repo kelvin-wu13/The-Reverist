@@ -12,7 +12,6 @@ public class Bullet : MonoBehaviour
     
     // Visual components
     [SerializeField] private SpriteRenderer spriteRenderer;
-    [SerializeField] private TrailRenderer trailRenderer;
     
     // Animation properties
     [SerializeField] private float fadeOutTime = 0.1f;
@@ -29,9 +28,6 @@ public class Bullet : MonoBehaviour
         // Get components if not assigned in inspector
         if (spriteRenderer == null)
             spriteRenderer = GetComponent<SpriteRenderer>();
-            
-        if (trailRenderer == null)
-            trailRenderer = GetComponent<TrailRenderer>();
     }
     
     public void Initialize(Vector2 dir, float spd, int dmg, TileGrid grid)
@@ -152,12 +148,6 @@ public class Bullet : MonoBehaviour
         float startAlpha = 1f;
         Color startColor = spriteRenderer.color;
         float elapsedTime = 0;
-        
-        // Disable trail if present
-        if (trailRenderer != null)
-        {
-            trailRenderer.emitting = false;
-        }
         
         // Fade out the sprite
         while (elapsedTime < fadeOutTime)

@@ -13,9 +13,17 @@ public class PlayerShoot : MonoBehaviour
 
     [Header("Grid Reference")]
     [SerializeField] private TileGrid tileGrid;
+    
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+    
+    // Animation parameter hash for better performance
+    private readonly int isShootingParam = Animator.StringToHash("IsShooting");
 
     private float lastShootTime;
     private bool isHoldingFireButton = false;
+    private Vector2 shootDirection = Vector2.right; // Default shoot direction
+    
     private void Awake()
     {   
         // If no spawn point assigned, use the player position
@@ -28,6 +36,12 @@ public class PlayerShoot : MonoBehaviour
         if (tileGrid == null)
         {
             tileGrid = FindObjectOfType<TileGrid>();
+        }
+        
+        // Try to get animator if not assigned in the inspector
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
         }
     }
 
@@ -57,11 +71,14 @@ public class PlayerShoot : MonoBehaviour
             return;
         }
 
-        // Get the player's current grid position
-        Vector2Int playerGridPos = tileGrid.GetGridPosition(transform.position);
+        // Play shooting animation
+        if (animator != null)
+        {
+            animator.SetTrigger(isShootingParam);
+        }
         
-        // Shoot in the forward direction (assuming the player is facing right)
-        ShootBullet(Vector2.right);
+        // Shoot the bullet in the current shoot direction
+        ShootBullet(shootDirection);
         
         // Update the last shoot time
         lastShootTime = Time.time;
