@@ -1,0 +1,21 @@
+#
+# Sprite sheet data for Unity.
+#
+# To import these sprites into your Unity project, download "TexturePackerImporter":
+# https://www.codeandweb.com/texturepacker/unity
+#
+# $TexturePacker:SmartUpdate:179172336593a1472a37e3e6887ad7a9:73045b0750e0cab00541905276551d74:236697798356fd694e5dd6a8bb294d6c$
+#
+:format=40300
+:texture=MC Animation.png
+:size=4096x4096
+:pivotpoints=enabled
+:borders=disabled
+:alphahandling=ClearTransparentPixels
+
+MC Attack sprite-0;0;3016;1080;1080; 0.5;0.5; 0;0;0;0
+MC Attack sprite-1;1080;3016;1080;1080; 0.5;0.5; 0;0;0;0
+MC Attack sprite-2;2160;3016;1080;1080; 0.5;0.5; 0;0;0;0
+MC Attack sprite-3;0;1936;1080;1080; 0.5;0.5; 0;0;0;0
+MC Attack sprite-4;1080;1936;1080;1080; 0.5;0.5; 0;0;0;0
+MC Attack sprite-5;2160;1936;1080;1080; 0.5;0.5; 0;0;0;0
