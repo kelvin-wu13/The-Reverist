@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &186632132335026699
+--- !u!1 &6941465084218670886
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,47 +8,43 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8056335320807435803}
-  - component: {fileID: 460049984474806104}
+  - component: {fileID: 682938912189103387}
+  - component: {fileID: 5224743015450679918}
   m_Layer: 0
-  m_Name: QESkillPrefab
+  m_Name: WQSkillPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8056335320807435803
+--- !u!4 &682938912189103387
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 186632132335026699}
+  m_GameObject: {fileID: 6941465084218670886}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.075274, y: 0.95387286, z: 0.04915472}
+  m_LocalPosition: {x: 0, y: 2.79, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &460049984474806104
+--- !u!114 &5224743015450679918
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 186632132335026699}
+  m_GameObject: {fileID: 6941465084218670886}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 868755e3084573b478f5a1953afeb483, type: 3}
+  m_Script: {fileID: 11500000, guid: e545c0bc21258194cbe699e6744f6d41, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lifetime: 1
+  lifetime: 2
   skillEffect: {fileID: 0}
-  damage: 30
-  laserWidth: 0.3
-  laserMaxDistance: 20
-  laserDuration: 0.8
-  laserColor: {r: 0, g: 0, b: 1, a: 1}
-  laserPrefab: {fileID: 7625917550097447495, guid: b71e1574978c9e640bca5521a38b2fa0, type: 3}
+  damageAmount: 10
+  effectRadius: 0.5

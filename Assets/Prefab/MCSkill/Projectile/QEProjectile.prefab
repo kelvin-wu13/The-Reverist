@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2501741694156867686}
   - component: {fileID: -934350658951176818}
   m_Layer: 0
-  m_Name: QWProjectile
+  m_Name: QEProjectile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
