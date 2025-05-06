@@ -644,7 +644,7 @@ MonoBehaviour:
   skillEEPrefab: {fileID: 0}
   skillEQPrefab: {fileID: 0}
   skillEWPrefab: {fileID: 0}
-  skillWWPrefab: {fileID: 0}
+  skillWWPrefab: {fileID: 7790877365476529809, guid: 050ba40bd18a00c4f86936122d7a418f, type: 3}
   skillWQPrefab: {fileID: 6941465084218670886, guid: 12c1fc04740146a498097f8d7455815e, type: 3}
   skillWEPrefab: {fileID: 0}
   showDebugLogs: 1
