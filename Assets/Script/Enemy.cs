@@ -14,11 +14,13 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private float moveInterval = 2f;
     [SerializeField] private bool isMoving = false;
+    [SerializeField] private bool isStunned = false;
 
     [Header("Visual")]
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private float hitFlashDuration = 0.1f;
     [SerializeField] private Color hitColor = Color.red;
+    [SerializeField] private Color stunnedColor = Color.blue;
 
     private TileGrid tileGrid;
     private Vector2Int currentGridPosition;
@@ -69,13 +71,13 @@ public class Enemy : MonoBehaviour
         moveTimer = moveInterval;
         
         // Start movement coroutine
-        // StartCoroutine(RandomMovement());
+        StartCoroutine(RandomMovement());
     }
     
     private void Update()
     {
         // Handle movement
-        if (isMoving)
+        if (isMoving  && !isStunned)
         {
             // Move towards target position
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
@@ -89,58 +91,58 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    // private IEnumerator RandomMovement()
-    // {
-    //     while (!isDying)
-    //     {
-    //         // Wait for the move interval
-    //         yield return new WaitForSeconds(moveInterval);
+    private IEnumerator RandomMovement()
+    {
+        while (!isDying)
+        {
+            // Wait for the move interval
+            yield return new WaitForSeconds(moveInterval);
             
-    //         if (!isMoving)
-    //         {
-    //             // Try to move in a random direction
-    //             TryMove();
-    //         }
-    //     }
-    // }
+            if (!isMoving && !isStunned)
+            {
+                // Try to move in a random direction
+                TryMove();
+            }
+        }
+    }
     
-    // private void TryMove()
-    // {
-    //     // Shuffle the directions array for random movement
-    //     ShuffleDirections();
+    private void TryMove()
+    {
+        // Shuffle the directions array for random movement
+        ShuffleDirections();
         
-    //     // Try each direction until a valid move is found
-    //     foreach (Vector2Int direction in directions)
-    //     {
-    //         Vector2Int newPosition = currentGridPosition + direction;
+        // Try each direction until a valid move is found
+        foreach (Vector2Int direction in directions)
+        {
+            Vector2Int newPosition = currentGridPosition + direction;
             
-    //         // Check if the new position is valid (is within grid and is an enemy tile)
-    //         if (tileGrid.IsValidGridPosition(newPosition) && tileGrid.grid[newPosition.x, newPosition.y] == TileType.Enemy)
-    //         {
-    //             // Update grid position and set target
-    //             currentGridPosition = newPosition;
-    //             targetPosition = tileGrid.GetWorldPosition(currentGridPosition);
-    //             isMoving = true;
+            // Check if the new position is valid (is within grid and is an enemy tile)
+            if (tileGrid.IsValidGridPosition(newPosition) && tileGrid.grid[newPosition.x, newPosition.y] == TileType.Enemy)
+            {
+                // Update grid position and set target
+                currentGridPosition = newPosition;
+                targetPosition = tileGrid.GetWorldPosition(currentGridPosition);
+                isMoving = true;
                 
-    //             return; // Successfully moved
-    //         }
-    //     }
+                return; // Successfully moved
+            }
+        }
         
-    //     // If we reach here, no valid move was found
-    //     Debug.Log("Enemy: No valid move found from current position");
-    // }
+        // If we reach here, no valid move was found
+        Debug.Log("Enemy: No valid move found from current position");
+    }
     
-    // private void ShuffleDirections()
-    // {
-    //     // Simple Fisher-Yates shuffle
-    //     for (int i = directions.Length - 1; i > 0; i--)
-    //     {
-    //         int j = Random.Range(0, i + 1);
-    //         Vector2Int temp = directions[i];
-    //         directions[i] = directions[j];
-    //         directions[j] = temp;
-    //     }
-    // }
+    private void ShuffleDirections()
+    {
+        // Simple Fisher-Yates shuffle
+        for (int i = directions.Length - 1; i > 0; i--)
+        {
+            int j = Random.Range(0, i + 1);
+            Vector2Int temp = directions[i];
+            directions[i] = directions[j];
+            directions[j] = temp;
+        }
+    }
 
     public void TakeDamage(int damage)
     {
@@ -167,8 +169,8 @@ public class Enemy : MonoBehaviour
         // Wait for flash duration
         yield return new WaitForSeconds(hitFlashDuration);
         
-        // Change back to original color
-        spriteRenderer.color = originalColor;
+         // Change back to original color or stunned color if currently stunned
+        spriteRenderer.color = isStunned ? stunnedColor : originalColor;
     }
 
     private void Die()
@@ -184,5 +186,30 @@ public class Enemy : MonoBehaviour
         }
 
         Destroy(gameObject);
+    }
+
+    public void Stun(float duration)
+    {
+        if (isDying) return;
+        StartCoroutine(ApplyStun(duration));
+    }
+
+    private IEnumerator ApplyStun(float duration)
+    {
+        isStunned = true;
+
+        //Visual feedback
+        if (spriteRenderer != null)
+            spriteRenderer.color = stunnedColor;
+
+        //Wait for stun duration
+        yield return new WaitForSeconds(duration);
+
+        //Remove Stun effect
+        isStunned = false;
+
+        //Restore original color
+        if (spriteRenderer != null && !isDying)
+            spriteRenderer.color = originalColor;
     }
 }
