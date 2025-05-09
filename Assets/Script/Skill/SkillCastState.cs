@@ -2,81 +2,109 @@ using UnityEngine;
 
 namespace SkillSystem
 {
-    // Base State class for the State Pattern
+    // Base abstract class for all skill cast states
     public abstract class SkillCastState
     {
         protected SkillCast skillCast;
-
+        
         public SkillCastState(SkillCast skillCast)
         {
             this.skillCast = skillCast;
         }
-
+        
         public abstract void EnterState();
-        public abstract void Update();
-        public abstract void ProcessInput(SkillType skillType);
         public abstract void ExitState();
+        public abstract void Update();
+        public abstract void ProcessInput(SkillType inputType);
     }
-
-    // Idle state - waiting for first skill input
+    
+    // Idle state - waiting for the first skill input
     public class IdleState : SkillCastState
     {
         public IdleState(SkillCast skillCast) : base(skillCast) { }
-
+        
         public override void EnterState()
         {
+            // Reset first skill when entering idle state
+            skillCast.firstSkill = SkillType.None;
+            
             if (skillCast.showDebugLogs) Debug.Log("Entered Idle State");
         }
-
-        public override void Update()
-        {
-            // Nothing to update in idle state
-        }
-
-        public override void ProcessInput(SkillType skillType)
-        {
-            // First skill input received, transition to WaitingForSecond state
-            skillCast.firstSkill = skillType;
-            skillCast.ChangeState(skillCast.waitingState);
-            
-            if (skillCast.showDebugLogs) Debug.Log($"First skill selected: {skillType}");
-        }
-
+        
         public override void ExitState()
         {
             // Nothing special to do when exiting idle state
         }
-    }
-
-    // Waiting state - first skill input received, waiting for second input
-    public class WaitingForSecondState : SkillCastState
-    {
-        public WaitingForSecondState(SkillCast skillCast) : base(skillCast) { }
-
-        public override void EnterState()
-        {
-            if (skillCast.showDebugLogs) Debug.Log("Entered Waiting State");
-        }
-
+        
         public override void Update()
         {
-            // No time limit anymore, will wait indefinitely
+            // Nothing to update in idle state
         }
-
-        public override void ProcessInput(SkillType skillType)
+        
+        public override void ProcessInput(SkillType inputType)
         {
-            // Second skill input received, cast the skill
-            SkillCombination combination = skillCast.GetSkillCombination(skillCast.firstSkill, skillType);
-            skillCast.CastSkill(combination);
-            
-            // Return to idle state
-            skillCast.ChangeState(skillCast.idleState);
+            if (inputType != SkillType.None)
+            {
+                // Store the first skill
+                skillCast.firstSkill = inputType;
+                
+                // Transition to waiting state
+                skillCast.ChangeState(skillCast.waitingState);
+                
+                if (skillCast.showDebugLogs) Debug.Log($"First skill input: {inputType}");
+            }
         }
-
+    }
+    
+    // Waiting state - waiting for the second skill input
+    public class WaitingForSecondState : SkillCastState
+    {
+        private float timeLeftForSecondInput;
+        private const float MAX_WAIT_TIME = 2.0f; // Time window to input second skill
+        
+        public WaitingForSecondState(SkillCast skillCast) : base(skillCast) { }
+        
+        public override void EnterState()
+        {
+            // Reset timer
+            timeLeftForSecondInput = MAX_WAIT_TIME;
+            
+            if (skillCast.showDebugLogs) Debug.Log("Entered Waiting State");
+        }
+        
         public override void ExitState()
         {
-            // Reset first skill when exiting waiting state
-            skillCast.firstSkill = SkillType.None;
+            // Nothing special to do when exiting waiting state
+        }
+        
+        public override void Update()
+        {
+            // Count down the time left for second input
+            timeLeftForSecondInput -= Time.deltaTime;
+            
+            // If time runs out, go back to idle state
+            if (timeLeftForSecondInput <= 0)
+            {
+                if (skillCast.showDebugLogs) Debug.Log("Timeout waiting for second skill input");
+                skillCast.ChangeState(skillCast.idleState);
+            }
+        }
+        
+        public override void ProcessInput(SkillType inputType)
+        {
+            if (inputType != SkillType.None)
+            {
+                // Get the skill combination
+                SkillCombination combination = skillCast.GetSkillCombination(skillCast.firstSkill, inputType);
+                
+                // Cast the skill
+                skillCast.CastSkill(combination);
+                
+                if (skillCast.showDebugLogs) Debug.Log($"Second skill input: {inputType}, Combination: {combination}");
+                
+                // Return to idle state
+                skillCast.ChangeState(skillCast.idleState);
+            }
         }
     }
 }

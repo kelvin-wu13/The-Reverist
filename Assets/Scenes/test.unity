@@ -119,57 +119,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &28397528
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 28397530}
-  - component: {fileID: 28397529}
-  m_Layer: 0
-  m_Name: EESkillPrefab
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &28397529
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 28397528}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5e58208f271cb184eb73427840ae5e06, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  bulletPrefab: {fileID: 5650957259287448328, guid: e0afd894e99b68e4e80cfe840e3249f3, type: 3}
-  bulletSpeed: 10
-  bulletDamage: 10
-  enemyStunDuration: 3
-  firePoint: {fileID: 1532281402}
-  cooldownDuration: 1
-  fireKey: 32
---- !u!4 &28397530
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 28397528}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &334597317
 GameObject:
   m_ObjectHideFlags: 0
@@ -695,7 +644,7 @@ MonoBehaviour:
   skillQQPrefab: {fileID: 7857377519010454379, guid: 65375e5fff78f2a41b9c30bfa03903c6, type: 3}
   skillQEPrefab: {fileID: 186632132335026699, guid: d8fc575de34caa44a962c43647a7210e, type: 3}
   skillQWPrefab: {fileID: 7670841722180877047, guid: 51737f717feeea44db11cfdaa99b1422, type: 3}
-  skillEEPrefab: {fileID: 0}
+  skillEEPrefab: {fileID: 2937717139180138505, guid: 243132003c6c363478ea2747fd218f02, type: 3}
   skillEQPrefab: {fileID: 0}
   skillEWPrefab: {fileID: 6201362687822346803, guid: c49f31833769b4c409b1c29b665bb6e8, type: 3}
   skillWWPrefab: {fileID: 7790877365476529809, guid: 050ba40bd18a00c4f86936122d7a418f, type: 3}
@@ -765,4 +714,3 @@ SceneRoots:
   - {fileID: 334597319}
   - {fileID: 1585159249}
   - {fileID: 1144395321}
-  - {fileID: 28397530}
