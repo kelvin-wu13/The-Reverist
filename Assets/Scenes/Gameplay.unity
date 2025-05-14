@@ -342,7 +342,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93cc1806d1f48df43ab8b2d5df2df962, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numberOfEnemies: 3
+  numberOfEnemies: 5
   spawnOnStart: 1
   useRandomPositions: 1
   tileGrid: {fileID: 334597318}
@@ -605,11 +605,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cbd1a92b384b4be45911e7742a9c206a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bulletPrefab: {fileID: 5426870732938009253, guid: c74fea998bb5f8d48b9089760483fbe5, type: 3}
+  bulletPrefab: {fileID: 2133345011772533360, guid: 59f47dda7f3d49f4296d35b0ff332bf1, type: 3}
   bulletSpawnPoint: {fileID: 1532281402}
   shootCooldown: 0.2
   bulletSpeed: 20
-  bulletDamage: 10
+  bulletDamage: 5
   tileGrid: {fileID: 334597318}
   animator: {fileID: 1573556188}
 --- !u!114 &1573556186
@@ -660,7 +660,7 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1573556180}
-  m_Enabled: 0
+  m_Enabled: 1
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: d7fbce38cf4696541be79ae11dc881d7, type: 2}
   m_CullingMode: 0

@@ -9,10 +9,7 @@ public class Bullet : MonoBehaviour
     private float speed;
     private int damage;
     private TileGrid tileGrid;
-    
-    // Visual components
-    [SerializeField] private SpriteRenderer spriteRenderer;
-    
+        
     // Animation properties
     [SerializeField] private float fadeOutTime = 0.1f;
     
@@ -22,13 +19,6 @@ public class Bullet : MonoBehaviour
     // Internal tracking
     private Vector2Int currentGridPosition;
     private bool isDestroying = false;
-    
-    private void Awake()
-    {
-        // Get components if not assigned in inspector
-        if (spriteRenderer == null)
-            spriteRenderer = GetComponent<SpriteRenderer>();
-    }
     
     public void Initialize(Vector2 dir, float spd, int dmg, TileGrid grid)
     {
@@ -146,7 +136,6 @@ public class Bullet : MonoBehaviour
     private IEnumerator FadeOutAndDestroy()
     {
         float startAlpha = 1f;
-        Color startColor = spriteRenderer.color;
         float elapsedTime = 0;
         
         // Fade out the sprite
@@ -155,8 +144,6 @@ public class Bullet : MonoBehaviour
             elapsedTime += Time.deltaTime;
             float alpha = Mathf.Lerp(startAlpha, 0f, elapsedTime / fadeOutTime);
             
-            // Set new color with faded alpha
-            spriteRenderer.color = new Color(startColor.r, startColor.g, startColor.b, alpha);
             
             yield return null;
         }
