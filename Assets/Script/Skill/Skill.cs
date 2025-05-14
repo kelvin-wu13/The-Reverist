@@ -4,7 +4,7 @@ namespace SkillSystem
 {
     public class Skill : MonoBehaviour
     {
-        [SerializeField] private float lifetime = 2.0f;
+        [SerializeField] private float lifetime = 5.0f;
         [SerializeField] private ParticleSystem skillEffect;
         
         private Vector2Int targetGridPosition;

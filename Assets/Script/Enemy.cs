@@ -15,6 +15,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float moveInterval = 2f;
     [SerializeField] private bool isMoving = false;
     [SerializeField] private bool isStunned = false;
+    [SerializeField] private LayerMask obstacleLayer; // Layer for collision detection
 
     [Header("Visual")]
     [SerializeField] private SpriteRenderer spriteRenderer;
@@ -24,9 +25,13 @@ public class Enemy : MonoBehaviour
 
     private TileGrid tileGrid;
     private Vector2Int currentGridPosition;
+    private Vector2Int targetGridPosition; // Added to track where enemy is headed
     private Vector3 targetPosition;
     private Color originalColor;
     private float moveTimer;
+    
+    // Static dictionary to track which grid positions are reserved
+    private static Dictionary<Vector2Int, GameObject> reservedPositions = new Dictionary<Vector2Int, GameObject>();
 
     // Possible movement directions
     private Vector2Int[] directions = new Vector2Int[]
@@ -59,7 +64,11 @@ public class Enemy : MonoBehaviour
         currentHealth = maxHealth;
 
         currentGridPosition = tileGrid.GetGridPosition(transform.position);
+        targetGridPosition = currentGridPosition; // Initialize as current position
         targetPosition = transform.position;
+        
+        // Reserve the current position
+        ReserveGridPosition(currentGridPosition);
 
         if (spriteRenderer == null)
             spriteRenderer = GetComponent<SpriteRenderer>();
@@ -77,7 +86,7 @@ public class Enemy : MonoBehaviour
     private void Update()
     {
         // Handle movement
-        if (isMoving  && !isStunned)
+        if (isMoving && !isStunned)
         {
             // Move towards target position
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
@@ -87,6 +96,11 @@ public class Enemy : MonoBehaviour
             {
                 isMoving = false;
                 transform.position = targetPosition;
+                
+                // Update current position and ensure it's reserved
+                currentGridPosition = targetGridPosition;
+                
+                // No need to reserve again as we maintain our reservation throughout movement
             }
         }
     }
@@ -116,12 +130,20 @@ public class Enemy : MonoBehaviour
         {
             Vector2Int newPosition = currentGridPosition + direction;
             
-            // Check if the new position is valid (is within grid and is an enemy tile)
-            if (tileGrid.IsValidGridPosition(newPosition) && tileGrid.grid[newPosition.x, newPosition.y] == TileType.Enemy)
+            // Check if the new position is valid (is within grid, is an enemy tile, and is not reserved)
+            if (tileGrid.IsValidGridPosition(newPosition) && 
+                tileGrid.grid[newPosition.x, newPosition.y] == TileType.Enemy && 
+                !IsPositionReserved(newPosition))
             {
-                // Update grid position and set target
-                currentGridPosition = newPosition;
-                targetPosition = tileGrid.GetWorldPosition(currentGridPosition);
+                // Release our current position reservation
+                ReleaseGridPosition(currentGridPosition);
+                
+                // Reserve the new position
+                ReserveGridPosition(newPosition);
+                
+                // Update target position
+                targetGridPosition = newPosition;
+                targetPosition = tileGrid.GetWorldPosition(targetGridPosition);
                 isMoving = true;
                 
                 return; // Successfully moved
@@ -130,6 +152,52 @@ public class Enemy : MonoBehaviour
         
         // If we reach here, no valid move was found
         Debug.Log("Enemy: No valid move found from current position");
+    }
+    
+    // Reserve a grid position for this enemy
+    private void ReserveGridPosition(Vector2Int position)
+    {
+        reservedPositions[position] = gameObject;
+    }
+    
+    // Release a grid position reservation
+    private void ReleaseGridPosition(Vector2Int position)
+    {
+        if (reservedPositions.ContainsKey(position) && reservedPositions[position] == gameObject)
+        {
+            reservedPositions.Remove(position);
+        }
+    }
+    
+    // Check if a grid position is already reserved
+    private bool IsPositionReserved(Vector2Int position)
+    {
+        return reservedPositions.ContainsKey(position) && reservedPositions[position] != gameObject;
+    }
+    
+    // Physical collision check (can be used in addition to reservation system)
+    private bool IsPositionOccupied(Vector2Int gridPosition)
+    {
+        // Convert grid position to world position
+        Vector3 worldPosition = tileGrid.GetWorldPosition(gridPosition);
+        
+        // Create a small overlap circle to check for collisions
+        float checkRadius = 0.4f; // Adjust based on your entity size
+        
+        // Check for overlapping colliders
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(worldPosition, checkRadius, obstacleLayer);
+        
+        // If we found any colliders that aren't our own, the position is occupied
+        foreach (Collider2D collider in colliders)
+        {
+            // Skip our own collider
+            if (collider.gameObject != gameObject)
+            {
+                return true; // Position is occupied
+            }
+        }
+        
+        return false; // Position is free
     }
     
     private void ShuffleDirections()
