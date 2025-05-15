@@ -1,7 +1,31 @@
 fileFormatVersion: 2
-guid: e83b9b54e5e9e7849aa0c1d45d7e7c57
+guid: 311abb7e017bdbf428afa2b69198f3b6
 TextureImporter:
-  internalIDToNameTable: []
+  internalIDToNameTable:
+  - first:
+      213: -7704895832629564282
+    second: Flat_Arena_0
+  - first:
+      213: -934039776186738552
+    second: Flat_Arena_1
+  - first:
+      213: -2546098267454831057
+    second: Flat_Arena_2
+  - first:
+      213: -7758961341159568449
+    second: Flat_Arena_3
+  - first:
+      213: 7330980621696116706
+    second: Flat_Arena_4
+  - first:
+      213: -3115944825997400295
+    second: Flat_Arena_5
+  - first:
+      213: -2244143376720050256
+    second: Flat_Arena_6
+  - first:
+      213: -6463912044355684079
+    second: Flat_Arena_7
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -34,7 +58,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 2
+    filterMode: 1
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -48,7 +72,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 256
+  spritePixelsToUnits: 72
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -67,7 +91,7 @@ TextureImporter:
   swizzle: 50462976
   cookieLightType: 0
   platformSettings:
-  - serializedVersion: 3
+  - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -80,7 +104,7 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 3
+  - serializedVersion: 4
     buildTarget: Standalone
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -97,170 +121,218 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Timeline 1_0000
+      name: Flat_Arena_0
       rect:
         serializedVersion: 2
-        x: 1
-        y: 102
-        width: 861
-        height: 921
-      alignment: 9
-      pivot: {x: 0.5342625, y: 0.5863192}
+        x: 348
+        y: 505
+        width: 150
+        height: 96
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: e35b8b826d844fa48a3c787f56f81e3d
-      internalID: 1569837789
+      spriteID: 68c2ab00016b21590800000000000000
+      internalID: -7704895832629564282
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Timeline 1_0001
+      name: Flat_Arena_1
       rect:
         serializedVersion: 2
-        x: 1
-        y: 102
-        width: 861
-        height: 921
-      alignment: 9
-      pivot: {x: 0.5342625, y: 0.5863192}
+        x: 504
+        y: 209
+        width: 150
+        height: 396
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: f65327da8632e804e9459c36ead4c34d
-      internalID: -929843277
+      spriteID: 888dd46b5cf9903f0800000000000000
+      internalID: -934039776186738552
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Timeline 1_0002
+      name: Flat_Arena_2
       rect:
         serializedVersion: 2
-        x: 1
-        y: 102
-        width: 861
-        height: 921
-      alignment: 9
-      pivot: {x: 0.5342625, y: 0.5863192}
+        x: 660
+        y: 209
+        width: 150
+        height: 396
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 3decb948b6a4d474baaef057f74ce1d5
-      internalID: 46048676
+      spriteID: f260e159d117aacd0800000000000000
+      internalID: -2546098267454831057
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Timeline 1_0003
+      name: Flat_Arena_3
       rect:
         serializedVersion: 2
-        x: 813
-        y: 69
-        width: 553
-        height: 954
-      alignment: 9
-      pivot: {x: 0.5533454, y: 0.5534591}
+        x: 816
+        y: 210
+        width: 150
+        height: 396
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 804da1e7ab2c1024d8066574449ebc86
-      internalID: 794252863
+      spriteID: fbb023ad4c1a25490800000000000000
+      internalID: -7758961341159568449
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Timeline 1_0004
+      name: Flat_Arena_4
       rect:
         serializedVersion: 2
-        x: 813
-        y: 69
-        width: 553
-        height: 954
-      alignment: 9
-      pivot: {x: 0.5533454, y: 0.5534591}
+        x: 975
+        y: 507
+        width: 150
+        height: 97
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 879705fc3f73efa42a8ce7c665258e1c
-      internalID: 922999743
+      spriteID: 2e72873c800ecb560800000000000000
+      internalID: 7330980621696116706
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Timeline 1_0005
+      name: Flat_Arena_5
       rect:
         serializedVersion: 2
-        x: 813
-        y: 69
-        width: 553
-        height: 954
-      alignment: 9
-      pivot: {x: 0.5533454, y: 0.5534591}
+        x: 1131
+        y: 211
+        width: 150
+        height: 396
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 228045b9f7ee9e042b7ce9e57a2820f1
-      internalID: 1774705072
+      spriteID: 91765b290b0f1c4d0800000000000000
+      internalID: -3115944825997400295
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Timeline 1_0006
+      name: Flat_Arena_6
       rect:
         serializedVersion: 2
-        x: 813
-        y: 69
-        width: 553
-        height: 954
-      alignment: 9
-      pivot: {x: 0.5533454, y: 0.5534591}
+        x: 1287
+        y: 211
+        width: 150
+        height: 396
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b74e852d733bd0e0800000000000000
+      internalID: -2244143376720050256
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Flat_Arena_7
+      rect:
+        serializedVersion: 2
+        x: 1443
+        y: 212
+        width: 150
+        height: 396
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1197fc03e329b46a0800000000000000
+      internalID: -6463912044355684079
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Flat_Arena_8
+      rect:
+        serializedVersion: 2
+        x: 348
+        y: 505
+        width: 150
+        height: 96
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 324b194f64d27f14fa032354eb73bcfd
-      internalID: 703067908
+      spriteID: 357ce8de0fc56c14a824f59db1358cdc
+      internalID: -489947962
       vertices: []
       indices: 
       edges: []
       weights: []
     outline: []
+    customData: 
     physicsShape: []
     bones: []
-    spriteID: 764a5b9cea0787a47b01a686bb0b2c3d
+    spriteID: eb4b823d34d47de429a287c02041c514
     internalID: 0
     vertices: []
     indices: 
     edges: []
     weights: []
     secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
     nameFileIdTable:
-      Timeline 1_0000: 1569837789
-      Timeline 1_0001: -929843277
-      Timeline 1_0002: 46048676
-      Timeline 1_0003: 794252863
-      Timeline 1_0004: 922999743
-      Timeline 1_0005: 1774705072
-      Timeline 1_0006: 703067908
+      Flat_Arena_8: -489947962
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

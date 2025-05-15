@@ -4,17 +4,11 @@ using UnityEngine;
 
 public class PlayerShoot : MonoBehaviour
 {
-    [Header("Bullet Settings")]
+    [Header("References")]
+    [SerializeField] private Stats stats;
     [SerializeField] private GameObject bulletPrefab;
     [SerializeField] private Transform bulletSpawnPoint;
-    [SerializeField] private float shootCooldown = 0.5f;
-    [SerializeField] private float bulletSpeed = 10f;
-    [SerializeField] private int bulletDamage = 10;
-
-    [Header("Grid Reference")]
     [SerializeField] private TileGrid tileGrid;
-    
-    [Header("Animation")]
     [SerializeField] private Animator animator;
     
     // Animation parameter hash for better performance
@@ -43,6 +37,12 @@ public class PlayerShoot : MonoBehaviour
         {
             animator = GetComponent<Animator>();
         }
+        
+        // Validate that we have stats
+        if (stats == null)
+        {
+            Debug.LogError("Stats scriptable object not assigned to PlayerShoot!");
+        }
     }
 
     private void Update()
@@ -65,8 +65,11 @@ public class PlayerShoot : MonoBehaviour
 
     private void TryShoot()
     {
+        // Make sure we have stats
+        if (stats == null) return;
+        
         // Check if cooldown has passed
-        if (Time.time - lastShootTime < shootCooldown)
+        if (Time.time - lastShootTime < stats.ShootCooldown)
         {
             return;
         }
@@ -93,7 +96,7 @@ public class PlayerShoot : MonoBehaviour
         Bullet bullet = bulletObject.GetComponent<Bullet>();
         if (bullet != null)
         {
-            bullet.Initialize(direction, bulletSpeed, bulletDamage, tileGrid);
+            bullet.Initialize(direction, stats.BulletSpeed, stats.BulletDamage, tileGrid);
         }
         else
         {

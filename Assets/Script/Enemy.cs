@@ -23,12 +23,21 @@ public class Enemy : MonoBehaviour
     [SerializeField] private Color hitColor = Color.red;
     [SerializeField] private Color stunnedColor = Color.blue;
 
+    [Header("Shooting")]
+    [SerializeField] private GameObject bulletPrefab;
+    [SerializeField] private float shootInterval = 3f;
+    [SerializeField] private float bulletSpeed = 5f;
+    [SerializeField] private int bulletDamage = 10;
+    [SerializeField] private Transform shootPoint;
+    [SerializeField] private float shootChance = 0.7f; // Chance to shoot when timer is up
+
     private TileGrid tileGrid;
     private Vector2Int currentGridPosition;
     private Vector2Int targetGridPosition; // Added to track where enemy is headed
     private Vector3 targetPosition;
     private Color originalColor;
     private float moveTimer;
+    private float shootTimer;
     
     // Static dictionary to track which grid positions are reserved
     private static Dictionary<Vector2Int, GameObject> reservedPositions = new Dictionary<Vector2Int, GameObject>();
@@ -56,6 +65,12 @@ public class Enemy : MonoBehaviour
         {
             Debug.LogError("Enemy: Could not find TileGrid");
         }
+        
+        // Create shoot point if not assigned
+        if(shootPoint == null)
+        {
+            shootPoint = transform;
+        }
     }
 
     private void Start()
@@ -79,6 +94,9 @@ public class Enemy : MonoBehaviour
         // Initialize move timer
         moveTimer = moveInterval;
         
+        // Initialize shoot timer with a random offset so all enemies don't shoot at once
+        shootTimer = Random.Range(0f, shootInterval);
+        
         // Start movement coroutine
         StartCoroutine(RandomMovement());
     }
@@ -101,6 +119,24 @@ public class Enemy : MonoBehaviour
                 currentGridPosition = targetGridPosition;
                 
                 // No need to reserve again as we maintain our reservation throughout movement
+            }
+        }
+        
+        // Handle shooting
+        if (!isStunned && !isDying)
+        {
+            shootTimer -= Time.deltaTime;
+            
+            if (shootTimer <= 0)
+            {
+                // Reset the shoot timer
+                shootTimer = shootInterval;
+                
+                // Random chance to shoot
+                if (Random.value <= shootChance)
+                {
+                    ShootAtPlayer();
+                }
             }
         }
     }
@@ -152,6 +188,67 @@ public class Enemy : MonoBehaviour
         
         // If we reach here, no valid move was found
         Debug.Log("Enemy: No valid move found from current position");
+    }
+    
+    private void ShootAtPlayer()
+    {
+        if (bulletPrefab == null) return;
+        
+        // Always shoot straight to the left (toward player side)
+        Vector2 direction = Vector2.left;
+        
+        // Create the bullet
+        GameObject bulletObj = Instantiate(bulletPrefab, shootPoint.position, Quaternion.identity);
+        EnemyBullet bullet = bulletObj.GetComponent<EnemyBullet>();
+        
+        if (bullet != null)
+        {
+            // Initialize bullet with parameters
+            bullet.Initialize(direction, bulletSpeed, bulletDamage, tileGrid);
+            
+            // Play shoot sound/effect if needed
+            PlayShootEffect();
+        }
+        else
+        {
+            // If there's no EnemyBullet component, try to add one
+            bullet = bulletObj.AddComponent<EnemyBullet>();
+            if (bullet != null)
+            {
+                bullet.Initialize(direction, bulletSpeed, bulletDamage, tileGrid);
+                PlayShootEffect();
+            }
+            else
+            {
+                Debug.LogError("Enemy: Failed to add EnemyBullet component to bullet prefab");
+                Destroy(bulletObj);
+            }
+        }
+    }
+    
+    private void PlayShootEffect()
+    {
+        // Flash the sprite when shooting
+        StartCoroutine(ShootFlash());
+        
+        // You could play a sound effect or particle effect here
+    }
+    
+    private IEnumerator ShootFlash()
+    {
+        if (spriteRenderer == null) yield break;
+        
+        // Store the original color
+        Color originalFlashColor = spriteRenderer.color;
+        
+        // Set to yellow for shooting flash
+        spriteRenderer.color = Color.yellow;
+        
+        // Short flash duration
+        yield return new WaitForSeconds(0.05f);
+        
+        // Return to original color
+        spriteRenderer.color = originalFlashColor;
     }
     
     // Reserve a grid position for this enemy

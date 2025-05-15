@@ -18,6 +18,7 @@ namespace SkillSystem
         private bool isProjectileFired = false;
         private Vector3 direction;
         private TileGrid tileGrid;
+        private Vector2Int currentGridPosition;
 
         private void Awake()
         {
@@ -62,11 +63,6 @@ namespace SkillSystem
             // Calculate direction
             direction = (targetPosition - startPosition).normalized;
             
-            // Create a basic projectile if we don't have the asset yet
-            if (projectilePrefab == null)
-            {
-                projectilePrefab = CreateBasicProjectile();
-            }
             
             // Instantiate projectile
             activeProjectile = Instantiate(projectilePrefab, startPosition, Quaternion.identity);
@@ -75,28 +71,11 @@ namespace SkillSystem
             activeProjectile.transform.up = direction;
             
             isProjectileFired = true;
+
+            // Set initial grid position for the projectile
+            currentGridPosition = tileGrid.GetGridPosition(activeProjectile.transform.position);
             
             Debug.Log($"QQ Skill: Fired projectile toward {targetGridPosition}");
-        }
-        
-        private GameObject CreateBasicProjectile()
-        {
-            // Create a simple projectile prefab programmatically
-            GameObject tempProjectile = new GameObject("BasicProjectile");
-            SpriteRenderer spriteRenderer = tempProjectile.AddComponent<SpriteRenderer>();
-            spriteRenderer.sprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd");
-            spriteRenderer.color = Color.red;
-            tempProjectile.transform.localScale = new Vector3(0.3f, 0.5f, 1f);
-            
-            // Add a collider (but don't enable it for this template)
-            CircleCollider2D collider = tempProjectile.AddComponent<CircleCollider2D>();
-            collider.radius = 0.2f;
-            collider.isTrigger = true;
-            
-            // Hide it from the scene
-            tempProjectile.SetActive(false);
-            
-            return tempProjectile;
         }
         
         private void Update()

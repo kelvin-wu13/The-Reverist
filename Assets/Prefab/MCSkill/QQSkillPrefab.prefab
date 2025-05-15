@@ -49,6 +49,6 @@ MonoBehaviour:
   projectileSpeed: 10
   explosionTileRadius: 1
   damage: 20
-  projectilePrefab: {fileID: 249291533228470059, guid: 9381aabce18d9b049bc36bb179901458, type: 3}
-  explosionEffectPrefab: {fileID: 5022621381268518176, guid: a02050a1928d2c04a8036c828e8d1885, type: 3}
+  projectilePrefab: {fileID: 1204518691854023705, guid: 586d9b43f800f92439286b6b1f21c523, type: 3}
+  explosionEffectPrefab: {fileID: 3831150701529647939, guid: 1043fd10685dac147a6633d3b7d81893, type: 3}
   explosionEffectDuration: 1

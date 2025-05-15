@@ -17,10 +17,6 @@ namespace SkillSystem
             
             if (bulletPrefab != null)
             {
-                // Calculate direction from caster to target
-                Vector3 worldTargetPos = new Vector3(targetPosition.x, targetPosition.y, 0);
-                Vector2 direction = (worldTargetPos - casterTransform.position).normalized;
-                
                 // Create bullet at caster position
                 GameObject bullet = Instantiate(bulletPrefab, casterTransform.position, Quaternion.identity);
                 
@@ -28,6 +24,9 @@ namespace SkillSystem
                 EEBullet bulletScript = bullet.GetComponent<EEBullet>();
                 if (bulletScript != null)
                 {
+                    // Direction is now always to the right regardless of target position
+                    Vector2 direction = Vector2.right;
+                    
                     // Initialize the bullet with properties
                     bulletScript.Initialize(direction, bulletSpeed, bulletDamage, enemyStunDuration);
                 }

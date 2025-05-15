@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7870274068674347606}
   - component: {fileID: 7870274068674347609}
   m_Layer: 0
-  m_Name: ef_05
+  m_Name: Rooted_Animation
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

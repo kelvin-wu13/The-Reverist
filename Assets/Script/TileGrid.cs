@@ -28,6 +28,12 @@ public class TileGrid : MonoBehaviour
     [SerializeField] public int gridHeight = 4;
     [SerializeField] private float tileSize = 1f;
     
+    [Header("Grid Visualization")]
+    [SerializeField] private bool showGridInEditor = true;
+    [SerializeField] private Color gridLineColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+    [SerializeField] private Color playerAreaColor = new Color(0, 1, 0, 0.2f);
+    [SerializeField] private Color enemyAreaColor = new Color(1, 0, 0, 0.2f);
+    
     [Header("Tile Effect Durations")]
     [SerializeField] private float crackedTileDuration = 1.5f; // Duration before a cracked tile auto-repairs
     [SerializeField] private float brokenTileDuration = 2.0f; // Duration before a broken tile auto-repairs
@@ -43,6 +49,70 @@ public class TileGrid : MonoBehaviour
     private TileType[,] originalTileTypes;
 
     private void Awake()
+    {
+        // Initialize the grid
+        InitializeGrid();
+    }
+
+    private void OnValidate()
+    {
+        // Ensure grid dimensions are always positive
+        gridWidth = Mathf.Max(1, gridWidth);
+        gridHeight = Mathf.Max(1, gridHeight);
+        
+        // If the grid is already initialized in play mode, update it
+        if (Application.isPlaying && grid != null)
+        {
+            // Store the current grid state
+            TileType[,] oldGrid = grid;
+            GameObject[,] oldTileObjects = tileObjects;
+            TileType[,] oldOriginalTypes = originalTileTypes;
+            
+            int oldWidth = oldGrid.GetLength(0);
+            int oldHeight = oldGrid.GetLength(1);
+            
+            // Initialize with new dimensions
+            grid = new TileType[gridWidth, gridHeight];
+            tileObjects = new GameObject[gridWidth, gridHeight];
+            originalTileTypes = new TileType[gridWidth, gridHeight];
+            
+            // Copy over the old data where possible
+            for (int x = 0; x < gridWidth; x++)
+            {
+                for (int y = 0; y < gridHeight; y++)
+                {
+                    if (x < oldWidth && y < oldHeight)
+                    {
+                        grid[x, y] = oldGrid[x, y];
+                        tileObjects[x, y] = oldTileObjects[x, y];
+                        originalTileTypes[x, y] = oldOriginalTypes[x, y];
+                    }
+                    else
+                    {
+                        // Create new tiles for expanded grid
+                        CreateTile(new Vector2Int(x, y));
+                    }
+                }
+            }
+            
+            // Clean up any tiles that are now out of bounds
+            for (int x = 0; x < oldWidth; x++)
+            {
+                for (int y = 0; y < oldHeight; y++)
+                {
+                    if (x >= gridWidth || y >= gridHeight)
+                    {
+                        if (oldTileObjects[x, y] != null)
+                        {
+                            Destroy(oldTileObjects[x, y]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private void InitializeGrid()
     {
         // Initialize the grid
         grid = new TileType[gridWidth, gridHeight];
@@ -62,29 +132,34 @@ public class TileGrid : MonoBehaviour
         {
             for (int y = 0; y < gridHeight; y++)
             {
-                Vector3 position = new Vector3(x * tileSize + gridOffset.x, y * tileSize + gridOffset.y, 0);
-                GameObject tile = Instantiate(tilePrefab, position, Quaternion.identity, transform);
-                tile.name = $"Tile_{x}_{y}";
-                
-                SpriteRenderer spriteRenderer = tile.GetComponent<SpriteRenderer>();
-                if (spriteRenderer == null)
-                {
-                    spriteRenderer = tile.AddComponent<SpriteRenderer>();
-                }
-                
-                // All tiles start as empty
-                grid[x, y] = TileType.Empty;
-                originalTileTypes[x, y] = TileType.Empty;
-                spriteRenderer.sprite = tileSet.emptyTileSprite;
-                
-                tileObjects[x, y] = tile;
+                CreateTile(new Vector2Int(x, y));
             }
         }
     }
     
+    private void CreateTile(Vector2Int position)
+    {
+        Vector3 worldPosition = new Vector3(position.x * tileSize + gridOffset.x, position.y * tileSize + gridOffset.y, 0);
+        GameObject tile = Instantiate(tilePrefab, worldPosition, Quaternion.identity, transform);
+        tile.name = $"Tile_{position.x}_{position.y}";
+        
+        SpriteRenderer spriteRenderer = tile.GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null)
+        {
+            spriteRenderer = tile.AddComponent<SpriteRenderer>();
+        }
+        
+        // All tiles start as empty
+        grid[position.x, position.y] = TileType.Empty;
+        originalTileTypes[position.x, position.y] = TileType.Empty;
+        spriteRenderer.sprite = tileSet.emptyTileSprite;
+        
+        tileObjects[position.x, position.y] = tile;
+    }
+    
     private void SetupInitialPositions()
     {
-        // Set left half for player (first 4 columns)
+        // Set left half for player (first half of columns)
         for (int x = 0; x < gridWidth / 2; x++)
         {
             for (int y = 0; y < gridHeight; y++)
@@ -93,7 +168,7 @@ public class TileGrid : MonoBehaviour
             }
         }
         
-        // Set right half for enemy (last 4 columns)
+        // Set right half for enemy (second half of columns)
         for (int x = gridWidth / 2; x < gridWidth; x++)
         {
             for (int y = 0; y < gridHeight; y++)
@@ -326,5 +401,82 @@ public class TileGrid : MonoBehaviour
         int y = Mathf.FloorToInt((worldPosition.y - gridOffset.y) / tileSize);
         
         return new Vector2Int(x, y);
+    }
+    
+    // Draw grid lines in the scene view
+    private void OnDrawGizmos()
+    {
+        if (!showGridInEditor) return;
+        
+        Vector3 startPos = transform.position + new Vector3(gridOffset.x, gridOffset.y, 0);
+        
+        // Draw horizontal grid lines
+        for (int y = 0; y <= gridHeight; y++)
+        {
+            Vector3 lineStart = startPos + new Vector3(0, y * tileSize, 0);
+            Vector3 lineEnd = startPos + new Vector3(gridWidth * tileSize, y * tileSize, 0);
+            Gizmos.color = gridLineColor;
+            Gizmos.DrawLine(lineStart, lineEnd);
+        }
+        
+        // Draw vertical grid lines
+        for (int x = 0; x <= gridWidth; x++)
+        {
+            Vector3 lineStart = startPos + new Vector3(x * tileSize, 0, 0);
+            Vector3 lineEnd = startPos + new Vector3(x * tileSize, gridHeight * tileSize, 0);
+            Gizmos.color = gridLineColor;
+            Gizmos.DrawLine(lineStart, lineEnd);
+        }
+        
+        // Draw player area and enemy area if not in play mode
+        if (!Application.isPlaying)
+        {
+            // Player area (left half)
+            Vector3 playerAreaStart = startPos;
+            Vector3 playerAreaSize = new Vector3(gridWidth * tileSize / 2, gridHeight * tileSize, 0.1f);
+            Gizmos.color = playerAreaColor;
+            Gizmos.DrawCube(playerAreaStart + playerAreaSize / 2, playerAreaSize);
+            
+            // Enemy area (right half)
+            Vector3 enemyAreaStart = startPos + new Vector3(gridWidth * tileSize / 2, 0, 0);
+            Vector3 enemyAreaSize = new Vector3(gridWidth * tileSize / 2, gridHeight * tileSize, 0.1f);
+            Gizmos.color = enemyAreaColor;
+            Gizmos.DrawCube(enemyAreaStart + enemyAreaSize / 2, enemyAreaSize);
+        }
+        
+        // Draw tile types if in play mode
+        if (Application.isPlaying && grid != null)
+        {
+            for (int x = 0; x < gridWidth; x++)
+            {
+                for (int y = 0; y < gridHeight; y++)
+                {
+                    Vector3 tileCenter = startPos + new Vector3(x * tileSize + tileSize / 2, y * tileSize + tileSize / 2, 0);
+                    Vector3 tileSize3D = new Vector3(tileSize * 0.8f, tileSize * 0.8f, 0.1f);
+                    
+                    // Color based on tile type
+                    switch (grid[x, y])
+                    {
+                        case TileType.Player:
+                            Gizmos.color = new Color(0, 1, 0, 0.3f); // Green
+                            break;
+                        case TileType.Enemy:
+                            Gizmos.color = new Color(1, 0, 0, 0.3f); // Red
+                            break;
+                        case TileType.Empty:
+                            Gizmos.color = new Color(0.7f, 0.7f, 0.7f, 0.3f); // Gray
+                            break;
+                        case TileType.Cracked:
+                            Gizmos.color = new Color(1, 1, 0, 0.3f); // Yellow
+                            break;
+                        case TileType.Broken:
+                            Gizmos.color = new Color(0, 0, 0, 0.3f); // Black
+                            break;
+                    }
+                    
+                    Gizmos.DrawCube(tileCenter, tileSize3D);
+                }
+            }
+        }
     }
 }

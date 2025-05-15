@@ -6,6 +6,7 @@ namespace SkillSystem
     {
         [Header("Bullet Properties")]
         [SerializeField] private int damage = 10;
+        [SerializeField] private float speed = 10f;
         [SerializeField] private float lifetime = 2f;
         [SerializeField] private float stunDuration = 3f;
         [SerializeField] private string targetTag = "Enemy";
@@ -13,18 +14,20 @@ namespace SkillSystem
         [Header("Visual Effects")]
         [SerializeField] private TrailRenderer trailRenderer;
         [SerializeField] private ParticleSystem hitEffect;
+        [SerializeField] private float fadeOutTime = 0.1f;
         
-        private Rigidbody2D rb;
+        // Reference to tile grid for position checks
+        private TileGrid tileGrid;
+        private Vector2Int currentGridPosition;
+        private bool isDestroying = false;
         
         private void Awake()
         {
-            // Get or add rigidbody component
-            rb = GetComponent<Rigidbody2D>();
-            if (rb == null)
+            // Get reference to the TileGrid in the scene
+            tileGrid = FindObjectOfType<TileGrid>();
+            if (tileGrid == null)
             {
-                rb = gameObject.AddComponent<Rigidbody2D>();
-                rb.gravityScale = 0f; // No gravity
-                rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+                Debug.LogError("TileGrid not found in scene!");
             }
             
             // Add collider if not present
@@ -38,21 +41,72 @@ namespace SkillSystem
         
         private void Start()
         {
-            // Destroy after lifetime
+            // Set initial grid position
+            if (tileGrid != null)
+            {
+                currentGridPosition = tileGrid.GetGridPosition(transform.position);
+            }
+            
+            // Destroy after lifetime as a fallback
             Destroy(gameObject, lifetime);
         }
         
-        public void Initialize(Vector2 direction, float speed, int damage, float stunTime)
+        private void Update()
         {
-            this.damage = damage;
+            if (isDestroying) return;
+            
+            // Move the bullet straight to the right
+            transform.Translate(Vector3.right * speed * Time.deltaTime, Space.World);
+            
+            if (tileGrid != null)
+            {
+                // Check if we've moved to a new grid position
+                Vector2Int newGridPosition = tileGrid.GetGridPosition(transform.position);
+                
+                // If we changed grid cells, check for hits and boundaries
+                if (newGridPosition != currentGridPosition)
+                {
+                    currentGridPosition = newGridPosition;
+                    
+                    // Check if bullet has gone past the rightmost grid
+                    CheckIfPastRightmostGrid();
+                }
+            }
+        }
+        
+        public void Initialize(Vector2 direction, float bulletSpeed, int bulletDamage, float stunTime)
+        {
+            // Only use the speed from parameters, direction will always be right
+            this.speed = bulletSpeed;
+            this.damage = bulletDamage;
             this.stunDuration = stunTime;
             
-            // Set velocity
-            rb.linearVelocity = direction.normalized * speed;
+            // Set rotation to face right
+            transform.rotation = Quaternion.identity;
+        }
+        
+        private void CheckIfPastRightmostGrid()
+        {
+            // If we're beyond the rightmost enemy grid column, destroy the bullet
+            if (currentGridPosition.x >= tileGrid.gridWidth)
+            {
+                DestroyBullet();
+                return;
+            }
             
-            // Rotate to face direction
-            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-            transform.eulerAngles = new Vector3(0, 0, angle);
+            // If we're in an invalid position, destroy the bullet
+            if (!tileGrid.IsValidGridPosition(currentGridPosition))
+            {
+                DestroyBullet();
+                return;
+            }
+            
+            // Check if we've passed the rightmost enemy column
+            // In your grid setup, enemies occupy the right half of the grid
+            if (currentGridPosition.x > tileGrid.gridWidth - 1)
+            {
+                DestroyBullet();
+            }
         }
         
         private void OnTriggerEnter2D(Collider2D other)
@@ -78,43 +132,53 @@ namespace SkillSystem
                 }
                 
                 // Destroy bullet
-                Destroy(gameObject);
+                DestroyBullet();
             }
         }
         
-        // Optional method to stop the bullet from the outside (e.g., hitting walls)
-        public void Stop(bool createEffect = true)
+        private void DestroyBullet()
         {
-            rb.linearVelocity = Vector2.zero;
+            if (isDestroying) return;
+            isDestroying = true;
             
-            // Disable collider
+            // Disable collider if present
             Collider2D collider = GetComponent<Collider2D>();
             if (collider != null)
             {
                 collider.enabled = false;
             }
             
-            // Disable sprite renderer
-            SpriteRenderer renderer = GetComponent<SpriteRenderer>();
-            if (renderer != null)
+            // Start fade-out animation
+            StartCoroutine(FadeOutAndDestroy());
+        }
+        
+        private System.Collections.IEnumerator FadeOutAndDestroy()
+        {
+            float startAlpha = 1f;
+            float elapsedTime = 0;
+            
+            // Get sprite renderer (if any)
+            SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+            
+            // Fade out the sprite
+            while (elapsedTime < fadeOutTime)
             {
-                renderer.enabled = false;
+                elapsedTime += Time.deltaTime;
+                float alpha = Mathf.Lerp(startAlpha, 0f, elapsedTime / fadeOutTime);
+                
+                // Apply alpha if sprite renderer exists
+                if (spriteRenderer != null)
+                {
+                    Color color = spriteRenderer.color;
+                    color.a = alpha;
+                    spriteRenderer.color = color;
+                }
+                
+                yield return null;
             }
             
-            // Stop trail
-            if (trailRenderer != null)
-            {
-                trailRenderer.emitting = false;
-            }
-            
-            // Spawn hit effect if available
-            if (createEffect && hitEffect != null)
-            {
-                Instantiate(hitEffect, transform.position, Quaternion.identity);
-            }
-            
-            // Destroy after a short delay to allow effects to finish
-            Destroy(gameObject, 0.5f);
+            // Destroy the gameObject
+            Destroy(gameObject);
         }
     }
 }
