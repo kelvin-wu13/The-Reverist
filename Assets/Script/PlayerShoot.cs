@@ -10,13 +10,14 @@ public class PlayerShoot : MonoBehaviour
     [SerializeField] private Transform bulletSpawnPoint;
     [SerializeField] private TileGrid tileGrid;
     [SerializeField] private Animator animator;
+    [SerializeField] private PlayerMovement playerMovement; // Reference to player movement to get grid position
     
     // Animation parameter hash for better performance
     private readonly int isShootingParam = Animator.StringToHash("IsShooting");
 
     private float lastShootTime;
     private bool isHoldingFireButton = false;
-    private Vector2 shootDirection = Vector2.right; // Default shoot direction
+    private Vector2 shootDirection = Vector2.right; // Default shoot direction - always to the right
     
     private void Awake()
     {   
@@ -36,6 +37,12 @@ public class PlayerShoot : MonoBehaviour
         if (animator == null)
         {
             animator = GetComponent<Animator>();
+        }
+        
+        // Try to get player movement if not assigned in the inspector
+        if (playerMovement == null)
+        {
+            playerMovement = GetComponent<PlayerMovement>();
         }
         
         // Validate that we have stats
@@ -80,23 +87,49 @@ public class PlayerShoot : MonoBehaviour
             animator.SetTrigger(isShootingParam);
         }
         
-        // Shoot the bullet in the current shoot direction
-        ShootBullet(shootDirection);
+        // Always shoot to the right (along x-axis)
+        ShootBulletFromCurrentTile();
         
         // Update the last shoot time
         lastShootTime = Time.time;
     }
 
-    public void ShootBullet(Vector2 direction)
+    private void ShootBulletFromCurrentTile()
     {
-        // Create the bullet
-        GameObject bulletObject = Instantiate(bulletPrefab, bulletSpawnPoint.position, Quaternion.identity);
+        // Get the current grid position from the player movement component
+        Vector2Int currentGridPosition = Vector2Int.zero;
+        
+        // If we have the player movement component, get the position from there
+        if (playerMovement != null)
+        {
+            // Get the grid position from the PlayerMovement component
+            // We need to add a public method to access this from PlayerMovement
+            currentGridPosition = playerMovement.GetCurrentGridPosition();
+        }
+        else
+        {
+            // Fallback: calculate grid position from transform position
+            currentGridPosition = tileGrid.GetGridPosition(transform.position);
+        }
+        
+        // Calculate spawn position - use the right edge of the current tile
+        Vector3 tileWorldPos = tileGrid.GetWorldPosition(currentGridPosition);
+        float tileWidth = tileGrid.GetTileWidth();
+        Vector3 spawnPosition = new Vector3(
+            tileWorldPos.x + tileWidth,
+            tileWorldPos.y + (tileGrid.GetTileHeight() / 2),
+            0
+        );
+        
+        // Create the bullet at the spawn position
+        GameObject bulletObject = Instantiate(bulletPrefab, spawnPosition, Quaternion.identity);
         
         // Get and configure the bullet component
         Bullet bullet = bulletObject.GetComponent<Bullet>();
         if (bullet != null)
         {
-            bullet.Initialize(direction, stats.BulletSpeed, stats.BulletDamage, tileGrid);
+            // Always shoot straight to the right
+            bullet.Initialize(Vector2.right, stats.BulletSpeed, stats.BulletDamage, tileGrid);
         }
         else
         {

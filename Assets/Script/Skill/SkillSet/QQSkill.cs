@@ -12,17 +12,22 @@ namespace SkillSystem
         [SerializeField] private int damage = 20;
         [SerializeField] private GameObject projectilePrefab;
         [SerializeField] private GameObject explosionEffectPrefab;
-        [SerializeField] private float explosionEffectDuration;
+        [SerializeField] private float explosionEffectDuration = 1.0f;
+        
+        [Header("Grid-Based Settings")]
+        [SerializeField] private bool useGridBasedShooting = true; // Toggle for grid-based or direct shooting
         
         private GameObject activeProjectile;
         private bool isProjectileFired = false;
         private Vector3 direction;
         private TileGrid tileGrid;
         private Vector2Int currentGridPosition;
+        private PlayerMovement playerMovement;
 
         private void Awake()
         {
             FindTileGrid();
+            FindPlayerMovement();
         }
 
         private void FindTileGrid()
@@ -37,15 +42,66 @@ namespace SkillSystem
                 }
             }
         }
+        
+        private void FindPlayerMovement()
+        {
+            if (playerMovement == null)
+            {
+                playerMovement = FindObjectOfType<PlayerMovement>();
+                if (playerMovement == null)
+                {
+                    Debug.LogWarning("QQSkill: Could not find PlayerMovement in the scene. Grid-based targeting may not work correctly.");
+                }
+            }
+        }
 
         // Override the parent class's method
         public override void ExecuteSkillEffect(Vector2Int targetPosition, Transform casterTransform)
         {
-            //Find the grid
+            // Find the grid
             FindTileGrid();
 
-            // Fire the projectile from the caster position toward the target position
-            FireProjectile(casterTransform.position, targetPosition);
+            if (useGridBasedShooting && playerMovement != null)
+            {
+                // Use grid-based shooting (shoot along the grid row)
+                FireGridBasedProjectile(casterTransform);
+            }
+            else
+            {
+                // Use the original targeting method (shoot toward a specific target position)
+                FireProjectile(casterTransform.position, targetPosition);
+            }
+        }
+        
+        private void FireGridBasedProjectile(Transform casterTransform)
+        {
+            // Get the player's current grid position
+            Vector2Int playerGridPos = playerMovement.GetCurrentGridPosition();
+            
+            // Calculate spawn position - on the right edge of the current tile
+            Vector3 tileWorldPos = tileGrid.GetWorldPosition(playerGridPos);
+            float tileWidth = tileGrid.GetTileWidth();
+            Vector3 spawnPosition = new Vector3(
+                tileWorldPos.x + tileWidth,
+                tileWorldPos.y + (tileGrid.GetTileHeight() / 2),
+                0
+            );
+            
+            // Always shoot to the right
+            direction = Vector3.right;
+            
+            // Instantiate projectile
+            activeProjectile = Instantiate(projectilePrefab, spawnPosition, Quaternion.identity);
+            
+            // Set the projectile's forward direction to match the firing direction
+            activeProjectile.transform.up = direction;
+            
+            isProjectileFired = true;
+            
+            // Set initial grid position for the projectile
+            currentGridPosition = tileGrid.GetGridPosition(activeProjectile.transform.position);
+            
+            Debug.Log($"QQ Skill: Fired grid-based projectile from player tile {playerGridPos}");
         }
 
         private void FireProjectile(Vector3 startPosition, Vector2Int targetGridPosition)
@@ -62,7 +118,6 @@ namespace SkillSystem
             
             // Calculate direction
             direction = (targetPosition - startPosition).normalized;
-            
             
             // Instantiate projectile
             activeProjectile = Instantiate(projectilePrefab, startPosition, Quaternion.identity);
@@ -85,28 +140,64 @@ namespace SkillSystem
                 // Move projectile
                 activeProjectile.transform.position += direction * projectileSpeed * Time.deltaTime;
                 
-                // Check for collision with enemies
-                Collider2D[] hits = Physics2D.OverlapCircleAll(activeProjectile.transform.position, 0.2f);
-                foreach (Collider2D hit in hits)
+                // Get the current grid position
+                Vector2Int newGridPosition = tileGrid.GetGridPosition(activeProjectile.transform.position);
+                
+                // Check if we've moved to a new grid cell
+                if (newGridPosition != currentGridPosition)
                 {
-                    if (hit.CompareTag("Enemy"))
+                    currentGridPosition = newGridPosition;
+                    
+                    // Check if the projectile is in enemy territory
+                    if (IsEnemyTilePosition(currentGridPosition))
                     {
-                        // Hit an enemy, trigger explosion at its grid position
-                        Vector2Int enemyGridPosition = tileGrid.GetGridPosition(hit.transform.position);
-                        ExplodeAtGridPosition(enemyGridPosition);
+                        // Check for enemies at this position
+                        CheckForEnemyHit(currentGridPosition);
+                    }
+                    
+                    // Check if projectile has gone past the rightmost grid
+                    if (currentGridPosition.x >= tileGrid.gridWidth)
+                    {
                         Destroy(activeProjectile);
                         isProjectileFired = false;
-                        break;
                     }
                 }
                 
-                // Destroy projectile if it goes too far
+                // Destroy projectile if it goes too far (failsafe)
                 if (Vector3.Distance(transform.position, activeProjectile.transform.position) > 50f)
                 {
                     Destroy(activeProjectile);
                     isProjectileFired = false;
                 }
             }
+        }
+        
+        private void CheckForEnemyHit(Vector2Int gridPosition)
+        {
+            // Get world position of this tile's center
+            Vector3 tileWorldPos = tileGrid.GetWorldPosition(gridPosition);
+            
+            // Get all colliders at this tile position
+            Collider2D[] hitColliders = Physics2D.OverlapCircleAll(tileWorldPos, 0.4f);
+            
+            foreach (Collider2D collider in hitColliders)
+            {
+                if (collider.CompareTag("Enemy"))
+                {
+                    // Hit an enemy, trigger explosion at its grid position
+                    ExplodeAtGridPosition(gridPosition);
+                    Destroy(activeProjectile);
+                    isProjectileFired = false;
+                    break;
+                }
+            }
+        }
+        
+        private bool IsEnemyTilePosition(Vector2Int gridPosition)
+        {
+            // Based on your TileGrid.cs, enemy tiles are on the right half
+            return tileGrid.IsValidGridPosition(gridPosition) && 
+                   gridPosition.x >= tileGrid.gridWidth / 2;
         }
         
         private void ExplodeAtGridPosition(Vector2Int centerGridPosition)
@@ -127,7 +218,6 @@ namespace SkillSystem
             else
             {
                 explosionEffect = Instantiate(explosionEffectPrefab, worldPosition, Quaternion.identity);
-
                 Destroy(explosionEffect, explosionEffectDuration);
             }
             
@@ -204,12 +294,11 @@ namespace SkillSystem
             // Shape module
             var shape = particles.shape;
             shape.shapeType = ParticleSystemShapeType.Circle;
-            shape.radius = explosionTileRadius * tileGrid.gridWidth / 8f; // Approximate radius based on tile size
             
             float safeRadius = explosionTileRadius;
             if (tileGrid != null)
             {
-                safeRadius = explosionTileRadius * tileGrid.gridWidth / 8f;
+                safeRadius = explosionTileRadius * tileGrid.GetTileWidth();
             }
             shape.radius = safeRadius;
             

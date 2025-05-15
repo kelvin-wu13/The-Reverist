@@ -16,6 +16,9 @@ public class Enemy : MonoBehaviour
     [SerializeField] private bool isMoving = false;
     [SerializeField] private bool isStunned = false;
     [SerializeField] private LayerMask obstacleLayer; // Layer for collision detection
+    
+    [Header("Position Offset")]
+    [SerializeField] private Vector2 positionOffset = Vector2.zero; // Added position offset
 
     [Header("Visual")]
     [SerializeField] private SpriteRenderer spriteRenderer;
@@ -80,7 +83,13 @@ public class Enemy : MonoBehaviour
 
         currentGridPosition = tileGrid.GetGridPosition(transform.position);
         targetGridPosition = currentGridPosition; // Initialize as current position
-        targetPosition = transform.position;
+        
+        // Apply position offset to target position
+        Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
+        targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
+        
+        // Set initial position with offset
+        transform.position = targetPosition;
         
         // Reserve the current position
         ReserveGridPosition(currentGridPosition);
@@ -177,9 +186,11 @@ public class Enemy : MonoBehaviour
                 // Reserve the new position
                 ReserveGridPosition(newPosition);
                 
-                // Update target position
+                // Update target position with offset
                 targetGridPosition = newPosition;
-                targetPosition = tileGrid.GetWorldPosition(targetGridPosition);
+                Vector3 basePosition = tileGrid.GetWorldPosition(targetGridPosition);
+                targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
+                
                 isMoving = true;
                 
                 return; // Successfully moved
@@ -376,5 +387,25 @@ public class Enemy : MonoBehaviour
         //Restore original color
         if (spriteRenderer != null && !isDying)
             spriteRenderer.color = originalColor;
+    }
+    
+    // Method to set position offset at runtime
+    public void SetPositionOffset(Vector2 newOffset)
+    {
+        positionOffset = newOffset;
+        
+        // Update current position with new offset if not moving
+        if (!isMoving)
+        {
+            Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
+            targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
+            transform.position = targetPosition;
+        }
+    }
+    
+    // Method to get current position offset
+    public Vector2 GetPositionOffset()
+    {
+        return positionOffset;
     }
 }

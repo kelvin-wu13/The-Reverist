@@ -15,14 +15,23 @@ public class PlayerMovement : MonoBehaviour
     private readonly int directionXParam = Animator.StringToHash("DirectionX");
     private readonly int directionYParam = Animator.StringToHash("DirectionY");
     
+    [Header("Position Offset")]
+    [SerializeField] private Vector2 positionOffset = new Vector2(0.5f, 0.5f); // Offset to center character on tile
+    
     private bool isMoving = false;
     private Vector2Int currentGridPosition = new Vector2Int(0, 0);
     private Vector2Int lastDirection = Vector2Int.down; // Default facing direction
     
+    // Public getter for current grid position
+    public Vector2Int GetCurrentGridPosition()
+    {
+        return currentGridPosition;
+    }
+    
     private void Start()
     {
         // Initialize player position
-        transform.position = tileGrid.GetWorldPosition(currentGridPosition);
+        transform.position = GetAdjustedWorldPosition(currentGridPosition);
         
         // If animator wasn't assigned in inspector, try to get it
         if (animator == null)
@@ -88,7 +97,7 @@ public class PlayerMovement : MonoBehaviour
         isMoving = true;
 
         Vector3 startPos = transform.position;
-        Vector3 endPos = tileGrid.GetWorldPosition(targetGridPosition);
+        Vector3 endPos = GetAdjustedWorldPosition(targetGridPosition);
 
         float elapsedTime = 0;
         while (elapsedTime < moveDuration)
@@ -128,5 +137,25 @@ public class PlayerMovement : MonoBehaviour
                 animator.SetFloat(directionYParam, direction.y);
             }
         }
+    }
+    
+    // New method to calculate adjusted world position with offset
+    private Vector3 GetAdjustedWorldPosition(Vector2Int gridPosition)
+    {
+        // Get the base position from TileGrid
+        Vector3 basePosition = tileGrid.GetWorldPosition(gridPosition);
+        
+        // Add the offset to center the character on the tile
+        // The offset is scaled by tile size
+        float tileWidth = tileGrid.GetTileWidth();
+        float tileHeight = tileGrid.GetTileHeight();
+        
+        Vector3 offset = new Vector3(
+            positionOffset.x * tileWidth,
+            positionOffset.y * tileHeight,
+            0f
+        );
+        
+        return basePosition + offset;
     }
 }

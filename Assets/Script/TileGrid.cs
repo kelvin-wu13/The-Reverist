@@ -60,21 +60,32 @@ public class TileGrid : MonoBehaviour
     {
         InitializeGrid();
     }
+    
+    // Add these public getter methods for tile size
+    public float GetTileWidth()
+    {
+        return tileWidth;
+    }
+    
+    public float GetTileHeight()
+    {
+        return tileHeight;
+    }
 
     private void OnValidate()
     {
         // Ensure grid dimensions are always positive
         gridWidth = Mathf.Max(1, gridWidth);
         gridHeight = Mathf.Max(1, gridHeight);
-        
+
         // Ensure tile dimensions are always positive
         tileWidth = Mathf.Max(0.1f, tileWidth);
         tileHeight = Mathf.Max(0.1f, tileHeight);
-        
+
         // Spacing can be zero but not negative
         horizontalSpacing = Mathf.Max(0f, horizontalSpacing);
         verticalSpacing = Mathf.Max(0f, verticalSpacing);
-        
+
         // If the grid is already initialized in play mode, update it
         if (Application.isPlaying && grid != null)
         {

@@ -218,7 +218,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridWidth: 8
   gridHeight: 4
-  tileSize: 1.3
+  tileWidth: 1
+  tileHeight: 1.3
+  horizontalSpacing: 1.12
+  verticalSpacing: 0.4
   showGridInEditor: 1
   gridLineColor: {r: 1, g: 0.95660377, b: 0.95660377, a: 0.5}
   playerAreaColor: {r: 0, g: 1, b: 0.925611, a: 0.2}
@@ -248,6 +251,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &344260778
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 344260779}
+  m_Layer: 0
+  m_Name: PlayerPivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 7148428337604731935, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &344260779
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 344260778}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1573556183}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &368758678
 GameObject:
   m_ObjectHideFlags: 0
@@ -266,7 +300,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &368758679
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -520,7 +554,7 @@ MonoBehaviour:
   spawnOnStart: 1
   useRandomPositions: 1
   tileGrid: {fileID: 334597318}
-  enemyPrefab: {fileID: 4844902712463983382, guid: 2fe3b629969bef44cb009f3340728dd9, type: 3}
+  enemyPrefab: {fileID: 7668810312669118031, guid: 197b203c7426f534d8347a7f37daa4af, type: 3}
   enemyContainer: {fileID: 1585159249}
   specificSpawnPositions: []
 --- !u!4 &1144395321
@@ -638,7 +672,7 @@ Transform:
   m_GameObject: {fileID: 1532281401}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.78, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -671,8 +705,8 @@ Transform:
   m_GameObject: {fileID: 1557569855}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5.99, y: -0.13, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 8.32, y: -0.5099, z: 0}
+  m_LocalScale: {x: 0.8209, y: 0.7214, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1573556183}
@@ -689,11 +723,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd594220cb88ddc409b2a9cff894c54c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerTransform: {fileID: 1573556183}
+  playerTransform: {fileID: 344260779}
   tileGrid: {fileID: 334597318}
-  crosshairVisual: {fileID: 1557569855}
+  crosshairVisual: {fileID: 0}
   distanceFromPlayer: 4
-  crosshairColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
 --- !u!212 &1557569858
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -738,12 +771,12 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 1
-  m_Sprite: {fileID: 479064341, guid: 58793761428e3bb4e82a00424135bef2, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Sprite: {fileID: 21300000, guid: 7ac683a0eaa425647b43413d55378cc4, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.49411765}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 10.8, y: 10.8}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -837,12 +870,13 @@ Transform:
   m_GameObject: {fileID: 1573556180}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.12, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1532281402}
   - {fileID: 1557569856}
+  - {fileID: 344260779}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1573556184
@@ -862,6 +896,7 @@ MonoBehaviour:
   bulletSpawnPoint: {fileID: 1532281402}
   tileGrid: {fileID: 334597318}
   animator: {fileID: 1573556188}
+  playerMovement: {fileID: 0}
 --- !u!114 &1573556186
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -877,6 +912,7 @@ MonoBehaviour:
   moveDuration: 0.1
   tileGrid: {fileID: 334597318}
   animator: {fileID: 1573556188}
+  positionOffset: {x: 0, y: 1}
 --- !u!114 &1573556187
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -958,8 +994,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.34663308, y: -0.24357474}
-  m_Size: {x: 1.690345, y: 2.6700256}
+  m_Offset: {x: -0.16079372, y: -0.4918704}
+  m_Size: {x: 1.3186663, y: 1.7532759}
   m_Direction: 0
 --- !u!50 &1573556191
 Rigidbody2D:

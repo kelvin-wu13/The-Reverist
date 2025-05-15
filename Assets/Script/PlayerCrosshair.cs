@@ -11,7 +11,6 @@ public class PlayerCrosshair : MonoBehaviour
     
     [Header("Settings")]
     [SerializeField] private int distanceFromPlayer = 4;
-    [SerializeField] private Color crosshairColor = Color.yellow;
     
     // Direction tracking
     private Vector2Int playerFacingDirection = Vector2Int.right; // Default facing right
@@ -23,7 +22,7 @@ public class PlayerCrosshair : MonoBehaviour
     {
         if (playerTransform == null)
         {
-            Debug.LogError("PlayerCrosshair: Player Transform reference is missing!");
+            Debug.Log("PlayerCrosshair: Player Transform reference is missing!");
         }
         
         if (tileGrid == null)
@@ -31,22 +30,10 @@ public class PlayerCrosshair : MonoBehaviour
             tileGrid = FindObjectOfType<TileGrid>();
             if (tileGrid == null)
             {
-                Debug.LogError("PlayerCrosshair: Could not find TileGrid in the scene!");
+                Debug.Log("PlayerCrosshair: Could not find TileGrid in the scene!");
             }
         }
         
-        if (crosshairVisual == null)
-        {
-            // Create a visual representation for the crosshair
-            crosshairVisual = new GameObject("CrosshairVisual");
-            crosshairVisual.transform.SetParent(transform);
-            crosshairVisual.transform.localPosition = Vector3.zero;
-            
-            crosshairRenderer = crosshairVisual.AddComponent<SpriteRenderer>();
-            crosshairRenderer.sprite = CreateCrosshairSprite();
-            crosshairRenderer.color = crosshairColor;
-            crosshairRenderer.sortingOrder = 10; // Make sure it's visible above tiles
-        }
         else
         {
             crosshairRenderer = crosshairVisual.GetComponent<SpriteRenderer>();
@@ -63,7 +50,6 @@ public class PlayerCrosshair : MonoBehaviour
     private void Update()
     {
         UpdatePositions();
-        UpdateCrosshairVisual();
     }
     
     private void UpdatePositions()
@@ -78,18 +64,10 @@ public class PlayerCrosshair : MonoBehaviour
         targetGridPosition.y = Mathf.Clamp(targetGridPosition.y, 0, tileGrid.gridHeight - 1);
         
         // Update crosshair world position
-        transform.position = tileGrid.GetWorldPosition(targetGridPosition) + new Vector3(0.5f, 0.5f, 0); // Center in the tile
-    }
-    
-    
-    private void UpdateCrosshairVisual()
-    {
-        // Add a pulsing effect to make the crosshair more visible
-        if (crosshairRenderer != null)
-        {
-            Color color = crosshairRenderer.color;
-            crosshairRenderer.color = color;
-        }
+        // Get the base tile position and add 0.5 to both X and Y to center within the tile
+        Vector3 tileWorldPos = tileGrid.GetWorldPosition(targetGridPosition);
+        Vector3 tileCenterPos = tileWorldPos + new Vector3(-0.05f, -0.01f, 0);
+        transform.position = tileCenterPos;
     }
     
     private Sprite CreateCrosshairSprite()
@@ -151,7 +129,8 @@ public class PlayerCrosshair : MonoBehaviour
     
     public Vector3 GetTargetWorldPosition()
     {
-        return tileGrid.GetWorldPosition(targetGridPosition) + new Vector3(0.5f, 0.5f, 0);
+        // Return the center of the targeted tile
+        return tileGrid.GetWorldPosition(targetGridPosition) + new Vector3(-5f, 0f, 0);
     }
     
     public bool IsCellTargeted(Vector2Int cellPosition)
@@ -166,7 +145,8 @@ public class PlayerCrosshair : MonoBehaviour
         {
             Gizmos.color = new Color(1f, 1f, 0f, 0.5f);
             Vector3 targetPos = tileGrid.GetWorldPosition(targetGridPosition);
-            Gizmos.DrawCube(targetPos + new Vector3(0.5f, 0.5f, 0), new Vector3(1, 1, 0.1f));
+            Vector3 targetCenter = targetPos + new Vector3(0.5f, 0.5f, 0);
+            Gizmos.DrawCube(targetCenter, new Vector3(1, 1, 0.1f));
             
             // Draw a line from player to crosshair
             if (playerTransform != null)
@@ -174,9 +154,19 @@ public class PlayerCrosshair : MonoBehaviour
                 Gizmos.color = new Color(1f, 1f, 0f, 0.2f);
                 Gizmos.DrawLine(
                     playerTransform.position,
-                    targetPos + new Vector3(0.5f, 0.5f, 0)
+                    targetCenter
                 );
             }
+        }
+    }
+    
+    // Method to update the player's facing direction (can be called by input or movement scripts)
+    public void SetPlayerFacingDirection(Vector2Int newDirection)
+    {
+        if (newDirection != Vector2Int.zero)
+        {
+            playerFacingDirection = newDirection;
+            UpdatePositions();
         }
     }
 }
