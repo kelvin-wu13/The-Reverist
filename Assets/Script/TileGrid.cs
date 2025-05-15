@@ -17,8 +17,8 @@ public class TileSet
     public Sprite playerTileSprite;
     public Sprite enemyTileSprite;
     public Sprite emptyTileSprite;
-    public Sprite crackedTileSprite; // Added sprite for cracked tiles
-    public Sprite brokenTileSprite;  // Added sprite for broken tiles
+    public Sprite crackedTileSprite;
+    public Sprite brokenTileSprite;
 }
 
 public class TileGrid : MonoBehaviour
@@ -26,7 +26,12 @@ public class TileGrid : MonoBehaviour
     [Header("Grid Setting")] 
     [SerializeField] public int gridWidth = 8;
     [SerializeField] public int gridHeight = 4;
-    [SerializeField] private float tileSize = 1f;
+    
+    [Header("Tile Size and Spacing")]
+    [SerializeField] private float tileWidth = 1f;
+    [SerializeField] private float tileHeight = 1f;
+    [SerializeField] private float horizontalSpacing = 0.1f;
+    [SerializeField] private float verticalSpacing = 0.1f;
     
     [Header("Grid Visualization")]
     [SerializeField] private bool showGridInEditor = true;
@@ -35,8 +40,8 @@ public class TileGrid : MonoBehaviour
     [SerializeField] private Color enemyAreaColor = new Color(1, 0, 0, 0.2f);
     
     [Header("Tile Effect Durations")]
-    [SerializeField] private float crackedTileDuration = 1.5f; // Duration before a cracked tile auto-repairs
-    [SerializeField] private float brokenTileDuration = 2.0f; // Duration before a broken tile auto-repairs
+    [SerializeField] private float crackedTileDuration = 1.5f;
+    [SerializeField] private float brokenTileDuration = 2.0f;
 
     [Header("Tile Reference")]
     [SerializeField] private GameObject tilePrefab;
@@ -45,12 +50,14 @@ public class TileGrid : MonoBehaviour
     [SerializeField] private Vector2 gridOffset = Vector2.zero;
     public TileType[,] grid;
     private GameObject[,] tileObjects;
-    // Track original tile type to restore correctly after damage
     private TileType[,] originalTileTypes;
+
+    // Calculated total tile size including spacing
+    private float totalTileWidth => tileWidth + horizontalSpacing;
+    private float totalTileHeight => tileHeight + verticalSpacing;
 
     private void Awake()
     {
-        // Initialize the grid
         InitializeGrid();
     }
 
@@ -60,52 +67,76 @@ public class TileGrid : MonoBehaviour
         gridWidth = Mathf.Max(1, gridWidth);
         gridHeight = Mathf.Max(1, gridHeight);
         
+        // Ensure tile dimensions are always positive
+        tileWidth = Mathf.Max(0.1f, tileWidth);
+        tileHeight = Mathf.Max(0.1f, tileHeight);
+        
+        // Spacing can be zero but not negative
+        horizontalSpacing = Mathf.Max(0f, horizontalSpacing);
+        verticalSpacing = Mathf.Max(0f, verticalSpacing);
+        
         // If the grid is already initialized in play mode, update it
         if (Application.isPlaying && grid != null)
         {
-            // Store the current grid state
-            TileType[,] oldGrid = grid;
-            GameObject[,] oldTileObjects = tileObjects;
-            TileType[,] oldOriginalTypes = originalTileTypes;
-            
-            int oldWidth = oldGrid.GetLength(0);
-            int oldHeight = oldGrid.GetLength(1);
-            
-            // Initialize with new dimensions
-            grid = new TileType[gridWidth, gridHeight];
-            tileObjects = new GameObject[gridWidth, gridHeight];
-            originalTileTypes = new TileType[gridWidth, gridHeight];
-            
-            // Copy over the old data where possible
-            for (int x = 0; x < gridWidth; x++)
+            UpdateGridLayout();
+        }
+    }
+    
+    private void UpdateGridLayout()
+    {
+        // Store the current grid state
+        TileType[,] oldGrid = grid;
+        GameObject[,] oldTileObjects = tileObjects;
+        TileType[,] oldOriginalTypes = originalTileTypes;
+        
+        int oldWidth = oldGrid.GetLength(0);
+        int oldHeight = oldGrid.GetLength(1);
+        
+        // Initialize with new dimensions
+        grid = new TileType[gridWidth, gridHeight];
+        tileObjects = new GameObject[gridWidth, gridHeight];
+        originalTileTypes = new TileType[gridWidth, gridHeight];
+        
+        // Copy over the old data where possible
+        for (int x = 0; x < gridWidth; x++)
+        {
+            for (int y = 0; y < gridHeight; y++)
             {
-                for (int y = 0; y < gridHeight; y++)
+                if (x < oldWidth && y < oldHeight)
                 {
-                    if (x < oldWidth && y < oldHeight)
+                    grid[x, y] = oldGrid[x, y];
+                    originalTileTypes[x, y] = oldOriginalTypes[x, y];
+                    
+                    if (oldTileObjects[x, y] != null)
                     {
-                        grid[x, y] = oldGrid[x, y];
+                        // Update position and scale of existing tiles
                         tileObjects[x, y] = oldTileObjects[x, y];
-                        originalTileTypes[x, y] = oldOriginalTypes[x, y];
+                        UpdateTileTransform(new Vector2Int(x, y));
                     }
                     else
                     {
-                        // Create new tiles for expanded grid
+                        // Create tile if it doesn't exist
                         CreateTile(new Vector2Int(x, y));
                     }
                 }
-            }
-            
-            // Clean up any tiles that are now out of bounds
-            for (int x = 0; x < oldWidth; x++)
-            {
-                for (int y = 0; y < oldHeight; y++)
+                else
                 {
-                    if (x >= gridWidth || y >= gridHeight)
+                    // Create new tiles for expanded grid
+                    CreateTile(new Vector2Int(x, y));
+                }
+            }
+        }
+        
+        // Clean up any tiles that are now out of bounds
+        for (int x = 0; x < oldWidth; x++)
+        {
+            for (int y = 0; y < oldHeight; y++)
+            {
+                if (x >= gridWidth || y >= gridHeight)
+                {
+                    if (oldTileObjects[x, y] != null)
                     {
-                        if (oldTileObjects[x, y] != null)
-                        {
-                            Destroy(oldTileObjects[x, y]);
-                        }
+                        Destroy(oldTileObjects[x, y]);
                     }
                 }
             }
@@ -139,9 +170,12 @@ public class TileGrid : MonoBehaviour
     
     private void CreateTile(Vector2Int position)
     {
-        Vector3 worldPosition = new Vector3(position.x * tileSize + gridOffset.x, position.y * tileSize + gridOffset.y, 0);
+        Vector3 worldPosition = GetWorldPosition(position);
         GameObject tile = Instantiate(tilePrefab, worldPosition, Quaternion.identity, transform);
         tile.name = $"Tile_{position.x}_{position.y}";
+        
+        // Scale the tile to match the specified width and height
+        tile.transform.localScale = new Vector3(tileWidth, tileHeight, 1f);
         
         SpriteRenderer spriteRenderer = tile.GetComponent<SpriteRenderer>();
         if (spriteRenderer == null)
@@ -155,6 +189,17 @@ public class TileGrid : MonoBehaviour
         spriteRenderer.sprite = tileSet.emptyTileSprite;
         
         tileObjects[position.x, position.y] = tile;
+    }
+    
+    private void UpdateTileTransform(Vector2Int position)
+    {
+        GameObject tile = tileObjects[position.x, position.y];
+        if (tile != null)
+        {
+            // Update position and scale
+            tile.transform.position = GetWorldPosition(position);
+            tile.transform.localScale = new Vector3(tileWidth, tileHeight, 1f);
+        }
     }
     
     private void SetupInitialPositions()
@@ -392,13 +437,17 @@ public class TileGrid : MonoBehaviour
     
     public Vector3 GetWorldPosition(Vector2Int gridPosition)
     {
-        return new Vector3(gridPosition.x * tileSize + gridOffset.x, gridPosition.y * tileSize + gridOffset.y, 0);
+        // Calculate world position with spacing
+        float x = gridPosition.x * totalTileWidth + gridOffset.x;
+        float y = gridPosition.y * totalTileHeight + gridOffset.y;
+        return new Vector3(x, y, 0);
     }
     
     public Vector2Int GetGridPosition(Vector3 worldPosition)
     {
-        int x = Mathf.FloorToInt((worldPosition.x - gridOffset.x) / tileSize);
-        int y = Mathf.FloorToInt((worldPosition.y - gridOffset.y) / tileSize);
+        // Convert world position to grid position accounting for spacing
+        int x = Mathf.FloorToInt((worldPosition.x - gridOffset.x) / totalTileWidth);
+        int y = Mathf.FloorToInt((worldPosition.y - gridOffset.y) / totalTileHeight);
         
         return new Vector2Int(x, y);
     }
@@ -413,8 +462,9 @@ public class TileGrid : MonoBehaviour
         // Draw horizontal grid lines
         for (int y = 0; y <= gridHeight; y++)
         {
-            Vector3 lineStart = startPos + new Vector3(0, y * tileSize, 0);
-            Vector3 lineEnd = startPos + new Vector3(gridWidth * tileSize, y * tileSize, 0);
+            float yPos = y * totalTileHeight;
+            Vector3 lineStart = startPos + new Vector3(0, yPos, 0);
+            Vector3 lineEnd = startPos + new Vector3(gridWidth * totalTileWidth, yPos, 0);
             Gizmos.color = gridLineColor;
             Gizmos.DrawLine(lineStart, lineEnd);
         }
@@ -422,8 +472,9 @@ public class TileGrid : MonoBehaviour
         // Draw vertical grid lines
         for (int x = 0; x <= gridWidth; x++)
         {
-            Vector3 lineStart = startPos + new Vector3(x * tileSize, 0, 0);
-            Vector3 lineEnd = startPos + new Vector3(x * tileSize, gridHeight * tileSize, 0);
+            float xPos = x * totalTileWidth;
+            Vector3 lineStart = startPos + new Vector3(xPos, 0, 0);
+            Vector3 lineEnd = startPos + new Vector3(xPos, gridHeight * totalTileHeight, 0);
             Gizmos.color = gridLineColor;
             Gizmos.DrawLine(lineStart, lineEnd);
         }
@@ -433,13 +484,13 @@ public class TileGrid : MonoBehaviour
         {
             // Player area (left half)
             Vector3 playerAreaStart = startPos;
-            Vector3 playerAreaSize = new Vector3(gridWidth * tileSize / 2, gridHeight * tileSize, 0.1f);
+            Vector3 playerAreaSize = new Vector3(gridWidth * totalTileWidth / 2, gridHeight * totalTileHeight, 0.1f);
             Gizmos.color = playerAreaColor;
             Gizmos.DrawCube(playerAreaStart + playerAreaSize / 2, playerAreaSize);
             
             // Enemy area (right half)
-            Vector3 enemyAreaStart = startPos + new Vector3(gridWidth * tileSize / 2, 0, 0);
-            Vector3 enemyAreaSize = new Vector3(gridWidth * tileSize / 2, gridHeight * tileSize, 0.1f);
+            Vector3 enemyAreaStart = startPos + new Vector3(gridWidth * totalTileWidth / 2, 0, 0);
+            Vector3 enemyAreaSize = new Vector3(gridWidth * totalTileWidth / 2, gridHeight * totalTileHeight, 0.1f);
             Gizmos.color = enemyAreaColor;
             Gizmos.DrawCube(enemyAreaStart + enemyAreaSize / 2, enemyAreaSize);
         }
@@ -451,8 +502,9 @@ public class TileGrid : MonoBehaviour
             {
                 for (int y = 0; y < gridHeight; y++)
                 {
-                    Vector3 tileCenter = startPos + new Vector3(x * tileSize + tileSize / 2, y * tileSize + tileSize / 2, 0);
-                    Vector3 tileSize3D = new Vector3(tileSize * 0.8f, tileSize * 0.8f, 0.1f);
+                    Vector3 tilePos = GetWorldPosition(new Vector2Int(x, y));
+                    Vector3 tileCenter = tilePos + new Vector3(tileWidth / 2, tileHeight / 2, 0);
+                    Vector3 tileSize3D = new Vector3(tileWidth * 0.8f, tileHeight * 0.8f, 0.1f);
                     
                     // Color based on tile type
                     switch (grid[x, y])

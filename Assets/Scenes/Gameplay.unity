@@ -232,7 +232,7 @@ MonoBehaviour:
     emptyTileSprite: {fileID: 0}
     crackedTileSprite: {fileID: 781061624, guid: 58793761428e3bb4e82a00424135bef2, type: 3}
     brokenTileSprite: {fileID: 1692011548, guid: 58793761428e3bb4e82a00424135bef2, type: 3}
-  gridOffset: {x: 2, y: 0}
+  gridOffset: {x: 0, y: 0}
 --- !u!4 &334597319
 Transform:
   m_ObjectHideFlags: 0
