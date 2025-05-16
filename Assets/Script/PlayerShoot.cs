@@ -13,8 +13,13 @@ public class PlayerShoot : MonoBehaviour
     [SerializeField] private PlayerMovement playerMovement; // Reference to player movement to get grid position
     
     // Animation parameter hash for better performance
+    private readonly int ComboIndex = Animator.StringToHash("ComboIndex");
     private readonly int isShootingParam = Animator.StringToHash("IsShooting");
+    [SerializeField] private int comboAmount = 3;
 
+    private float Time_elapsed;
+    [SerializeField] private float WaitTime = 1.5f;
+    private int currentComboIndex = 0;
     private float lastShootTime;
     private bool isHoldingFireButton = false;
     private Vector2 shootDirection = Vector2.right; // Default shoot direction - always to the right
@@ -63,42 +68,60 @@ public class PlayerShoot : MonoBehaviour
         {
             isHoldingFireButton = false;
         }
-        
-        if(isHoldingFireButton)
+
+        if (isHoldingFireButton)
         {
             TryShoot();
         }
+
+        UpdateShootTimer();
+        animator.SetBool(isShootingParam, isHoldingFireButton);
     }
 
     private void TryShoot()
     {
         // Make sure we have stats
         if (stats == null) return;
-        
+
         // Check if cooldown has passed
         if (Time.time - lastShootTime < stats.ShootCooldown)
         {
             return;
         }
 
+        currentComboIndex++;
+        if (currentComboIndex > comboAmount)
+        {
+            currentComboIndex = 1;
+        }
+
         // Play shooting animation
         if (animator != null)
         {
-            animator.SetTrigger(isShootingParam);
+            animator.SetInteger(ComboIndex, currentComboIndex);
         }
-        
+
         // Always shoot to the right (along x-axis)
         ShootBulletFromCurrentTile();
-        
+
         // Update the last shoot time
         lastShootTime = Time.time;
+    }
+
+    private void UpdateShootTimer()
+    {
+        Time_elapsed += Time.deltaTime;
+        if (Time_elapsed >= WaitTime)
+        {
+            currentComboIndex = 0;
+        }
     }
 
     private void ShootBulletFromCurrentTile()
     {
         // Get the current grid position from the player movement component
         Vector2Int currentGridPosition = Vector2Int.zero;
-        
+
         // If we have the player movement component, get the position from there
         if (playerMovement != null)
         {
@@ -111,7 +134,7 @@ public class PlayerShoot : MonoBehaviour
             // Fallback: calculate grid position from transform position
             currentGridPosition = tileGrid.GetGridPosition(transform.position);
         }
-        
+
         // Calculate spawn position - use the right edge of the current tile
         Vector3 tileWorldPos = tileGrid.GetWorldPosition(currentGridPosition);
         float tileWidth = tileGrid.GetTileWidth();
@@ -120,10 +143,11 @@ public class PlayerShoot : MonoBehaviour
             tileWorldPos.y + (tileGrid.GetTileHeight() / 2),
             0
         );
-        
+
         // Create the bullet at the spawn position
         GameObject bulletObject = Instantiate(bulletPrefab, spawnPosition, Quaternion.identity);
-        
+        Time_elapsed = 0;
+
         // Get and configure the bullet component
         Bullet bullet = bulletObject.GetComponent<Bullet>();
         if (bullet != null)
