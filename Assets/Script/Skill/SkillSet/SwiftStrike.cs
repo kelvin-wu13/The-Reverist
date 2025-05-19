@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace SkillSystem
 {
-    public class WWSkill : Skill
+    public class SwiftStrike : Skill
     {
         [Header("Dash Settings")]
         [SerializeField] private float dashDuration = 0.3f;

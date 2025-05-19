@@ -4,30 +4,35 @@ using System.Collections.Generic;
 
 namespace SkillSystem
 {
-    public class QQSkill : Skill
+    public class IonBolt : Skill
     {
-        [Header("QQ Skill Settings")]
+        [Header("IonBolt Skill Settings")]
         [SerializeField] private float projectileSpeed = 10f;
         [SerializeField] private int explosionTileRadius = 1; // Number of tiles in each direction from center
         [SerializeField] private int damage = 20;
         [SerializeField] private GameObject projectilePrefab;
         [SerializeField] private GameObject explosionEffectPrefab;
         [SerializeField] private float explosionEffectDuration = 1.0f;
-        
+        [SerializeField] private float manaCost = 1.5f; // Mana cost for casting this skill
+        [SerializeField] public float cooldownDuration = 1.5f; // Cooldown duration in seconds - make public so SkillCast can access it
+
         [Header("Grid-Based Settings")]
         [SerializeField] private bool useGridBasedShooting = true; // Toggle for grid-based or direct shooting
         
         private GameObject activeProjectile;
         private bool isProjectileFired = false;
+        private bool isOnCooldown = false;
         private Vector3 direction;
         private TileGrid tileGrid;
         private Vector2Int currentGridPosition;
         private PlayerMovement playerMovement;
+        private PlayerStats playerStats;
 
         private void Awake()
         {
             FindTileGrid();
             FindPlayerMovement();
+            FindPlayerStats();
         }
 
         private void FindTileGrid()
@@ -54,30 +59,69 @@ namespace SkillSystem
                 }
             }
         }
+        
+        private void FindPlayerStats()
+        {
+            if (playerStats == null)
+            {
+                playerStats = FindObjectOfType<PlayerStats>();
+                if (playerStats == null)
+                {
+                    Debug.LogWarning("QQSkill: Could not find PlayerStats in the scene. Mana consumption will not work correctly.");
+                }
+            }
+        }
 
         // Override the parent class's method
         public override void ExecuteSkillEffect(Vector2Int targetPosition, Transform casterTransform)
         {
-            // Find the grid
+            // Find the grid and player stats if not already found
             FindTileGrid();
+            FindPlayerStats();
 
-            if (useGridBasedShooting && playerMovement != null)
+             // Check if skill is on cooldown
+            if (isOnCooldown)
             {
-                // Use grid-based shooting (shoot along the grid row)
-                FireGridBasedProjectile(casterTransform);
+                Debug.Log("IonBolt is on cooldown!");
+                return;
+            }
+
+
+            // Check if player has enough mana
+            if (playerStats == null || playerStats.TryUseMana(Mathf.CeilToInt(manaCost)))
+            {
+                if (useGridBasedShooting && playerMovement != null)
+                {
+                    // Use grid-based shooting (shoot along the grid row)
+                    FireGridBasedProjectile(casterTransform);
+                    StartCoroutine(StartCooldown());
+                }
+                else
+                {
+                    // Use the original targeting method (shoot toward a specific target position)
+                    FireProjectile(casterTransform.position, targetPosition);
+                    StartCoroutine(StartCooldown());
+                }
             }
             else
             {
-                // Use the original targeting method (shoot toward a specific target position)
-                FireProjectile(casterTransform.position, targetPosition);
+                Debug.Log("QQ Skill: Not enough mana to cast!");
             }
+        }
+        
+        private IEnumerator StartCooldown()
+        {
+            isOnCooldown = true;
+            yield return new WaitForSeconds(cooldownDuration);
+            isOnCooldown = false;
+            Debug.Log("PlasmaSurge cooldown finished!");
         }
         
         private void FireGridBasedProjectile(Transform casterTransform)
         {
             // Get the player's current grid position
             Vector2Int playerGridPos = playerMovement.GetCurrentGridPosition();
-            
+
             // Calculate spawn position - on the right edge of the current tile
             Vector3 tileWorldPos = tileGrid.GetWorldPosition(playerGridPos);
             float tileWidth = tileGrid.GetTileWidth();
@@ -86,21 +130,21 @@ namespace SkillSystem
                 tileWorldPos.y + (tileGrid.GetTileHeight() / 2),
                 0
             );
-            
+
             // Always shoot to the right
             direction = Vector3.right;
-            
+
             // Instantiate projectile
             activeProjectile = Instantiate(projectilePrefab, spawnPosition, Quaternion.identity);
-            
+
             // Set the projectile's forward direction to match the firing direction
             activeProjectile.transform.up = direction;
-            
+
             isProjectileFired = true;
-            
+
             // Set initial grid position for the projectile
             currentGridPosition = tileGrid.GetGridPosition(activeProjectile.transform.position);
-            
+
             Debug.Log($"QQ Skill: Fired grid-based projectile from player tile {playerGridPos}");
         }
 

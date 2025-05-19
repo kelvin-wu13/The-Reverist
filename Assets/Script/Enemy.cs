@@ -132,7 +132,7 @@ public class Enemy : MonoBehaviour
         }
         
         // Handle shooting
-        if (!isStunned && !isDying)
+        if (!isDying)
         {
             shootTimer -= Time.deltaTime;
             

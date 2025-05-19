@@ -235,6 +235,7 @@ MonoBehaviour:
     emptyTileSprite: {fileID: 0}
     crackedTileSprite: {fileID: 781061624, guid: 58793761428e3bb4e82a00424135bef2, type: 3}
     brokenTileSprite: {fileID: 1692011548, guid: 58793761428e3bb4e82a00424135bef2, type: 3}
+  tileRenderingLayer: 0
   gridOffset: {x: 0, y: 0}
 --- !u!4 &334597319
 Transform:
@@ -896,7 +897,9 @@ MonoBehaviour:
   bulletSpawnPoint: {fileID: 1532281402}
   tileGrid: {fileID: 334597318}
   animator: {fileID: 1573556188}
-  playerMovement: {fileID: 0}
+  playerMovement: {fileID: 1573556186}
+  comboAmount: 3
+  WaitTime: 1.5
 --- !u!114 &1573556186
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -927,15 +930,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   crosshair: {fileID: 1557569857}
   tileGrid: {fileID: 334597318}
-  skillQQPrefab: {fileID: 7857377519010454379, guid: 65375e5fff78f2a41b9c30bfa03903c6, type: 3}
-  skillQEPrefab: {fileID: 186632132335026699, guid: d8fc575de34caa44a962c43647a7210e, type: 3}
-  skillQWPrefab: {fileID: 7670841722180877047, guid: 51737f717feeea44db11cfdaa99b1422, type: 3}
-  skillEEPrefab: {fileID: 2937717139180138505, guid: 243132003c6c363478ea2747fd218f02, type: 3}
-  skillEQPrefab: {fileID: 2888201447304451437, guid: 8241b57c21d1103458f06493654f6351, type: 3}
-  skillEWPrefab: {fileID: 6201362687822346803, guid: c49f31833769b4c409b1c29b665bb6e8, type: 3}
-  skillWWPrefab: {fileID: 7790877365476529809, guid: 050ba40bd18a00c4f86936122d7a418f, type: 3}
-  skillWQPrefab: {fileID: 6941465084218670886, guid: 12c1fc04740146a498097f8d7455815e, type: 3}
-  skillWEPrefab: {fileID: 8149464009382204992, guid: 80aa086379139b24cb716b01f9912c4b, type: 3}
+  IonBoltPrefab: {fileID: 7857377519010454379, guid: 65375e5fff78f2a41b9c30bfa03903c6, type: 3}
+  PulseFallPrefab: {fileID: 186632132335026699, guid: d8fc575de34caa44a962c43647a7210e, type: 3}
+  PlasmaSurgePrefab: {fileID: 7670841722180877047, guid: 51737f717feeea44db11cfdaa99b1422, type: 3}
+  GridLockPrefab: {fileID: 2937717139180138505, guid: 243132003c6c363478ea2747fd218f02, type: 3}
+  WilloWispPrefab: {fileID: 2888201447304451437, guid: 8241b57c21d1103458f06493654f6351, type: 3}
+  MagneticPullPrefab: {fileID: 6201362687822346803, guid: c49f31833769b4c409b1c29b665bb6e8, type: 3}
+  SwiftStrikePrefab: {fileID: 7790877365476529809, guid: 050ba40bd18a00c4f86936122d7a418f, type: 3}
+  QuickSlashPrefab: {fileID: 6941465084218670886, guid: 12c1fc04740146a498097f8d7455815e, type: 3}
+  KineticShovePrefab: {fileID: 8149464009382204992, guid: 80aa086379139b24cb716b01f9912c4b, type: 3}
   showDebugLogs: 1
   firstSkill: 0
 --- !u!95 &1573556188
@@ -1037,6 +1040,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   stats: {fileID: 11400000, guid: 352217b1aa8a9be409913895a5844b87, type: 2}
+  manaRegenAmount: 1
+  manaRegenInterval: 0.5
   currentHealth: 0
   currentMana: 0
   OnHealthChanged:

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7194397728543033825}
   - component: {fileID: 2196698502049217820}
   m_Layer: 0
-  m_Name: QWSkillPrefab
+  m_Name: PlasmaSurgePrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -52,3 +52,5 @@ MonoBehaviour:
   laserDuration: 0.8
   laserColor: {r: 0, g: 0, b: 1, a: 1}
   laserPrefab: {fileID: 7625917550097447495, guid: b71e1574978c9e640bca5521a38b2fa0, type: 3}
+  manaCost: 1.5
+  cooldownDuration: 2

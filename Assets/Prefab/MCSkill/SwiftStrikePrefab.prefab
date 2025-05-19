@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3435341443546567909}
   - component: {fileID: 7083302308307868589}
   m_Layer: 0
-  m_Name: WWSkillPrefab
+  m_Name: SwiftStrikePrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

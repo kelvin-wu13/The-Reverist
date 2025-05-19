@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SkillSystem
 {
-    public class WQSkill : Skill
+    public class QuickSlash : Skill
     {
         [SerializeField] private int damageAmount = 10;
         [SerializeField] private float effectRadius = 0.5f;

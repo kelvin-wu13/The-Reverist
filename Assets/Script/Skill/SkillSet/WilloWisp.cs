@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using SkillSystem;
 
-public class EQSkill : Skill
+public class WilloWisp : Skill
 {
     [Header("Skill Parameters")]
     [SerializeField] private float moveSpeed = 5f;

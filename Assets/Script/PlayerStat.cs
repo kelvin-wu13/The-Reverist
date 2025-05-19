@@ -7,13 +7,17 @@ public class PlayerStats : MonoBehaviour
     [Header("Stats Configuration")]
     [SerializeField] private Stats stats;
     
+    [Header("Mana Regeneration")]
+    [SerializeField] private float manaRegenAmount = 1f;  // Amount of mana to regenerate
+    [SerializeField] private float manaRegenInterval = 0.5f;  // Time between mana regeneration in seconds
+    
     [Header("Current Values")]
     [SerializeField] private int currentHealth;
-    [SerializeField] private int currentMana;
+    [SerializeField] private float currentMana;  // Changed to float for fractional mana
     
     // Events
     public UnityEvent<int, int> OnHealthChanged; // Current, Max
-    public UnityEvent<int, int> OnManaChanged; // Current, Max
+    public UnityEvent<float, int> OnManaChanged; // Current, Max (changed first parameter to float)
     public UnityEvent OnPlayerDeath;
     
     // Current stats
@@ -25,7 +29,7 @@ public class PlayerStats : MonoBehaviour
         private set => currentHealth = value; 
     }
     public int MaxHealth => stats ? stats.MaxHealth : 0;
-    public int CurrentMana { 
+    public float CurrentMana {  // Changed to float
         get => currentMana; 
         private set => currentMana = value; 
     }
@@ -74,20 +78,26 @@ public class PlayerStats : MonoBehaviour
         // Only regenerate mana if not at max
         if (currentMana < stats.MaxMana)
         {
-            // Calculate how much mana to regenerate this frame
-            float manaToRegen = stats.ManaRegenRate * Time.deltaTime;
+            // Increment timer
+            manaRegenTimer += Time.deltaTime;
             
-            // Add the regenerated mana
-            int previousMana = currentMana;
-            currentMana = Mathf.Min(stats.MaxMana, currentMana + Mathf.FloorToInt(manaToRegen));
-            
-            // Store fractional mana in the timer for next update
-            manaRegenTimer -= Mathf.FloorToInt(manaRegenTimer);
-            
-            // Only invoke event if mana actually changed
-            if (previousMana != currentMana)
+            // Check if it's time to regenerate mana
+            if (manaRegenTimer >= manaRegenInterval)
             {
-                OnManaChanged?.Invoke(currentMana, stats.MaxMana);
+                // Store previous mana value to check if it changes
+                float previousMana = currentMana;
+                
+                // Add the regenerated mana
+                currentMana = Mathf.Min(stats.MaxMana, currentMana + manaRegenAmount);
+                
+                // Reset timer, but keep leftover time for next cycle
+                manaRegenTimer -= manaRegenInterval;
+                
+                // Only invoke event if mana actually changed
+                if (!Mathf.Approximately(previousMana, currentMana))
+                {
+                    OnManaChanged?.Invoke(currentMana, stats.MaxMana);
+                }
             }
         }
     }
@@ -151,7 +161,7 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     /// <param name="amount">Amount of mana to consume</param>
     /// <returns>True if mana was successfully used</returns>
-    public bool TryUseMana(int amount)
+    public bool TryUseMana(float amount)  // Changed to float
     {
         if (stats == null) return false;
         
@@ -170,7 +180,7 @@ public class PlayerStats : MonoBehaviour
     /// Restores mana by the specified amount
     /// </summary>
     /// <param name="amount">Amount of mana to restore</param>
-    public void RestoreMana(int amount)
+    public void RestoreMana(float amount)  // Changed to float
     {
         if (stats == null) return;
         
@@ -189,6 +199,6 @@ public class PlayerStats : MonoBehaviour
     public float GetManaPercentage()
     {
         if (stats == null) return 0f;
-        return (float)currentMana / stats.MaxMana;
+        return currentMana / stats.MaxMana;
     }
 }

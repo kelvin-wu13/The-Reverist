@@ -46,11 +46,15 @@ public class TileGrid : MonoBehaviour
     [Header("Tile Reference")]
     [SerializeField] private GameObject tilePrefab;
     [SerializeField] private TileSet tileSet;
+    [SerializeField] private int tileRenderingLayer = 0;
     
     [SerializeField] private Vector2 gridOffset = Vector2.zero;
     public TileType[,] grid;
     private GameObject[,] tileObjects;
     private TileType[,] originalTileTypes;
+
+    // Dictionary to store objects currently in each grid position
+    private Dictionary<Vector2Int, List<GameObject>> objectsInTiles = new Dictionary<Vector2Int, List<GameObject>>();
 
     // Calculated total tile size including spacing
     private float totalTileWidth => tileWidth + horizontalSpacing;
@@ -59,6 +63,19 @@ public class TileGrid : MonoBehaviour
     private void Awake()
     {
         InitializeGrid();
+        InitializeObjectsInTilesDict();
+    }
+
+    private void InitializeObjectsInTilesDict()
+    {
+        objectsInTiles.Clear();
+        for (int x = 0; x < gridWidth; x++)
+        {
+            for (int y = 0; y < gridHeight; y++)
+            {
+                objectsInTiles[new Vector2Int(x, y)] = new List<GameObject>();
+            }
+        }
     }
     
     // Add these public getter methods for tile size
@@ -107,6 +124,9 @@ public class TileGrid : MonoBehaviour
         grid = new TileType[gridWidth, gridHeight];
         tileObjects = new GameObject[gridWidth, gridHeight];
         originalTileTypes = new TileType[gridWidth, gridHeight];
+        
+        // Update the objectsInTiles dictionary for the new dimensions
+        InitializeObjectsInTilesDict();
         
         // Copy over the old data where possible
         for (int x = 0; x < gridWidth; x++)
@@ -188,11 +208,13 @@ public class TileGrid : MonoBehaviour
         // Scale the tile to match the specified width and height
         tile.transform.localScale = new Vector3(tileWidth, tileHeight, 1f);
         
+        // Set the rendering order to be behind other elements
         SpriteRenderer spriteRenderer = tile.GetComponent<SpriteRenderer>();
         if (spriteRenderer == null)
         {
             spriteRenderer = tile.AddComponent<SpriteRenderer>();
         }
+        spriteRenderer.sortingOrder = tileRenderingLayer;
         
         // All tiles start as empty
         grid[position.x, position.y] = TileType.Empty;
@@ -210,6 +232,13 @@ public class TileGrid : MonoBehaviour
             // Update position and scale
             tile.transform.position = GetWorldPosition(position);
             tile.transform.localScale = new Vector3(tileWidth, tileHeight, 1f);
+            
+            // Update the sorting order
+            SpriteRenderer spriteRenderer = tile.GetComponent<SpriteRenderer>();
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.sortingOrder = tileRenderingLayer;
+            }
         }
     }
     
@@ -461,6 +490,73 @@ public class TileGrid : MonoBehaviour
         int y = Mathf.FloorToInt((worldPosition.y - gridOffset.y) / totalTileHeight);
         
         return new Vector2Int(x, y);
+    }
+    
+    // Methods for managing objects in tiles
+    public void RegisterObjectInTile(GameObject obj, Vector2Int gridPosition)
+    {
+        if (IsValidGridPosition(gridPosition))
+        {
+            if (!objectsInTiles.ContainsKey(gridPosition))
+            {
+                objectsInTiles[gridPosition] = new List<GameObject>();
+            }
+            
+            if (!objectsInTiles[gridPosition].Contains(obj))
+            {
+                objectsInTiles[gridPosition].Add(obj);
+            }
+        }
+    }
+    
+    public void UnregisterObjectFromTile(GameObject obj, Vector2Int gridPosition)
+    {
+        if (IsValidGridPosition(gridPosition) && objectsInTiles.ContainsKey(gridPosition))
+        {
+            objectsInTiles[gridPosition].Remove(obj);
+        }
+    }
+    
+    public List<GameObject> GetObjectsInTile(Vector2Int gridPosition)
+    {
+        if (IsValidGridPosition(gridPosition) && objectsInTiles.ContainsKey(gridPosition))
+        {
+            return new List<GameObject>(objectsInTiles[gridPosition]);
+        }
+        return new List<GameObject>();
+    }
+    
+    public bool HasObjectWithTag(Vector2Int gridPosition, string tag)
+    {
+        if (IsValidGridPosition(gridPosition) && objectsInTiles.ContainsKey(gridPosition))
+        {
+            foreach (GameObject obj in objectsInTiles[gridPosition])
+            {
+                if (obj != null && obj.CompareTag(tag))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    public List<GameObject> GetObjectsWithTagInTile(Vector2Int gridPosition, string tag)
+    {
+        List<GameObject> result = new List<GameObject>();
+        
+        if (IsValidGridPosition(gridPosition) && objectsInTiles.ContainsKey(gridPosition))
+        {
+            foreach (GameObject obj in objectsInTiles[gridPosition])
+            {
+                if (obj != null && obj.CompareTag(tag))
+                {
+                    result.Add(obj);
+                }
+            }
+        }
+        
+        return result;
     }
     
     // Draw grid lines in the scene view

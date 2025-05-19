@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SkillSystem
 {
-    public class EWSkill : Skill
+    public class MagneticPull : Skill
     {
         [SerializeField] private float pushForce = 5f;
         [SerializeField] private float pushDuration = 0.5f;

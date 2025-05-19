@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using SkillSystem;
 
-public class QESkill : Skill
+public class PulseFall : Skill
 {
     [Header("QE Skill Settings")]
     [SerializeField] private int damageAmount = 20;

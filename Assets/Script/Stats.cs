@@ -17,9 +17,9 @@ public class Stats : ScriptableObject
 
     [Header("Mana")]
     [Tooltip("Maximum mana points for special abilities")]
-    [SerializeField] private int maxMana = 100;
+    [SerializeField] private int maxMana = 10;
     [Tooltip("Rate at which mana regenerates per second")]
-    [SerializeField] private float manaRegenRate = 5f;
+    [SerializeField] private float manaRegenRate = 2f;
 
     // Public property accessors
     public int MaxHealth => maxHealth;

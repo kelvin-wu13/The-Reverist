@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SkillSystem
@@ -5,134 +7,144 @@ namespace SkillSystem
     public class EEBullet : MonoBehaviour
     {
         [Header("Bullet Properties")]
-        [SerializeField] private int damage = 10;
-        [SerializeField] private float speed = 10f;
-        [SerializeField] private float lifetime = 2f;
+        [SerializeField] private int damage = 15;
+        [SerializeField] private float tileMoveDuration = 0.3f; // Time to traverse one tile
         [SerializeField] private float stunDuration = 3f;
         [SerializeField] private string targetTag = "Enemy";
         
         [Header("Visual Effects")]
         [SerializeField] private TrailRenderer trailRenderer;
         [SerializeField] private ParticleSystem hitEffect;
-        [SerializeField] private float fadeOutTime = 0.1f;
+        [SerializeField] private float fadeOutTime = 0.2f;
+        [SerializeField] private bool showDebugInfo = true;
         
-        // Reference to tile grid for position checks
+        // Grid movement properties
         private TileGrid tileGrid;
         private Vector2Int currentGridPosition;
+        private Vector2Int targetGridPosition;
+        private bool isMoving = false;
         private bool isDestroying = false;
         
         private void Awake()
         {
-            // Get reference to the TileGrid in the scene
-            tileGrid = FindObjectOfType<TileGrid>();
-            if (tileGrid == null)
-            {
-                Debug.LogError("TileGrid not found in scene!");
-            }
-            
             // Add collider if not present
             if (GetComponent<Collider2D>() == null)
             {
                 CircleCollider2D collider = gameObject.AddComponent<CircleCollider2D>();
                 collider.isTrigger = true;
-                collider.radius = 0.1f;
+                collider.radius = 0.25f;
             }
         }
         
-        private void Start()
+        public void InitializeGridBased(Vector2Int startPosition, float movementSpeed, int bulletDamage, float enemyStunDuration, TileGrid grid)
         {
-            // Set initial grid position
-            if (tileGrid != null)
-            {
-                currentGridPosition = tileGrid.GetGridPosition(transform.position);
-            }
-            
-            // Destroy after lifetime as a fallback
-            Destroy(gameObject, lifetime);
-        }
-        
-        private void Update()
-        {
-            if (isDestroying) return;
-            
-            // Move the bullet straight to the right
-            transform.Translate(Vector3.right * speed * Time.deltaTime, Space.World);
-            
-            if (tileGrid != null)
-            {
-                // Check if we've moved to a new grid position
-                Vector2Int newGridPosition = tileGrid.GetGridPosition(transform.position);
-                
-                // If we changed grid cells, check for hits and boundaries
-                if (newGridPosition != currentGridPosition)
-                {
-                    currentGridPosition = newGridPosition;
-                    
-                    // Check if bullet has gone past the rightmost grid
-                    CheckIfPastRightmostGrid();
-                }
-            }
-        }
-        
-        public void Initialize(Vector2 direction, float bulletSpeed, int bulletDamage, float stunTime)
-        {
-            // Only use the speed from parameters, direction will always be right
-            this.speed = bulletSpeed;
+            this.tileGrid = grid;
+            this.currentGridPosition = startPosition;
             this.damage = bulletDamage;
-            this.stunDuration = stunTime;
+            this.stunDuration = enemyStunDuration;
             
-            // Set rotation to face right
-            transform.rotation = Quaternion.identity;
+            // Convert speed (tiles/second) to duration (seconds/tile)
+            if (movementSpeed > 0)
+                this.tileMoveDuration = 1f / movementSpeed;
+            
+            // Snap to the grid position
+            transform.position = tileGrid.GetWorldPosition(currentGridPosition);
+            
+            // Start grid-based movement
+            StartGridMovement();
         }
         
-        private void CheckIfPastRightmostGrid()
+        private void StartGridMovement()
         {
-            // If we're beyond the rightmost enemy grid column, destroy the bullet
-            if (currentGridPosition.x >= tileGrid.gridWidth)
-            {
-                DestroyBullet();
-                return;
-            }
+            if (tileGrid == null) return;
             
-            // If we're in an invalid position, destroy the bullet
-            if (!tileGrid.IsValidGridPosition(currentGridPosition))
-            {
-                DestroyBullet();
-                return;
-            }
-            
-            // Check if we've passed the rightmost enemy column
-            // In your grid setup, enemies occupy the right half of the grid
-            if (currentGridPosition.x > tileGrid.gridWidth - 1)
-            {
-                DestroyBullet();
-            }
+            StartCoroutine(MoveAlongGrid());
         }
         
-        private void OnTriggerEnter2D(Collider2D other)
+        private IEnumerator MoveAlongGrid()
         {
-            // Check if we hit an object with the target tag
-            if (other.CompareTag(targetTag))
+            // Continue moving until we hit something or go off-grid
+            while (!isDestroying)
             {
-                // Try to get enemy component
-                var enemy = other.GetComponent<Enemy>();
-                if (enemy != null)
+                // Calculate next grid position (one tile to the right)
+                Vector2Int nextPosition = currentGridPosition + Vector2Int.right;
+                
+                // Check if the next position is valid
+                if (!tileGrid.IsValidGridPosition(nextPosition))
                 {
-                    // Apply damage
-                    enemy.TakeDamage(damage);
-                    
-                    // Stun the enemy
-                    enemy.Stun(stunDuration);
+                    // We've reached the edge of the grid, destroy the bullet
+                    if (showDebugInfo) Debug.Log("Bullet reached grid boundary at " + nextPosition);
+                    DestroyBullet();
+                    yield break;
                 }
                 
-                // Spawn hit effect if available
-                if (hitEffect != null)
+                // Move to the next position first, then check for enemies
+                isMoving = true;
+                targetGridPosition = nextPosition;
+                
+                Vector3 startPos = transform.position;
+                Vector3 endPos = tileGrid.GetWorldPosition(targetGridPosition);
+                
+                float elapsedTime = 0;
+                while (elapsedTime < tileMoveDuration)
                 {
-                    Instantiate(hitEffect, transform.position, Quaternion.identity);
+                    elapsedTime += Time.deltaTime;
+                    float percent = elapsedTime / tileMoveDuration;
+                    transform.position = Vector3.Lerp(startPos, endPos, percent);
+                    yield return null;
                 }
                 
-                // Destroy bullet
-                DestroyBullet();
+                // Ensure we land exactly on the target position
+                transform.position = endPos;
+                currentGridPosition = targetGridPosition;
+                isMoving = false;
+                
+                // Now check if there's an enemy at our current position
+                Collider2D[] hitColliders = Physics2D.OverlapCircleAll(
+                    transform.position,
+                    0.4f); // Radius to check for enemies
+                
+                bool hitEnemy = false;
+                foreach (Collider2D collider in hitColliders)
+                {
+                    if (collider.CompareTag(targetTag))
+                    {
+                        // We found an enemy, damage it
+                        Enemy enemy = collider.GetComponent<Enemy>();
+                        if (enemy != null)
+                        {
+                            // Check if the enemy is in the same row (y-coordinate) as the bullet
+                            Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
+                            if (enemyGridPos.y == currentGridPosition.y)
+                            {
+                                if (showDebugInfo) Debug.Log("Bullet hit enemy at " + currentGridPosition);
+                                enemy.TakeDamage(damage);
+                                enemy.Stun(stunDuration);
+                                
+                                // Spawn hit effect
+                                if (hitEffect != null)
+                                {
+                                    Instantiate(hitEffect, transform.position, Quaternion.identity);
+                                }
+                                
+                                hitEnemy = true;
+                                break;
+                            }
+                            else if (showDebugInfo)
+                            {
+                                Debug.Log("Enemy detected but not in same row. Enemy Y: " + 
+                                          enemyGridPos.y + ", Bullet Y: " + currentGridPosition.y);
+                            }
+                        }
+                    }
+                }
+                
+                if (hitEnemy)
+                {
+                    // We hit an enemy, destroy the bullet
+                    DestroyBullet();
+                    yield break;
+                }
             }
         }
         
@@ -152,7 +164,7 @@ namespace SkillSystem
             StartCoroutine(FadeOutAndDestroy());
         }
         
-        private System.Collections.IEnumerator FadeOutAndDestroy()
+        private IEnumerator FadeOutAndDestroy()
         {
             float startAlpha = 1f;
             float elapsedTime = 0;
@@ -179,6 +191,25 @@ namespace SkillSystem
             
             // Destroy the gameObject
             Destroy(gameObject);
+        }
+        
+        // Draw gizmos to visualize the bullet's path
+        private void OnDrawGizmos()
+        {
+            if (tileGrid != null && showDebugInfo && !isDestroying)
+            {
+                // Draw a circle at the current position
+                Gizmos.color = Color.cyan;
+                Gizmos.DrawWireSphere(transform.position, 0.2f);
+                
+                // Draw a circle at the next position
+                Vector2Int nextPos = currentGridPosition + Vector2Int.right;
+                if (tileGrid.IsValidGridPosition(nextPos))
+                {
+                    Gizmos.color = Color.yellow;
+                    Gizmos.DrawWireSphere(tileGrid.GetWorldPosition(nextPos), 0.2f);
+                }
+            }
         }
     }
 }
