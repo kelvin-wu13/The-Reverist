@@ -1,171 +1,244 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace SkillSystem
 {
     public class MagneticPull : Skill
     {
-        [SerializeField] private float pushForce = 5f;
         [SerializeField] private float pushDuration = 0.5f;
-        
-        // Override the execute skill effect method
+        [SerializeField] private float postPullStunDuration = 1f;
+        [SerializeField] private bool preserveExactYPosition = true; // Flag to control Y position preservation
+
         public override void ExecuteSkillEffect(Vector2Int targetPosition, Transform casterTransform)
         {
-            // Log activation of the skill
-            Debug.Log($"EW Skill activated at {targetPosition}");
-            
-            // Get reference to the TileGrid
+            Debug.Log($"Magnetic Pull Skill activated at {targetPosition}");
+
             TileGrid tileGrid = FindObjectOfType<TileGrid>();
             if (tileGrid == null)
             {
                 Debug.LogError("TileGrid not found in the scene!");
                 return;
             }
+
+            List<GameObject> pullTargets = new List<GameObject>();
+            List<Vector2Int> currentPositions = new List<Vector2Int>();  // Store current positions
+            List<Vector2Int> targetGridPositions = new List<Vector2Int>();
+            List<Vector2> offsets = new List<Vector2>();
+            List<bool> validPulls = new List<bool>();
             
-            // Store pushable objects and their target positions
-            List<GameObject> pushableObjects = new List<GameObject>();
-            List<Vector3> targetPositions = new List<Vector3>();
+            // Track which positions are already targeted to prevent multiple enemies from being pulled to the same tile
+            HashSet<Vector2Int> targetedPositions = new HashSet<Vector2Int>();
+
+            // First pass: collect all potential pulls
+            List<PullCandidate> pullCandidates = new List<PullCandidate>();
             
-            // Iterate through all tiles in the grid
+            // Scan the grid for enemies
             for (int x = 0; x < tileGrid.gridWidth; x++)
             {
                 for (int y = 0; y < tileGrid.gridHeight; y++)
                 {
                     Vector2Int currentGridPos = new Vector2Int(x, y);
-                    
-                    // Check if it's an enemy tile
-                    if (tileGrid.IsValidGridPosition(currentGridPos) && 
+
+                    if (tileGrid.IsValidGridPosition(currentGridPos) &&
                         tileGrid.grid[x, y] == TileType.Enemy)
                     {
-                        // Find all pushable objects on this tile
-                        FindPushableObjectsAtPosition(currentGridPos, tileGrid, pushableObjects, targetPositions);
+                        FindPullCandidates(currentGridPos, tileGrid, pullCandidates);
                     }
                 }
             }
             
-            // Push all found objects
-            for (int i = 0; i < pushableObjects.Count; i++)
+            // Sort candidates by x position (leftmost first) to prioritize enemies closer to player side
+            pullCandidates.Sort((a, b) => a.currentPosition.x.CompareTo(b.currentPosition.x));
+            
+            // Second pass: assign valid pull targets, preventing duplicates
+            foreach (var candidate in pullCandidates)
             {
-                if (pushableObjects[i] != null)
+                // Skip candidates that are already physically occupied
+                // THIS IS THE KEY FIX - we're now checking isPhysicallyOccupied before considering the target
+                if (candidate.isPhysicallyOccupied)
                 {
-                    StartPushAnimation(pushableObjects[i], targetPositions[i]);
+                    Debug.Log($"Enemy at {candidate.currentPosition} cannot pull to {candidate.targetPosition} - target is physically occupied");
+                    continue;
+                }
+                
+                // Check if the target position is already targeted by another pull
+                if (targetedPositions.Contains(candidate.targetPosition))
+                {
+                    // Skip this candidate or mark as invalid pull
+                    pullTargets.Add(candidate.enemy.gameObject);
+                    currentPositions.Add(candidate.currentPosition);
+                    targetGridPositions.Add(candidate.targetPosition); // We'll use this, but the pull won't happen
+                    offsets.Add(candidate.offset);
+                    validPulls.Add(false); // Mark as invalid
+                    
+                    Debug.Log($"Enemy at {candidate.currentPosition} cannot pull to {candidate.targetPosition} - position already targeted");
+                }
+                else
+                {
+                    // This is a valid pull
+                    pullTargets.Add(candidate.enemy.gameObject);
+                    currentPositions.Add(candidate.currentPosition);
+                    targetGridPositions.Add(candidate.targetPosition);
+                    offsets.Add(candidate.offset);
+                    validPulls.Add(true);
+                    
+                    // Reserve this target position
+                    targetedPositions.Add(candidate.targetPosition);
+                    
+                    Debug.Log($"Enemy at {candidate.currentPosition} will pull to {candidate.targetPosition}");
+                }
+            }
+
+            // Prepare enemies for pulling
+            for (int i = 0; i < pullTargets.Count; i++)
+            {
+                if (pullTargets[i] != null && validPulls[i])
+                {
+                    Enemy enemy = pullTargets[i].GetComponent<Enemy>();
+                    if (enemy != null)
+                    {
+                        enemy.PrepareForPull(targetGridPositions[i]);
+                    }
+                }
+            }
+
+            // Execute the pull animation for each valid target
+            for (int i = 0; i < pullTargets.Count; i++)
+            {
+                if (pullTargets[i] == null) continue;
+
+                Enemy enemy = pullTargets[i].GetComponent<Enemy>();
+                if (enemy == null) continue;
+
+                if (validPulls[i])
+                {
+                    StartCoroutine(PullAnimation(enemy, currentPositions[i], targetGridPositions[i], offsets[i]));
+                }
+                else
+                {
+                    Debug.Log("Pull invalid — enemy will be stunned.");
+                    enemy.Stun(postPullStunDuration);
                 }
             }
         }
-        
-        private void FindPushableObjectsAtPosition(Vector2Int gridPos, TileGrid tileGrid, List<GameObject> objects, List<Vector3> targets)
+
+        // Struct to hold pull candidate information
+        private struct PullCandidate
         {
-            // Get the world position of the current tile
-            Vector3 tileWorldPos = tileGrid.GetWorldPosition(gridPos);
-            
-            // Calculate push direction (toward player side - always to the left in grid coordinates)
-            Vector2Int pushDirection = new Vector2Int(-1, 0);
-            
-            // Calculate the target grid position
-            Vector2Int targetGridPos = new Vector2Int(gridPos.x + pushDirection.x, gridPos.y + pushDirection.y);
-            
-            // Skip if target position is not valid or if it's a player tile
-            if (!tileGrid.IsValidGridPosition(targetGridPos) || 
+            public Enemy enemy;
+            public Vector2Int currentPosition;
+            public Vector2Int targetPosition;
+            public Vector2 offset;
+            public bool isPhysicallyOccupied;
+        }
+
+        private void FindPullCandidates(
+            Vector2Int gridPos,
+            TileGrid tileGrid,
+            List<PullCandidate> candidates)
+        {
+            // Pull direction is strictly LEFT with NO change in Y position
+            Vector2Int targetGridPos = new Vector2Int(gridPos.x - 1, gridPos.y); // Explicitly preserve Y
+
+            // Check if target position is valid
+            if (!tileGrid.IsValidGridPosition(targetGridPos) ||
+                tileGrid.grid[targetGridPos.x, targetGridPos.y] == TileType.Broken ||
                 tileGrid.grid[targetGridPos.x, targetGridPos.y] == TileType.Player)
             {
                 return;
             }
-            
-            // Check for objects on the current tile
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(tileWorldPos, 0.4f);
-            
+
+            // Find enemies at the current position
+            Vector3 currentWorldPos = tileGrid.GetWorldPosition(gridPos);
+            Collider2D[] colliders = Physics2D.OverlapCircleAll(currentWorldPos, 0.4f);
+
             foreach (Collider2D col in colliders)
             {
-                // Only push objects with Enemy or Obstacle tags
-                if (!col.gameObject.CompareTag("Enemy") && !col.gameObject.CompareTag("Obstacle"))
+                if (!col.CompareTag("Enemy")) continue;
+
+                Enemy enemy = col.GetComponent<Enemy>();
+                if (enemy == null) continue;
+
+                Vector2 offset = enemy.GetPositionOffset();
+
+                // Check if target position is already physically occupied
+                Vector3 targetWorldPos = tileGrid.GetWorldPosition(targetGridPos) + new Vector3(offset.x, offset.y, 0);
+                Collider2D[] overlaps = Physics2D.OverlapCircleAll(targetWorldPos, 0.3f);
+                
+                // Filter out the current enemy from the overlaps
+                bool isPhysicallyOccupied = false;
+                foreach (Collider2D overlap in overlaps)
                 {
-                    continue;
+                    if (overlap != col && overlap.CompareTag("Enemy"))
+                    {
+                        isPhysicallyOccupied = true;
+                        break;
+                    }
                 }
-                
-                // Check if target position already has an object
-                Vector3 targetWorldPos = tileGrid.GetWorldPosition(targetGridPos);
-                if (IsPositionOccupied(targetWorldPos))
+
+                // Create and add the pull candidate
+                PullCandidate candidate = new PullCandidate
                 {
-                    // Skip this object as the target position is already occupied
-                    Debug.Log($"Target position {targetGridPos} is already occupied. Cannot push object.");
-                    continue;
+                    enemy = enemy,
+                    currentPosition = gridPos,
+                    targetPosition = targetGridPos,
+                    offset = offset,
+                    isPhysicallyOccupied = isPhysicallyOccupied
+                };
+                
+                // Add candidate to list only if target is an Enemy tile and NOT physically occupied
+                if (tileGrid.grid[targetGridPos.x, targetGridPos.y] == TileType.Enemy && !isPhysicallyOccupied)
+                {
+                    candidates.Add(candidate);
+                    Debug.Log($"Found valid pull candidate at {gridPos} to {targetGridPos}, occupied: {isPhysicallyOccupied}");
                 }
-                
-                // Add to our lists
-                objects.Add(col.gameObject);
-                targets.Add(targetWorldPos);
-                
-                // No tile cracking as requested
+                else if (isPhysicallyOccupied)
+                {
+                    Debug.Log($"Skipping physically occupied target at {targetGridPos}");
+                }
             }
         }
-        
-        // Helper method to check if a position is already occupied by an Enemy or Obstacle
-        private bool IsPositionOccupied(Vector3 position)
+
+        private IEnumerator PullAnimation(Enemy enemy, Vector2Int currentPos, Vector2Int targetGridPos, Vector2 offset)
         {
-            // Use a smaller radius to check for occupation at the exact target position
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(position, 0.3f);
+            // Get current position to ensure we start from exactly where the enemy is
+            Vector3 start = enemy.transform.position;
             
-            foreach (Collider2D col in colliders)
-            {
-                if (col.gameObject.CompareTag("Enemy") || col.gameObject.CompareTag("Obstacle"))
-                {
-                    // Found an enemy or obstacle at this position
-                    return true;
-                }
+            // Calculate the target end position
+            TileGrid tileGrid = enemy.GetTileGrid();
+            Vector3 target = tileGrid.GetWorldPosition(targetGridPos);
+            
+            // If preserveExactYPosition is true, keep the same Y as the starting position
+            Vector3 end;
+            if (preserveExactYPosition) {
+                end = new Vector3(
+                    target.x + offset.x,
+                    start.y, // Keep the exact same Y position
+                    0
+                );
+            } else {
+                end = new Vector3(
+                    target.x + offset.x,
+                    target.y + offset.y, 
+                    0
+                );
             }
             
-            // No enemy or obstacle found at this position
-            return false;
-        }
-        
-        private void StartPushAnimation(GameObject obj, Vector3 targetPos)
-        {
-            // Start the push coroutine
-            StartCoroutine(PushAnimation(obj, targetPos));
-        }
-        
-        private System.Collections.IEnumerator PushAnimation(GameObject obj, Vector3 targetPos)
-        {
-            Vector3 startPos = obj.transform.position;
-            float elapsed = 0;
-            
+            Debug.Log($"Pull animation from {start} to {end}");
+
+            float elapsed = 0f;
             while (elapsed < pushDuration)
             {
-                // Calculate the current position using smooth interpolation
-                float t = elapsed / pushDuration;
-                t = Mathf.SmoothStep(0, 1, t); // Smooth the movement
-                
-                obj.transform.position = Vector3.Lerp(startPos, targetPos, t);
-                
+                float t = Mathf.SmoothStep(0, 1, elapsed / pushDuration);
+                enemy.transform.position = Vector3.Lerp(start, end, t);
                 elapsed += Time.deltaTime;
                 yield return null;
             }
-            
-            // Ensure the object is exactly at the target position
-            obj.transform.position = targetPos;
-            
-            // Trigger any effects that should happen after pushing
-            TriggerPushEffects(obj);
-        }
-        
-        private void TriggerPushEffects(GameObject obj)
-        {
-            // Here you can add effects that happen when an object is pushed
-            // For example, damage to the object, particle effects, sound, etc.
-            
-            // Example: Play a particle effect
-            ParticleSystem pushParticles = obj.GetComponent<ParticleSystem>();
-            if (pushParticles != null)
-            {
-                pushParticles.Play();
-            }
-            
-            // Example: Play a sound effect
-            AudioSource pushSound = obj.GetComponent<AudioSource>();
-            if (pushSound != null)
-            {
-                pushSound.Play();
-            }
+
+            enemy.transform.position = end;
+            enemy.ApplyPushEffect(targetGridPos, end);
+            enemy.Stun(postPullStunDuration);
         }
     }
 }

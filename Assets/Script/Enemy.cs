@@ -15,6 +15,9 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float moveInterval = 2f;
     [SerializeField] private bool isMoving = false;
     [SerializeField] private bool isStunned = false;
+    [SerializeField] private bool isAfterPush = false; // New flag for post-push/pull state
+    [SerializeField] private bool isBeingPulled = false; // Flag to track when enemy is being pulled
+    [SerializeField] private float postPushDelay = 1f; // Delay after being pushed/pulled
     [SerializeField] private LayerMask obstacleLayer; // Layer for collision detection
     
     [Header("Position Offset")]
@@ -25,6 +28,8 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float hitFlashDuration = 0.1f;
     [SerializeField] private Color hitColor = Color.red;
     [SerializeField] private Color stunnedColor = Color.blue;
+    [SerializeField] private Color pushedColor = new Color(1f, 0.5f, 0f); // Orange color for pushed state
+    [SerializeField] private Color pulledColor = new Color(0.5f, 0f, 1f); // Purple color for pulled state
 
     [Header("Shooting")]
     [SerializeField] private GameObject bulletPrefab;
@@ -113,7 +118,7 @@ public class Enemy : MonoBehaviour
     private void Update()
     {
         // Handle movement
-        if (isMoving && !isStunned)
+        if (isMoving && !isStunned && !isAfterPush && !isBeingPulled)
         {
             // Move towards target position
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
@@ -132,7 +137,7 @@ public class Enemy : MonoBehaviour
         }
         
         // Handle shooting
-        if (!isDying)
+        if (!isDying && !isBeingPulled)
         {
             shootTimer -= Time.deltaTime;
             
@@ -149,6 +154,12 @@ public class Enemy : MonoBehaviour
             }
         }
     }
+    
+    public TileGrid GetTileGrid()
+    {
+        return tileGrid;
+    }
+
 
     private IEnumerator RandomMovement()
     {
@@ -156,8 +167,8 @@ public class Enemy : MonoBehaviour
         {
             // Wait for the move interval
             yield return new WaitForSeconds(moveInterval);
-            
-            if (!isMoving && !isStunned)
+
+            if (!isMoving && !isStunned && !isAfterPush && !isBeingPulled)
             {
                 // Try to move in a random direction
                 TryMove();
@@ -167,38 +178,52 @@ public class Enemy : MonoBehaviour
     
     private void TryMove()
     {
-        // Shuffle the directions array for random movement
-        ShuffleDirections();
-        
-        // Try each direction until a valid move is found
-        foreach (Vector2Int direction in directions)
+        // Cancel movement if the enemy is being pulled
+        if (isBeingPulled)
+        {
+            Debug.Log("Enemy movement canceled due to being pulled.");
+            isMoving = false;
+            return;
+        }
+
+        // Define movement priority (favoring leftward movement first)
+        Vector2Int[] prioritizedDirections = new Vector2Int[]
+        {
+            Vector2Int.left,   // Prefer moving toward the player zone
+            Vector2Int.down,
+            Vector2Int.up,
+            Vector2Int.right   // Last priority: advancing deeper into enemy zone
+        };
+
+        // Try to find a valid movement direction
+        foreach (Vector2Int direction in prioritizedDirections)
         {
             Vector2Int newPosition = currentGridPosition + direction;
-            
-            // Check if the new position is valid (is within grid, is an enemy tile, and is not reserved)
-            if (tileGrid.IsValidGridPosition(newPosition) && 
-                tileGrid.grid[newPosition.x, newPosition.y] == TileType.Enemy && 
-                !IsPositionReserved(newPosition))
+
+            bool isValid = tileGrid.IsValidGridPosition(newPosition);
+            bool isEnemyTile = isValid && tileGrid.grid[newPosition.x, newPosition.y] == TileType.Enemy;
+            bool isReserved = IsPositionReserved(newPosition);
+
+            if (isValid && isEnemyTile && !isReserved)
             {
-                // Release our current position reservation
+                // Cancel reservation at current position
                 ReleaseGridPosition(currentGridPosition);
-                
+
                 // Reserve the new position
                 ReserveGridPosition(newPosition);
-                
-                // Update target position with offset
+
+                // Update movement data
                 targetGridPosition = newPosition;
                 Vector3 basePosition = tileGrid.GetWorldPosition(targetGridPosition);
                 targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
-                
+
                 isMoving = true;
-                
-                return; // Successfully moved
+                return;
             }
         }
-        
-        // If we reach here, no valid move was found
-        Debug.Log("Enemy: No valid move found from current position");
+
+        // No available move found
+        Debug.Log("Enemy: No valid prioritized move found from current position");
     }
     
     private void ShootAtPlayer()
@@ -345,8 +370,15 @@ public class Enemy : MonoBehaviour
         // Wait for flash duration
         yield return new WaitForSeconds(hitFlashDuration);
         
-         // Change back to original color or stunned color if currently stunned
-        spriteRenderer.color = isStunned ? stunnedColor : originalColor;
+        // Change back to original color or stunned color if currently stunned
+        if (isStunned)
+            spriteRenderer.color = stunnedColor;
+        else if (isAfterPush)
+            spriteRenderer.color = pushedColor;
+        else if (isBeingPulled)
+            spriteRenderer.color = pulledColor;
+        else
+            spriteRenderer.color = originalColor;
     }
 
     private void Die()
@@ -354,6 +386,9 @@ public class Enemy : MonoBehaviour
         isDying = true;
 
         StopAllCoroutines(); // Stop the movement coroutine
+        
+        // Make sure to release grid position when dying
+        ReleaseGridPosition(currentGridPosition);
 
         Collider2D[] colliders = GetComponents<Collider2D>();
         foreach (Collider2D collider in colliders)
@@ -375,7 +410,7 @@ public class Enemy : MonoBehaviour
         isStunned = true;
 
         //Visual feedback
-        if (spriteRenderer != null)
+        if (spriteRenderer != null && !isBeingPulled)
             spriteRenderer.color = stunnedColor;
 
         //Wait for stun duration
@@ -385,7 +420,7 @@ public class Enemy : MonoBehaviour
         isStunned = false;
 
         //Restore original color
-        if (spriteRenderer != null && !isDying)
+        if (spriteRenderer != null && !isDying && !isAfterPush && !isBeingPulled)
             spriteRenderer.color = originalColor;
     }
     
@@ -395,7 +430,7 @@ public class Enemy : MonoBehaviour
         positionOffset = newOffset;
         
         // Update current position with new offset if not moving
-        if (!isMoving)
+        if (!isMoving && !isBeingPulled)
         {
             Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
             targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
@@ -407,5 +442,94 @@ public class Enemy : MonoBehaviour
     public Vector2 GetPositionOffset()
     {
         return positionOffset;
+    }
+
+    // Modified method to prepare for pull
+    public void PrepareForPull(Vector2Int targetGridPos)
+    {
+        // Release current grid position reservation immediately
+        ReleaseGridPosition(currentGridPosition);
+        
+        // Set being pulled flag
+        isBeingPulled = true;
+        
+        // Update visual feedback for pulled state
+        if (spriteRenderer != null && !isDying)
+            spriteRenderer.color = pulledColor;
+            
+        // Stop movement
+        isMoving = false;
+        StopCoroutine(nameof(RandomMovement));
+    }
+
+    // New method to handle push/pull effects
+    public void ApplyPushEffect(Vector2Int newGridPosition, Vector3 newWorldPosition)
+    {
+        // Stop current movement
+        StopAllCoroutines(); // Stop all coroutines including RandomMovement
+        isMoving = false;
+        
+        // Reset flags
+        isBeingPulled = false;
+        
+        // Update grid positions
+        currentGridPosition = newGridPosition;
+        targetGridPosition = newGridPosition;
+        
+        // Reserve the new grid position
+        ReserveGridPosition(currentGridPosition);
+        
+        // Set the target position with the existing offset
+        Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
+        targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
+        
+        // Apply post-push delay
+        StartCoroutine(PostPushDelay());
+    }
+    
+    // Method to set position with offset (for use with KineticShove)
+    public void SetPositionWithOffset(Vector2Int newGridPosition)
+    {
+        // Stop current movement
+        StopAllCoroutines(); // Stop all coroutines including RandomMovement
+        isMoving = false;
+        
+        // Update grid positions
+        ReleaseGridPosition(currentGridPosition);
+        currentGridPosition = newGridPosition;
+        targetGridPosition = newGridPosition;
+        ReserveGridPosition(currentGridPosition);
+        
+        // Set the target position with the existing offset
+        Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
+        targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
+        transform.position = targetPosition; // Immediately set position
+        
+        // Apply post-push delay
+        StartCoroutine(PostPushDelay());
+    }
+    
+    // Add delay after being pushed/pulled
+    private IEnumerator PostPushDelay()
+    {
+        isAfterPush = true;
+        isBeingPulled = false;
+
+        // Visual feedback for pushed state
+        if (spriteRenderer != null && !isDying && !isStunned)
+            spriteRenderer.color = pushedColor;
+
+        // Wait for the delay period
+        yield return new WaitForSeconds(postPushDelay);
+
+        // Remove push effect
+        isAfterPush = false;
+
+        // Restore original color if not stunned
+        if (spriteRenderer != null && !isDying && !isStunned)
+            spriteRenderer.color = originalColor;
+
+        // Restart the movement coroutine
+        StartCoroutine(RandomMovement());
     }
 }

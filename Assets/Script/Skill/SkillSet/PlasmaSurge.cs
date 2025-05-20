@@ -119,10 +119,6 @@ namespace SkillSystem
                 {
                     activeLaser = Instantiate(laserPrefab, startPosition, Quaternion.identity);
                 }
-                else
-                {
-                    activeLaser = CreateBasicLaser();
-                }
             }
             
             // Get or add LineRenderer component
@@ -148,7 +144,7 @@ namespace SkillSystem
             ProcessRowHits(playerGridPosition, direction);
             
             // Make the laser visible
-            laserLineRenderer.enabled = true;
+            laserLineRenderer.enabled = false;
             
             // Start the laser duration countdown
             StartCoroutine(DeactivateLaserAfterDuration());
@@ -158,60 +154,44 @@ namespace SkillSystem
         
         private void ProcessRowHits(Vector2Int playerGridPosition, Vector3 direction)
         {
-            // Get the start world position
             Vector3 startWorldPos = tileGrid.GetWorldPosition(playerGridPosition);
-            
-            // Cast a ray to find all objects in the path
+
             RaycastHit2D[] hits = Physics2D.RaycastAll(startWorldPos, direction, laserMaxDistance);
-            
-            // Sort hits by distance
             System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
-            
-            // Create a HashSet to track which objects have already been hit
+
             HashSet<Collider2D> hitObjects = new HashSet<Collider2D>();
-            
+
             foreach (RaycastHit2D hit in hits)
             {
-                // Skip if we've already processed this object
-                if (hitObjects.Contains(hit.collider))
-                    continue;
-                
-                // Add to our tracking set
+                if (hitObjects.Contains(hit.collider)) continue;
                 hitObjects.Add(hit.collider);
-                
-                // Check for enemy tag
+
+                // Use the collider's transform position for accurate grid mapping
+                Vector2Int hitGridPos = tileGrid.GetGridPosition(hit.collider.transform.position);
+                if (hitGridPos.y != playerGridPosition.y) continue; // ✅ Skip if not same row
+
                 if (hit.collider.CompareTag("Enemy"))
                 {
-                    // Get enemy component and apply damage
                     Enemy enemy = hit.collider.GetComponent<Enemy>();
                     if (enemy != null)
                     {
                         enemy.TakeDamage(damage);
-                        Debug.Log($"PlasmaSurge: Dealt {damage} damage to enemy at position {hit.point}");
-                        
-                        // Create a hit effect at the impact point
-                        CreateImpactEffect(hit.point);
+                        Debug.Log($"PlasmaSurge: Dealt {damage} to enemy at {hitGridPos}");
                     }
                 }
-                // Check for obstacle tag
                 else if (hit.collider.CompareTag("Obstacle"))
                 {
-                    // Create a hit effect at the impact point
-                    CreateImpactEffect(hit.point);
-                    
-                    // Get obstacle component and apply damage if it has one
                     IDestructible destructible = hit.collider.GetComponent<IDestructible>();
                     if (destructible != null)
                     {
                         destructible.TakeDamage(damage);
-                        Debug.Log($"PlasmaSurge: Dealt {damage} damage to obstacle at position {hit.point}");
+                        Debug.Log($"PlasmaSurge: Dealt {damage} to obstacle at {hitGridPos}");
                     }
                 }
             }
-            
-            // Also check grid tiles in the same row for enemies and obstacles
             ProcessTilesInRow(playerGridPosition);
         }
+
         
         private void ProcessTilesInRow(Vector2Int playerGridPosition)
         {
@@ -232,99 +212,24 @@ namespace SkillSystem
         
         private int GetGridWidth()
         {
-            // This is a placeholder. Your TileGrid should have a method to return its width
-            // For example: return tileGrid.Width;
-            return 100; // Default large value as fallback
+            return tileGrid != null ? tileGrid.gridWidth : 0;
         }
         
         private void CheckTileForTargets(Vector2Int tilePosition)
         {
-            // Get the world position for this tile
             Vector3 worldPosition = tileGrid.GetWorldPosition(tilePosition);
-            
-            // Use a small overlap circle to detect objects at this tile
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(worldPosition, 0.4f); // Adjust radius as needed
-            
-            foreach (Collider2D collider in colliders)
-            {
-                // Check for enemy tag
-                if (collider.CompareTag("Enemy"))
-                {
-                    Enemy enemy = collider.GetComponent<Enemy>();
-                    if (enemy != null)
-                    {
-                        enemy.TakeDamage(damage);
-                        Debug.Log($"PlasmaSurge: Dealt {damage} damage to enemy at grid position {tilePosition}");
-                        CreateImpactEffect(worldPosition);
-                    }
-                }
-                // Check for obstacle tag
-                else if (collider.CompareTag("Obstacle"))
-                {
-                    IDestructible destructible = collider.GetComponent<IDestructible>();
-                    if (destructible != null)
-                    {
-                        destructible.TakeDamage(damage);
-                        Debug.Log($"PlasmaSurge: Dealt {damage} damage to obstacle at grid position {tilePosition}");
-                        CreateImpactEffect(worldPosition);
-                    }
-                }
-            }
+            Collider2D[] colliders = Physics2D.OverlapCircleAll(worldPosition, 0.2f); // ✅ Smaller radius
         }
-        
-        private GameObject CreateBasicLaser()
-        {
-            // Create a simple laser GameObject
-            GameObject laser = new GameObject("PlasmaSurge_Laser");
-            
-            // Add LineRenderer component
-            LineRenderer lineRenderer = laser.AddComponent<LineRenderer>();
-            SetupLaserLineRenderer(lineRenderer);
-            
-            return laser;
-        }
-        
+
         private void SetupLaserLineRenderer(LineRenderer lineRenderer)
         {
             // Configure the LineRenderer component
             lineRenderer.positionCount = 2; // Start and end points
             lineRenderer.startWidth = laserWidth;
             lineRenderer.endWidth = laserWidth;
-            lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-            lineRenderer.startColor = laserColor;
-            lineRenderer.endColor = laserColor;
             lineRenderer.enabled = false; // Start disabled
         }
         
-        private void CreateImpactEffect(Vector3 position)
-        {
-            // Create a simple impact effect
-            GameObject impact = new GameObject("LaserImpact");
-            impact.transform.position = position;
-            
-            // Add a particle system
-            ParticleSystem particles = impact.AddComponent<ParticleSystem>();
-            var main = particles.main;
-            main.startColor = laserColor;
-            main.startSize = 0.5f;
-            main.startSpeed = 2f;
-            main.startLifetime = 0.3f;
-            main.duration = 0.2f;
-            
-            // Emission module
-            var emission = particles.emission;
-            emission.rateOverTime = 0;
-            var burst = new ParticleSystem.Burst(0f, 15);
-            emission.SetBurst(0, burst);
-            
-            // Shape module
-            var shape = particles.shape;
-            shape.shapeType = ParticleSystemShapeType.Sphere;
-            shape.radius = 0.1f;
-            
-            // Auto-destroy after effect completes
-            Destroy(impact, 1f);
-        }
         
         private IEnumerator DeactivateLaserAfterDuration()
         {

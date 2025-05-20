@@ -193,10 +193,13 @@ MonoBehaviour:
   maxHealth: 100
   currentHealth: 0
   isDying: 0
-  moveSpeed: 2
-  moveInterval: 2
+  moveSpeed: 5
+  moveInterval: 3
   isMoving: 0
   isStunned: 0
+  isAfterPush: 0
+  isBeingPulled: 0
+  postPushDelay: 1
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 64
@@ -205,6 +208,8 @@ MonoBehaviour:
   hitFlashDuration: 0.1
   hitColor: {r: 1, g: 0, b: 0, a: 1}
   stunnedColor: {r: 0, g: 0, b: 1, a: 1}
+  pushedColor: {r: 1, g: 0.5, b: 0, a: 1}
+  pulledColor: {r: 0.5, g: 0, b: 1, a: 1}
   bulletPrefab: {fileID: 2133345011772533360, guid: 489b2fc9b138c0b4e8b2d2a0d29b05fc, type: 3}
   shootInterval: 3
   bulletSpeed: 5

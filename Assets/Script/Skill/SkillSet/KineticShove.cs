@@ -11,6 +11,7 @@ namespace SkillSystem
         [SerializeField] private float knockbackForce = 1f;
         [SerializeField] private float manaCost = 1.5f;
         [SerializeField] public float cooldownDuration = 2f;
+        [SerializeField] private float movementLockDuration = 1f; // Duration to lock movement after knockback
 
         [Header("Effects")]
         [SerializeField] private ParticleSystem hitEffect;
@@ -31,11 +32,6 @@ namespace SkillSystem
             }
         }
 
-        private void OnDestroy()
-        {
-            CleanupTemporaryEffects();
-        }
-
         public override void ExecuteSkillEffect(Vector2Int targetPosition, Transform casterTransform)
         {
             Vector2Int casterPosition = tileGrid.GetGridPosition(casterTransform.position);
@@ -50,8 +46,6 @@ namespace SkillSystem
                 casterPosition + direction * 2,
                 casterPosition + direction * 2 + Vector2Int.down
             };
-
-            ShowAreaOfEffectIndicator(hitPositions);
 
             foreach (Vector2Int hitPos in hitPositions)
             {
@@ -119,10 +113,10 @@ namespace SkillSystem
         {
             Vector3 startWorldPos = tileGrid.GetWorldPosition(startPos);
             Vector3 endWorldPos = tileGrid.GetWorldPosition(endPos);
-            StartCoroutine(SmoothKnockback(enemy, startWorldPos, endWorldPos));
+            StartCoroutine(SmoothKnockback(enemy, startWorldPos, endWorldPos, startPos, endPos));
         }
 
-        private IEnumerator SmoothKnockback(Enemy enemy, Vector3 startPos, Vector3 endPos)
+        private IEnumerator SmoothKnockback(Enemy enemy, Vector3 startPos, Vector3 endPos, Vector2Int startGridPos, Vector2Int endGridPos)
         {
             if (enemy == null) yield break;
 
@@ -135,6 +129,9 @@ namespace SkillSystem
                 renderer.color = Color.yellow;
             }
 
+            // Preserve the enemy's position offset
+            Vector2 positionOffset = enemy.GetPositionOffset();
+
             float elapsedTime = 0;
             float duration = 0.2f;
 
@@ -145,6 +142,11 @@ namespace SkillSystem
                 float t = elapsedTime / duration;
                 Vector3 arcPoint = Vector3.Lerp(startPos, endPos, t);
                 arcPoint.y += Mathf.Sin(t * Mathf.PI) * 0.2f;
+
+                // Add position offset during movement
+                arcPoint.x += positionOffset.x;
+                arcPoint.y += positionOffset.y;
+
                 enemy.transform.position = arcPoint;
 
                 elapsedTime += Time.deltaTime;
@@ -153,77 +155,14 @@ namespace SkillSystem
 
             if (enemy != null)
             {
-                enemy.transform.position = endPos;
+                // Update the enemy's grid position tracking with offset maintained
+                enemy.SetPositionWithOffset(endGridPos);
 
                 if (renderer != null)
                     renderer.color = originalColor;
+
+                // Note: The movement lock for 1 second is now handled in the SetPositionWithOffset method
             }
-        }
-
-        private void ShowAreaOfEffectIndicator(List<Vector2Int> positions)
-        {
-            CleanupTemporaryEffects();
-
-            foreach (Vector2Int pos in positions)
-            {
-                if (tileGrid.IsValidGridPosition(pos))
-                {
-                    Vector3 worldPos = tileGrid.GetWorldPosition(pos);
-                    GameObject indicator = aoeIndicatorPrefab != null
-                        ? Instantiate(aoeIndicatorPrefab, worldPos, Quaternion.identity)
-                        : CreateSimpleIndicator(worldPos);
-
-                    temporaryEffects.Add(indicator);
-                }
-            }
-
-            StartCoroutine(CleanupIndicatorsAfterDelay());
-        }
-
-        private GameObject CreateSimpleIndicator(Vector3 position)
-        {
-            GameObject indicator = new GameObject("AOE_Indicator");
-            indicator.transform.position = position;
-            SpriteRenderer renderer = indicator.AddComponent<SpriteRenderer>();
-            renderer.sprite = CreateSquareSprite();
-            renderer.color = indicatorColor;
-            renderer.sortingOrder = 1;
-            return indicator;
-        }
-
-        private Sprite CreateSquareSprite()
-        {
-            Texture2D texture = new Texture2D(32, 32);
-            Color[] colors = new Color[32 * 32];
-
-            for (int i = 0; i < colors.Length; i++)
-            {
-                int x = i % 32;
-                int y = i / 32;
-                colors[i] = (x < 2 || x >= 30 || y < 2 || y >= 30) ? Color.white : new Color(1, 1, 1, 0.3f);
-            }
-
-            texture.SetPixels(colors);
-            texture.Apply();
-
-            return Sprite.Create(texture, new Rect(0, 0, 32, 32), new Vector2(0.5f, 0.5f), 32);
-        }
-
-        private IEnumerator CleanupIndicatorsAfterDelay()
-        {
-            yield return new WaitForSeconds(indicatorDuration);
-            CleanupTemporaryEffects();
-        }
-
-        private void CleanupTemporaryEffects()
-        {
-            foreach (GameObject effect in temporaryEffects)
-            {
-                if (effect != null)
-                    Destroy(effect);
-            }
-
-            temporaryEffects.Clear();
         }
     }
 }

@@ -12,14 +12,23 @@ namespace SkillSystem
         [SerializeField] private TileGrid tileGrid;
         
         [Header("Skill Settings")]
+        [Header("QQ")]
         [SerializeField] public GameObject IonBoltPrefab;
+        [Header("QE")]
         [SerializeField] private GameObject PulseFallPrefab;
+        [Header("QW")]
         [SerializeField] private GameObject PlasmaSurgePrefab;
+        [Header("EE")]
         [SerializeField] private GameObject GridLockPrefab;
+        [Header("EQ")]
         [SerializeField] private GameObject WilloWispPrefab;
+        [Header("EW")]
         [SerializeField] private GameObject MagneticPullPrefab;
+        [Header("WW")]
         [SerializeField] private GameObject SwiftStrikePrefab;
+        [Header("WQ")]
         [SerializeField] private GameObject QuickSlashPrefab;
+        [Header("WE")]
         [SerializeField] private GameObject KineticShovePrefab;
         
         [Header("UI Feedback")]

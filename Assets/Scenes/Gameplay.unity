@@ -938,7 +938,7 @@ MonoBehaviour:
   MagneticPullPrefab: {fileID: 6201362687822346803, guid: c49f31833769b4c409b1c29b665bb6e8, type: 3}
   SwiftStrikePrefab: {fileID: 7790877365476529809, guid: 050ba40bd18a00c4f86936122d7a418f, type: 3}
   QuickSlashPrefab: {fileID: 6941465084218670886, guid: 12c1fc04740146a498097f8d7455815e, type: 3}
-  KineticShovePrefab: {fileID: 8149464009382204992, guid: 80aa086379139b24cb716b01f9912c4b, type: 3}
+  KineticShovePrefab: {fileID: 7409639793283886480, guid: 0f3387441a0b68b4f8b3884e43bc3d11, type: 3}
   showDebugLogs: 1
   firstSkill: 0
 --- !u!95 &1573556188
