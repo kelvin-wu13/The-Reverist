@@ -9,31 +9,55 @@ namespace SkillSystem
         [SerializeField] private float pushDuration = 0.5f;
         [SerializeField] private float postPullStunDuration = 1f;
         [SerializeField] private bool preserveExactYPosition = true; // Flag to control Y position preservation
+        [SerializeField] public float cooldownDuration = 2.0f;
+        [SerializeField] public float manaCost = 2.0f;
+
+        private PlayerStats playerStats;
+        private TileGrid tileGrid;
+
+        private void Awake()
+        {
+            playerStats = FindObjectOfType<PlayerStats>();
+            if (playerStats == null)
+            {
+                Debug.LogError("MagneticPull: Could not find PlayerStats component!");
+            }
+
+            tileGrid = FindObjectOfType<TileGrid>();
+            if (tileGrid == null)
+            {
+                Debug.LogError("MagneticPull: Could not find TileGrid component!");
+            }
+        }
+
 
         public override void ExecuteSkillEffect(Vector2Int targetPosition, Transform casterTransform)
         {
+            // Check mana cost
+            if (playerStats != null && !playerStats.TryUseMana(manaCost))
+            {
+                Debug.Log("Not enough mana to cast MagneticPull!");
+                return;
+            }
+            
             Debug.Log($"Magnetic Pull Skill activated at {targetPosition}");
 
-            TileGrid tileGrid = FindObjectOfType<TileGrid>();
             if (tileGrid == null)
             {
                 Debug.LogError("TileGrid not found in the scene!");
                 return;
             }
 
+            // ... rest of the existing ExecuteSkillEffect code remains the same ...
             List<GameObject> pullTargets = new List<GameObject>();
-            List<Vector2Int> currentPositions = new List<Vector2Int>();  // Store current positions
+            List<Vector2Int> currentPositions = new List<Vector2Int>();
             List<Vector2Int> targetGridPositions = new List<Vector2Int>();
             List<Vector2> offsets = new List<Vector2>();
             List<bool> validPulls = new List<bool>();
             
-            // Track which positions are already targeted to prevent multiple enemies from being pulled to the same tile
             HashSet<Vector2Int> targetedPositions = new HashSet<Vector2Int>();
-
-            // First pass: collect all potential pulls
             List<PullCandidate> pullCandidates = new List<PullCandidate>();
             
-            // Scan the grid for enemies
             for (int x = 0; x < tileGrid.gridWidth; x++)
             {
                 for (int y = 0; y < tileGrid.gridHeight; y++)
@@ -48,49 +72,40 @@ namespace SkillSystem
                 }
             }
             
-            // Sort candidates by x position (leftmost first) to prioritize enemies closer to player side
             pullCandidates.Sort((a, b) => a.currentPosition.x.CompareTo(b.currentPosition.x));
             
-            // Second pass: assign valid pull targets, preventing duplicates
             foreach (var candidate in pullCandidates)
             {
-                // Skip candidates that are already physically occupied
-                // THIS IS THE KEY FIX - we're now checking isPhysicallyOccupied before considering the target
                 if (candidate.isPhysicallyOccupied)
                 {
                     Debug.Log($"Enemy at {candidate.currentPosition} cannot pull to {candidate.targetPosition} - target is physically occupied");
                     continue;
                 }
                 
-                // Check if the target position is already targeted by another pull
                 if (targetedPositions.Contains(candidate.targetPosition))
                 {
-                    // Skip this candidate or mark as invalid pull
                     pullTargets.Add(candidate.enemy.gameObject);
                     currentPositions.Add(candidate.currentPosition);
-                    targetGridPositions.Add(candidate.targetPosition); // We'll use this, but the pull won't happen
+                    targetGridPositions.Add(candidate.targetPosition);
                     offsets.Add(candidate.offset);
-                    validPulls.Add(false); // Mark as invalid
+                    validPulls.Add(false);
                     
                     Debug.Log($"Enemy at {candidate.currentPosition} cannot pull to {candidate.targetPosition} - position already targeted");
                 }
                 else
                 {
-                    // This is a valid pull
                     pullTargets.Add(candidate.enemy.gameObject);
                     currentPositions.Add(candidate.currentPosition);
                     targetGridPositions.Add(candidate.targetPosition);
                     offsets.Add(candidate.offset);
                     validPulls.Add(true);
                     
-                    // Reserve this target position
                     targetedPositions.Add(candidate.targetPosition);
                     
                     Debug.Log($"Enemy at {candidate.currentPosition} will pull to {candidate.targetPosition}");
                 }
             }
 
-            // Prepare enemies for pulling
             for (int i = 0; i < pullTargets.Count; i++)
             {
                 if (pullTargets[i] != null && validPulls[i])
@@ -103,7 +118,6 @@ namespace SkillSystem
                 }
             }
 
-            // Execute the pull animation for each valid target
             for (int i = 0; i < pullTargets.Count; i++)
             {
                 if (pullTargets[i] == null) continue;

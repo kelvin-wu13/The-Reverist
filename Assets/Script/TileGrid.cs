@@ -7,6 +7,10 @@ public enum TileType
     Player,
     Enemy,
     Empty,
+    PlayerCracked,
+    PlayerBroken,
+    EnemyCracked,
+    EnemyBroken,
     Cracked,
     Broken
 }
@@ -17,8 +21,10 @@ public class TileSet
     public Sprite playerTileSprite;
     public Sprite enemyTileSprite;
     public Sprite emptyTileSprite;
-    public Sprite crackedTileSprite;
-    public Sprite brokenTileSprite;
+    public Sprite playerCrackedTileSprite;
+    public Sprite playerBrokenTileSprite;
+    public Sprite enemyCrackedTileSprite;
+    public Sprite enemyBrokenTileSprite;
 }
 
 public class TileGrid : MonoBehaviour
@@ -288,12 +294,20 @@ public class TileGrid : MonoBehaviour
                     // Update originalTileType only for base types (not damage states)
                     originalTileTypes[gridPosition.x, gridPosition.y] = TileType.Empty;
                     break;
-                case TileType.Cracked:
-                    spriteRenderer.sprite = tileSet.crackedTileSprite;
+                case TileType.PlayerCracked:
+                    spriteRenderer.sprite = tileSet.playerCrackedTileSprite;
                     // Don't update originalTileType for damage states
                     break;
-                case TileType.Broken:
-                    spriteRenderer.sprite = tileSet.brokenTileSprite;
+                case TileType.PlayerBroken:
+                    spriteRenderer.sprite = tileSet.playerBrokenTileSprite;
+                    // Don't update originalTileType for damage states
+                    break;
+                case TileType.EnemyCracked:
+                    spriteRenderer.sprite = tileSet.enemyCrackedTileSprite;
+                    // Don't update originalTileType for damage states
+                    break;
+                case TileType.EnemyBroken:
+                    spriteRenderer.sprite = tileSet.enemyBrokenTileSprite;
                     // Don't update originalTileType for damage states
                     break;
             }
@@ -308,21 +322,50 @@ public class TileGrid : MonoBehaviour
     
     public bool IsValidPlayerPosition(Vector2Int gridPosition)
     {
-        // Check if position is valid and not an enemy tile or a broken tile
+        // Check if position is valid and not an enemy tile or any broken tile
         return IsValidGridPosition(gridPosition) && 
                grid[gridPosition.x, gridPosition.y] != TileType.Enemy &&
-               grid[gridPosition.x, gridPosition.y] != TileType.Broken;
+               grid[gridPosition.x, gridPosition.y] != TileType.EnemyCracked &&
+               grid[gridPosition.x, gridPosition.y] != TileType.EnemyBroken &&
+               grid[gridPosition.x, gridPosition.y] != TileType.Broken &&
+               grid[gridPosition.x, gridPosition.y] != TileType.PlayerBroken;
     }
 
     public void CrackTile(Vector2Int gridPosition)
     {
-        if (IsValidGridPosition(gridPosition) && grid[gridPosition.x, gridPosition.y] != TileType.Broken)
+        if (IsValidGridPosition(gridPosition) && 
+            grid[gridPosition.x, gridPosition.y] != TileType.Broken &&
+            grid[gridPosition.x, gridPosition.y] != TileType.PlayerBroken &&
+            grid[gridPosition.x, gridPosition.y] != TileType.EnemyBroken)
         {
-            grid[gridPosition.x, gridPosition.y] = TileType.Cracked;
+            // Determine the appropriate cracked tile type based on the original tile
+            TileType crackedType;
+            switch (originalTileTypes[gridPosition.x, gridPosition.y])
+            {
+                case TileType.Player:
+                    crackedType = TileType.PlayerCracked;
+                    break;
+                case TileType.Enemy:
+                    crackedType = TileType.EnemyCracked;
+                    break;
+                default:
+                    crackedType = TileType.Cracked;
+                    break;
+            }
             
-            // Update tile sprite to cracked
+            grid[gridPosition.x, gridPosition.y] = crackedType;
+            
+            // Update tile sprite to appropriate cracked type
             SpriteRenderer spriteRenderer = tileObjects[gridPosition.x, gridPosition.y].GetComponent<SpriteRenderer>();
-            spriteRenderer.sprite = tileSet.crackedTileSprite;
+            switch (crackedType)
+            {
+                case TileType.PlayerCracked:
+                    spriteRenderer.sprite = tileSet.playerCrackedTileSprite;
+                    break;
+                case TileType.EnemyCracked:
+                    spriteRenderer.sprite = tileSet.enemyCrackedTileSprite;
+                    break;
+            }
             
             // Optional: Add some visual effect to indicate the crack
             StartCoroutine(TileCrackEffect(gridPosition));
@@ -336,11 +379,34 @@ public class TileGrid : MonoBehaviour
     {
         if (IsValidGridPosition(gridPosition))
         {
-            grid[gridPosition.x, gridPosition.y] = TileType.Broken;
+            // Determine the appropriate broken tile type based on the original tile
+            TileType brokenType;
+            switch (originalTileTypes[gridPosition.x, gridPosition.y])
+            {
+                case TileType.Player:
+                    brokenType = TileType.PlayerBroken;
+                    break;
+                case TileType.Enemy:
+                    brokenType = TileType.EnemyBroken;
+                    break;
+                default:
+                    brokenType = TileType.Broken;
+                    break;
+            }
             
-            // Update tile sprite to broken
+            grid[gridPosition.x, gridPosition.y] = brokenType;
+            
+            // Update tile sprite to appropriate broken type
             SpriteRenderer spriteRenderer = tileObjects[gridPosition.x, gridPosition.y].GetComponent<SpriteRenderer>();
-            spriteRenderer.sprite = tileSet.brokenTileSprite;
+            switch (brokenType)
+            {
+                case TileType.PlayerBroken:
+                    spriteRenderer.sprite = tileSet.playerBrokenTileSprite;
+                    break;
+                case TileType.EnemyBroken:
+                    spriteRenderer.sprite = tileSet.enemyBrokenTileSprite;
+                    break;
+            }
             
             // Optional: Add some visual effect to indicate the breaking
             StartCoroutine(TileBreakEffect(gridPosition));
@@ -421,8 +487,11 @@ public class TileGrid : MonoBehaviour
     {
         yield return new WaitForSeconds(duration);
         
-        // Only repair if the tile is still cracked
-        if (IsValidGridPosition(gridPosition) && grid[gridPosition.x, gridPosition.y] == TileType.Cracked)
+        // Only repair if the tile is still cracked (any cracked type)
+        if (IsValidGridPosition(gridPosition) && 
+            (grid[gridPosition.x, gridPosition.y] == TileType.Cracked ||
+             grid[gridPosition.x, gridPosition.y] == TileType.PlayerCracked ||
+             grid[gridPosition.x, gridPosition.y] == TileType.EnemyCracked))
         {
             // Reset to the original tile type
             TileType originalType = originalTileTypes[gridPosition.x, gridPosition.y];
@@ -437,8 +506,11 @@ public class TileGrid : MonoBehaviour
     {
         yield return new WaitForSeconds(duration);
         
-        // Only repair if the tile is still broken
-        if (IsValidGridPosition(gridPosition) && grid[gridPosition.x, gridPosition.y] == TileType.Broken)
+        // Only repair if the tile is still broken (any broken type)
+        if (IsValidGridPosition(gridPosition) && 
+            (grid[gridPosition.x, gridPosition.y] == TileType.Broken ||
+             grid[gridPosition.x, gridPosition.y] == TileType.PlayerBroken ||
+             grid[gridPosition.x, gridPosition.y] == TileType.EnemyBroken))
         {
             // Reset to the original tile type
             TileType originalType = originalTileTypes[gridPosition.x, gridPosition.y];
@@ -624,6 +696,18 @@ public class TileGrid : MonoBehaviour
                             break;
                         case TileType.Empty:
                             Gizmos.color = new Color(0.7f, 0.7f, 0.7f, 0.3f); // Gray
+                            break;
+                        case TileType.PlayerCracked:
+                            Gizmos.color = new Color(0.5f, 1, 0.5f, 0.3f); // Light Green
+                            break;
+                        case TileType.PlayerBroken:
+                            Gizmos.color = new Color(0, 0.5f, 0, 0.3f); // Dark Green
+                            break;
+                        case TileType.EnemyCracked:
+                            Gizmos.color = new Color(1, 0.5f, 0.5f, 0.3f); // Light Red
+                            break;
+                        case TileType.EnemyBroken:
+                            Gizmos.color = new Color(0.5f, 0, 0, 0.3f); // Dark Red
                             break;
                         case TileType.Cracked:
                             Gizmos.color = new Color(1, 1, 0, 0.3f); // Yellow

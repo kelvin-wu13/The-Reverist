@@ -9,6 +9,8 @@ public class WilloWisp : Skill
     [SerializeField] private int damageAmount = 20;
     [SerializeField] private int maxShots = 3;
     [SerializeField] private float chargeTime = 1.0f; // Time it takes to charge an attack
+    [SerializeField] public float cooldownDuration = 2.0f;
+    [SerializeField] public float manaCost = 2.0f;
 
     [Header("Visual Effects")]
     [SerializeField] private Color attackFlashColor = Color.red;
@@ -16,6 +18,7 @@ public class WilloWisp : Skill
     [SerializeField] private float flashDuration = 0.1f;
 
     private TileGrid tileGrid;
+    private PlayerStats playerStats;
     private Transform targetEnemy;
     private Vector2Int currentGridPosition;
     private Vector2Int targetPositionAtChargeStart;
@@ -31,6 +34,14 @@ public class WilloWisp : Skill
         // Find TileGrid
         tileGrid = FindObjectOfType<TileGrid>();
         if (tileGrid == null)
+        {
+            Debug.LogError("EQSkill: TileGrid not found!");
+            return;
+        }
+
+        // Find PlayerStats
+        playerStats = FindObjectOfType<PlayerStats>();
+        if (playerStats == null)
         {
             Debug.LogError("EQSkill: TileGrid not found!");
             return;
@@ -58,16 +69,24 @@ public class WilloWisp : Skill
 
     private IEnumerator FindAndEngageEnemies()
     {
+        // Move mana check to the very beginning, before any other logic
+        if (playerStats != null && !playerStats.TryUseMana(manaCost))
+        {
+            Debug.Log("Not enough mana to cast WilloWisp!");
+            Destroy(gameObject); // Destroy the skill object if mana check fails
+            yield break;
+        }
+        
         while (isSkillActive && shotsFired < maxShots)
-        { 
+        {
             // Debug logging to track progress
             Debug.Log($"EQSkill: Shots fired: {shotsFired}/{maxShots}");
-            
+
             // Find nearest enemy if we don't have one or if current target is destroyed
             if (targetEnemy == null || !targetEnemy.gameObject.activeInHierarchy)
             {
                 targetEnemy = FindNearestEnemy();
-                
+
                 // If no enemies found, wait and try again
                 if (targetEnemy == null)
                 {
@@ -79,14 +98,14 @@ public class WilloWisp : Skill
 
             // Always check enemy's current position
             Vector2Int enemyGridPos = tileGrid.GetGridPosition(targetEnemy.position);
-            
+
             // Always chase the enemy first before deciding to attack
             if (currentGridPosition != enemyGridPos)
             {
                 Debug.Log($"Moving towards enemy from {currentGridPosition} to {enemyGridPos}");
                 // Move towards enemy
                 yield return StartCoroutine(MoveTowardsEnemy());
-                
+
                 // Check if target was destroyed during movement
                 if (targetEnemy == null || !targetEnemy.gameObject.activeInHierarchy)
                 {
@@ -94,25 +113,25 @@ public class WilloWisp : Skill
                     continue;
                 }
             }
-            
+
             // After movement, recheck if we're in the same position as the enemy
             // Enemy might have moved during our movement
             if (targetEnemy != null && targetEnemy.gameObject.activeInHierarchy)
             {
                 enemyGridPos = tileGrid.GetGridPosition(targetEnemy.position);
-                
+
                 if (currentGridPosition == enemyGridPos)
                 {
                     // Record enemy position at charge start
                     targetPositionAtChargeStart = enemyGridPos;
-                    
+
                     // Only charge attack if we're in the same tile
                     Debug.Log("In same tile as enemy, charging attack");
                     yield return StartCoroutine(ChargeAttack());
-                    
+
                     // Perform the attack after charging
                     yield return StartCoroutine(PerformAttack());
-                    
+
                     // Check if we're done with all shots
                     if (shotsFired >= maxShots)
                     {

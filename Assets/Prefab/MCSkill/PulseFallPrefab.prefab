@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8056335320807435803}
   - component: {fileID: 8089008044302279975}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: PulseFallPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -45,7 +45,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifetime: 2
-  skillEffect: {fileID: 0}
+  skillEffect: {fileID: 8558445127854203552, guid: 849709c9b5aa7784d8a9c19913d8b5b5, type: 3}
+  cooldownDuration: 3
+  manaCost: 4
   damageAmount: 20
   horizontalRange: 1
   impactDelay: 0.5

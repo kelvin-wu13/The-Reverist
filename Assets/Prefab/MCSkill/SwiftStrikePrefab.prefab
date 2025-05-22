@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3435341443546567909}
   - component: {fileID: 7083302308307868589}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SwiftStrikePrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -44,8 +44,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f196453ac450cb45b192a3b529a73ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lifetime: 2
-  skillEffect: {fileID: 0}
+  lifetime: 1
+  skillEffect: {fileID: 8847787113060996220, guid: ad2c234e95bf4724f9db89e412eb7043, type: 3}
+  cooldownDuration: 3
+  manaCost: 3
   dashDuration: 0.3
   dashCurve:
     serializedVersion: 2
@@ -72,9 +74,8 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   dashEffectPrefab: {fileID: 0}
-  wqSkillPrefab: {fileID: 6941465084218670886, guid: 12c1fc04740146a498097f8d7455815e, type: 3}
-  verticalAttackRange: 3
-  delayBetweenAttacks: 0.2
+  damageAmount: 10
+  effectRadius: 0.5
   returnDelay: 0.5
   returnDuration: 0.3
   returnCurve:

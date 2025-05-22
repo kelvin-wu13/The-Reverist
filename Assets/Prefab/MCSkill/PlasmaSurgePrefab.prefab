@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4454145913802207601}
   - component: {fileID: 4454145913802207602}
   - component: {fileID: 4454145913802207603}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: QW_PLASMA_SURGE
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4913,7 +4913,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7194397728543033825}
   - component: {fileID: 2196698502049217820}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: PlasmaSurgePrefab
   m_TagString: Untagged
   m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}

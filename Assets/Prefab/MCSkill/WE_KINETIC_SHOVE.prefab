@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2377531999357103395}
   - component: {fileID: 4617603658059335134}
   - component: {fileID: 938471254920945364}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: WE_KINETIC_SHOVE
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4918,11 +4918,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lifetime: 1
   skillEffect: {fileID: 0}
-  damageAmount: 25
+  damageAmount: 10
   knockbackForce: 1
   manaCost: 1.5
   cooldownDuration: 2
-  movementLockDuration: 1
+  movementLockDuration: 0.5
   hitEffect: {fileID: 0}
   hitSound: {fileID: 0}
   aoeIndicatorPrefab: {fileID: 0}

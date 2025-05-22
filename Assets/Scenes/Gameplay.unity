@@ -233,9 +233,11 @@ MonoBehaviour:
     playerTileSprite: {fileID: -7704895832629564282, guid: 311abb7e017bdbf428afa2b69198f3b6, type: 3}
     enemyTileSprite: {fileID: 7330980621696116706, guid: 311abb7e017bdbf428afa2b69198f3b6, type: 3}
     emptyTileSprite: {fileID: 0}
-    crackedTileSprite: {fileID: 781061624, guid: 58793761428e3bb4e82a00424135bef2, type: 3}
-    brokenTileSprite: {fileID: 1692011548, guid: 58793761428e3bb4e82a00424135bef2, type: 3}
-  tileRenderingLayer: 0
+    playerCrackedTileSprite: {fileID: 2976775680879487497, guid: 518ab88cc1a255f40a090466c1ea2482, type: 3}
+    playerBrokenTileSprite: {fileID: 1155187104852230514, guid: be95627a63dfade4191be955162d0d0c, type: 3}
+    enemyCrackedTileSprite: {fileID: -734287881600552513, guid: 518ab88cc1a255f40a090466c1ea2482, type: 3}
+    enemyBrokenTileSprite: {fileID: 1387351681231225049, guid: be95627a63dfade4191be955162d0d0c, type: 3}
+  tileRenderingLayer: -1
   gridOffset: {x: 0, y: 0}
 --- !u!4 &334597319
 Transform:
@@ -295,7 +297,7 @@ GameObject:
   - component: {fileID: 368758681}
   - component: {fileID: 368758680}
   - component: {fileID: 368758679}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -363,7 +365,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: -5
   m_TargetDisplay: 0
 --- !u!224 &368758682
 RectTransform:
@@ -793,10 +795,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1573556183}
   - component: {fileID: 1573556182}
+  - component: {fileID: 1573556192}
   - component: {fileID: 1573556184}
   - component: {fileID: 1573556187}
   - component: {fileID: 1573556186}
-  - component: {fileID: 1573556192}
   - component: {fileID: 1573556188}
   - component: {fileID: 1573556190}
   - component: {fileID: 1573556191}
@@ -940,7 +942,6 @@ MonoBehaviour:
   QuickSlashPrefab: {fileID: 6941465084218670886, guid: 12c1fc04740146a498097f8d7455815e, type: 3}
   KineticShovePrefab: {fileID: 7409639793283886480, guid: 0f3387441a0b68b4f8b3884e43bc3d11, type: 3}
   showDebugLogs: 1
-  firstSkill: 0
 --- !u!95 &1573556188
 Animator:
   serializedVersion: 7

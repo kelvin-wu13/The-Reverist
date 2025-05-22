@@ -21,7 +21,7 @@ namespace SkillSystem
         [SerializeField] private Color indicatorColor = new Color(0, 1, 1, 0.5f); // Cyan semi-transparent
 
         private TileGrid tileGrid;
-        private List<GameObject> temporaryEffects = new List<GameObject>();
+        private PlayerStats playerStats;
 
         private void Awake()
         {
@@ -30,10 +30,23 @@ namespace SkillSystem
             {
                 Debug.LogError("WESkill: Could not find TileGrid component!");
             }
+
+            playerStats = FindObjectOfType<PlayerStats>();
+            if (playerStats == null)
+            {
+                Debug.Log("KineticShove: Cant find PlayerStat");
+            }
         }
 
         public override void ExecuteSkillEffect(Vector2Int targetPosition, Transform casterTransform)
         {
+            // Check mana cost - FIXED: Changed || to &&
+            if (playerStats == null || !playerStats.TryUseMana(manaCost))
+            {
+                Debug.Log("Not enough mana to cast KineticShove!");
+                return;
+            }
+            
             Vector2Int casterPosition = tileGrid.GetGridPosition(casterTransform.position);
             Vector2Int direction = Vector2Int.right;
 
@@ -82,31 +95,37 @@ namespace SkillSystem
             return null;
         }
 
+        // UPDATED: Simplified knockback to always push exactly 1 tile
         private void TryKnockback(Enemy enemy, Vector2Int currentPos, Vector2Int direction)
         {
             Vector2Int knockbackPos = currentPos + direction;
 
-            if (!tileGrid.IsValidGridPosition(knockbackPos)) return;
-            if (tileGrid.grid[knockbackPos.x, knockbackPos.y] == TileType.Broken) return;
+            // Check if the knockback position is valid
+            if (!tileGrid.IsValidGridPosition(knockbackPos)) 
+            {
+                Debug.Log($"Knockback failed: Position {knockbackPos} is outside grid bounds");
+                return;
+            }
+            
+            // Check if the knockback position is a broken tile
+            if (tileGrid.grid[knockbackPos.x, knockbackPos.y] == TileType.Broken || 
+                tileGrid.grid[knockbackPos.x, knockbackPos.y] == TileType.PlayerBroken || 
+                tileGrid.grid[knockbackPos.x, knockbackPos.y] == TileType.EnemyBroken) 
+            {
+                Debug.Log($"Knockback failed: Position {knockbackPos} is a broken tile");
+                return;
+            }
 
+            // Check if there's another enemy at the knockback position
             Enemy obstacleEnemy = FindEnemyAtPosition(knockbackPos);
-
             if (obstacleEnemy != null)
             {
-                Vector2Int doubleKnockbackPos = knockbackPos + direction;
-
-                if (!tileGrid.IsValidGridPosition(doubleKnockbackPos) ||
-                    tileGrid.grid[doubleKnockbackPos.x, doubleKnockbackPos.y] == TileType.Broken ||
-                    FindEnemyAtPosition(doubleKnockbackPos) != null)
-                    return;
-
-                ApplyKnockback(obstacleEnemy, knockbackPos, doubleKnockbackPos);
-                ApplyKnockback(enemy, currentPos, knockbackPos);
+                Debug.Log($"Knockback failed: Position {knockbackPos} is occupied by another enemy");
+                return;
             }
-            else
-            {
-                ApplyKnockback(enemy, currentPos, knockbackPos);
-            }
+
+            // All checks passed, apply knockback
+            ApplyKnockback(enemy, currentPos, knockbackPos);
         }
 
         private void ApplyKnockback(Enemy enemy, Vector2Int startPos, Vector2Int endPos)

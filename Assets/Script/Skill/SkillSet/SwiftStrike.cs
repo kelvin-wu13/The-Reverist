@@ -7,6 +7,10 @@ namespace SkillSystem
 {
     public class SwiftStrike : Skill
     {
+        [Header("Skill Properties")]
+        [SerializeField] public float cooldownDuration = 3.0f;
+        [SerializeField] public float manaCost = 15.0f;
+
         [Header("Dash Settings")]
         [SerializeField] private float dashDuration = 0.3f;
         [SerializeField] private AnimationCurve dashCurve;
@@ -28,20 +32,54 @@ namespace SkillSystem
         private Vector2Int originalPosition;
         private Vector3 originalWorldPosition;
         private bool isDashing = false;
-        
+        private PlayerStats playerStats;
+
         private void Start()
         {
             // Get tile grid reference
             tileGrid = FindObjectOfType<TileGrid>();
             if (tileGrid == null)
             {
-                Debug.LogError("WWSkill: Could not find TileGrid in the scene!");
+                Debug.LogError("SwiftStrike: Could not find TileGrid in the scene!");
                 Destroy(gameObject);
                 return;
             }
-            
-            // Execute the dash immediately
-            StartCoroutine(ExecuteDash());
+
+            // Find PlayerStats component
+            if (playerTransform != null)
+            {
+                playerStats = playerTransform.GetComponent<PlayerStats>();
+                if (playerStats == null)
+                {
+                    playerStats = playerTransform.GetComponentInChildren<PlayerStats>();
+                }
+            }
+
+            if (playerStats == null)
+            {
+                playerStats = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerStats>();
+            }
+
+            // Check if player has enough mana before executing the skill
+            if (playerStats != null)
+            {
+                if (playerStats.TryUseMana(manaCost))
+                {
+                    Debug.Log($"SwiftStrike: Used {manaCost} mana to cast skill");
+                    // Execute the dash immediately
+                    StartCoroutine(ExecuteDash());
+                }
+                else
+                {
+                    Debug.LogWarning("SwiftStrike: Not enough mana to cast skill!");
+                    Destroy(gameObject);
+                }
+            }
+            if (skillEffect != null)
+            {
+                skillEffect.transform.position = transform.position;
+                skillEffect.Play();
+            }
         }
         
         public override void Initialize(Vector2Int targetPos, SkillCombination skillType, Transform caster)
@@ -58,7 +96,7 @@ namespace SkillSystem
             originalPosition = tileGrid != null ? tileGrid.GetGridPosition(playerTransform.position) : Vector2Int.zero;
             originalWorldPosition = playerTransform.position;
             
-            Debug.Log($"WWSkill: Stored original position at {originalPosition} (world: {originalWorldPosition})");
+            Debug.Log($"SwiftStrike: Stored original position at {originalPosition} (world: {originalWorldPosition})");
         }
         
         public override void ExecuteSkillEffect(Vector2Int targetPosition, Transform casterTransform)
@@ -85,7 +123,7 @@ namespace SkillSystem
             // Modified validation: Allow movement into enemy grid but not into broken tiles
             if (!IsValidDashPosition(dashPosition))
             {
-                Debug.LogWarning("WWSkill: Dash target position is invalid, trying to find a valid position nearby");
+                Debug.LogWarning("SwiftStrike: Dash target position is invalid, trying to find a valid position nearby");
                 
                 // Try to find a valid position nearby
                 List<Vector2Int> adjacentPositions = new List<Vector2Int>
@@ -108,7 +146,7 @@ namespace SkillSystem
                 // If still invalid, cancel the dash
                 if (!IsValidDashPosition(dashPosition))
                 {
-                    Debug.LogWarning("WWSkill: Could not find a valid dash position, canceling skill");
+                    Debug.LogWarning("SwiftStrike: Could not find a valid dash position, canceling skill");
                     Destroy(gameObject);
                     yield break;
                 }
@@ -119,6 +157,11 @@ namespace SkillSystem
             {
                 GameObject dashEffect = Instantiate(dashEffectPrefab, playerTransform.position, Quaternion.identity);
                 Destroy(dashEffect, dashDuration + 0.5f);
+            }
+            else
+            {
+                // Create a simple visual effect if no prefab is available
+                CreateSimpleDashEffect(playerTransform.position, dashDuration);
             }
             
             // Store original position
@@ -173,6 +216,75 @@ namespace SkillSystem
             
             // Return to original position
             yield return StartCoroutine(ReturnToOriginalPosition());
+        }
+
+        // Create a simple particle effect for dash if no prefab is available
+        private void CreateSimpleDashEffect(Vector3 position, float duration)
+        {
+            GameObject dashEffectObj = new GameObject("DashEffect");
+            dashEffectObj.transform.position = position;
+
+            // Create trail renderer
+            TrailRenderer trailRenderer = dashEffectObj.AddComponent<TrailRenderer>();
+            trailRenderer.startWidth = 0.3f;
+            trailRenderer.endWidth = 0.1f;
+            trailRenderer.time = dashDuration * 2f;
+
+            // Set material to default particle material
+            trailRenderer.material = new Material(Shader.Find("Sprites/Default"));
+            
+            // Set trail color
+            Gradient gradient = new Gradient();
+            gradient.SetKeys(
+                new GradientColorKey[] { new GradientColorKey(Color.white, 0.0f), new GradientColorKey(Color.blue, 1.0f) },
+                new GradientAlphaKey[] { new GradientAlphaKey(1.0f, 0.0f), new GradientAlphaKey(0.0f, 1.0f) }
+            );
+            trailRenderer.colorGradient = gradient;
+
+            // Destroy after duration
+            Destroy(dashEffectObj, duration + 1f);
+
+            // Attach to player if possible
+            if (playerTransform != null)
+            {
+                dashEffectObj.transform.SetParent(playerTransform);
+            }
+        }
+
+        // Create a simple particle effect for return if no prefab is available
+        private void CreateSimpleReturnEffect(Vector3 position, float duration)
+        {
+            GameObject returnEffectObj = new GameObject("ReturnEffect");
+            returnEffectObj.transform.position = position;
+
+            // Create particle system
+            ParticleSystem particleSystem = returnEffectObj.AddComponent<ParticleSystem>();
+            var main = particleSystem.main;
+            main.startSpeed = 2f;
+            main.startSize = 0.2f;
+            main.startLifetime = 0.5f;
+            main.duration = duration;
+            
+            // Particle system renderer
+            var renderer = particleSystem.GetComponent<ParticleSystemRenderer>();
+            renderer.material = new Material(Shader.Find("Sprites/Default"));
+
+            // Set emission
+            var emission = particleSystem.emission;
+            emission.rateOverTime = 20;
+
+            // Set color over lifetime
+            var colorOverLifetime = particleSystem.colorOverLifetime;
+            colorOverLifetime.enabled = true;
+            Gradient gradient = new Gradient();
+            gradient.SetKeys(
+                new GradientColorKey[] { new GradientColorKey(Color.green, 0.0f), new GradientColorKey(Color.white, 1.0f) },
+                new GradientAlphaKey[] { new GradientAlphaKey(1.0f, 0.0f), new GradientAlphaKey(0.0f, 1.0f) }
+            );
+            colorOverLifetime.color = gradient;
+
+            // Destroy after duration
+            Destroy(returnEffectObj, duration + 1f);
         }
         
         // New method to check if position is valid for dashing (allows enemy tiles but not broken tiles)
@@ -253,11 +365,16 @@ namespace SkillSystem
                 GameObject returnEffect = Instantiate(returnEffectPrefab, playerTransform.position, Quaternion.identity);
                 Destroy(returnEffect, returnDuration + 0.5f);
             }
+            else
+            {
+                // Create a simple visual effect if no prefab is available
+                CreateSimpleReturnEffect(playerTransform.position, returnDuration);
+            }
             
             Vector3 currentPosition = playerTransform.position;
             Vector3 returnPosition = originalWorldPosition; // Use the stored world position directly
             
-            Debug.Log($"WWSkill: Returning to original position at {originalPosition} (world: {returnPosition})");
+            Debug.Log($"SwiftStrike: Returning to original position at {originalPosition} (world: {returnPosition})");
             
             // Create a more complex path for smoother animation
             List<Vector3> path = GenerateSmoothPath(currentPosition, returnPosition, 5);

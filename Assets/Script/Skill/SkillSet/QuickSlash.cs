@@ -7,16 +7,40 @@ namespace SkillSystem
     {
         [SerializeField] private int damageAmount = 10;
         [SerializeField] private float effectRadius = 0.5f;
+        [SerializeField] public float manaCost = 2f;
+        [SerializeField] public float cooldownDuration = 2f;
         
         private TileGrid tileGrid;
+        private PlayerStats playerStats;
 
         private void Awake()
         {
-            // Find the TileGrid in the scene
-            tileGrid = FindObjectOfType<TileGrid>();
+            FindTileGrid();
+            FindPlayerStats();
+        }
+        
+        private void FindTileGrid()
+        {
             if (tileGrid == null)
             {
-                Debug.LogError("WQSkill: Could not find TileGrid in the scene!");
+                // Find the TileGrid in the scene
+                tileGrid = FindObjectOfType<TileGrid>();
+                if (tileGrid == null)
+                {
+                    Debug.LogError("QQSkill: Could not find TileGrid in the scene!");
+                }
+            }
+        }
+
+        private void FindPlayerStats()
+        {
+            if (playerStats == null)
+            {
+                playerStats = FindObjectOfType<PlayerStats>();
+                if (playerStats == null)
+                {
+                    Debug.LogWarning("QQSkill: Could not find PlayerStats in the scene. Mana consumption will not work correctly.");
+                }
             }
         }
 
@@ -24,7 +48,7 @@ namespace SkillSystem
         {
             // Log the skill execution
             Debug.Log($"Executing WQ skill at grid position {targetPosition}");
-            
+
             if (tileGrid == null)
             {
                 tileGrid = FindObjectOfType<TileGrid>();
@@ -34,16 +58,37 @@ namespace SkillSystem
                     return;
                 }
             }
-            
+
+            if (playerStats == null)
+            {
+                playerStats = casterTransform.GetComponent<PlayerStats>();
+                if (playerStats == null)
+                {
+                    playerStats = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerStats>();
+                    if (playerStats == null)
+                    {
+                        Debug.Log("QuickSlash : Cant find player Stat");
+                        return;
+                    }
+                }
+            }
+
+            //Check if player has enought mana
+            if (!playerStats.TryUseMana(manaCost))
+            {
+                Debug.Log($"QuickSlash: Not enough mana! Required: {manaCost}, Current: {playerStats.CurrentMana}");
+                return;
+            }
+
             // Get the forward direction based on caster's facing direction (default is right)
             Vector2 forwardDirection = casterTransform.right;
-            
+
             // Get player's current grid position
             Vector2Int playerGridPos = tileGrid.GetGridPosition(casterTransform.position);
-            
+
             // Calculate the target grid positions (1 tile in front of player, vertically aligned)
             Vector2Int frontTile;
-            
+
             // Determine which direction is "front" based on player's facing direction
             if (Mathf.Abs(forwardDirection.x) > Mathf.Abs(forwardDirection.y))
             {
@@ -61,13 +106,13 @@ namespace SkillSystem
                     playerGridPos.y + (forwardDirection.y > 0 ? 1 : -1)
                 );
             }
-            
+
             // Calculate the three vertical tiles
             List<Vector2Int> damageGridPositions = new List<Vector2Int>();
             damageGridPositions.Add(frontTile);
             damageGridPositions.Add(new Vector2Int(frontTile.x, frontTile.y + 1)); // Above
             damageGridPositions.Add(new Vector2Int(frontTile.x, frontTile.y - 1)); // Below
-            
+
             // Convert grid positions to world positions for damage application
             List<Vector2> damageWorldPositions = new List<Vector2>();
             foreach (Vector2Int gridPos in damageGridPositions)
@@ -75,21 +120,18 @@ namespace SkillSystem
                 if (tileGrid.IsValidGridPosition(gridPos))
                 {
                     damageWorldPositions.Add(tileGrid.GetWorldPosition(gridPos));
-                    
-                    // Visual effect - you could add a tile effect here
-                    // tileGrid.CrackTile(gridPos);
                 }
             }
-            
+
             // Apply damage to each position
             foreach (Vector2 pos in damageWorldPositions)
             {
                 // Debug visualization during runtime
                 Debug.DrawLine(casterTransform.position, pos, Color.red, 1f);
-                
+
                 // Find all colliders at this position
                 Collider2D[] hitColliders = Physics2D.OverlapCircleAll(pos, effectRadius);
-                
+
                 // Apply damage to any enemies found
                 foreach (Collider2D collider in hitColliders)
                 {
@@ -110,105 +152,9 @@ namespace SkillSystem
                     }
                 }
             }
-            
+
             // Call the base implementation if needed
             base.ExecuteSkillEffect(targetPosition, casterTransform);
-        }
-        
-        // Visualization in the editor
-        private void OnDrawGizmos()
-        {
-            // Draw gizmos even when not selected
-            DrawSkillGizmos();
-        }
-        
-        // Visualization when selected in the editor
-        private void OnDrawGizmosSelected()
-        {
-            // Draw more prominent gizmos when selected
-            DrawSkillGizmos();
-        }
-        
-        private void DrawSkillGizmos()
-        {
-            if (transform == null)
-                return;
-                
-            if (tileGrid == null)
-            {
-                tileGrid = FindObjectOfType<TileGrid>();
-                if (tileGrid == null)
-                    return;
-            }
-            
-            Transform casterTransform = transform;
-            Vector2 forwardDirection = casterTransform.right;
-            
-            // Get player's current grid position
-            Vector2Int playerGridPos = tileGrid.GetGridPosition(casterTransform.position);
-            
-            // Calculate the target grid positions (1 tile in front of player)
-            Vector2Int frontTile;
-            
-            // Determine which direction is "front" based on player's facing direction
-            if (Mathf.Abs(forwardDirection.x) > Mathf.Abs(forwardDirection.y))
-            {
-                // Facing horizontally (right or left)
-                frontTile = new Vector2Int(
-                    playerGridPos.x + (forwardDirection.x > 0 ? 1 : -1),
-                    playerGridPos.y
-                );
-            }
-            else
-            {
-                // Facing vertically (up or down)
-                frontTile = new Vector2Int(
-                    playerGridPos.x,
-                    playerGridPos.y + (forwardDirection.y > 0 ? 1 : -1)
-                );
-            }
-            
-            // Calculate the three vertical tiles
-            List<Vector2Int> damageGridPositions = new List<Vector2Int>();
-            damageGridPositions.Add(frontTile);
-            damageGridPositions.Add(new Vector2Int(frontTile.x, frontTile.y + 1)); // Above
-            damageGridPositions.Add(new Vector2Int(frontTile.x, frontTile.y - 1)); // Below
-            
-            // Draw lines and circles for each valid grid position
-            foreach (Vector2Int gridPos in damageGridPositions)
-            {
-                if (tileGrid.IsValidGridPosition(gridPos))
-                {
-                    Vector3 worldPos = tileGrid.GetWorldPosition(gridPos);
-                    
-                    // Draw forward line
-                    Gizmos.color = Color.yellow;
-                    Gizmos.DrawLine(casterTransform.position, worldPos);
-                    
-                    // Draw damage areas
-                    Gizmos.color = Color.red;
-                    Gizmos.DrawWireSphere(worldPos, effectRadius);
-                }
-            }
-            
-            // Connect the vertical positions with lines if they are valid
-            if (tileGrid.IsValidGridPosition(frontTile) && 
-                tileGrid.IsValidGridPosition(new Vector2Int(frontTile.x, frontTile.y + 1)))
-            {
-                Gizmos.DrawLine(
-                    tileGrid.GetWorldPosition(frontTile),
-                    tileGrid.GetWorldPosition(new Vector2Int(frontTile.x, frontTile.y + 1))
-                );
-            }
-            
-            if (tileGrid.IsValidGridPosition(frontTile) && 
-                tileGrid.IsValidGridPosition(new Vector2Int(frontTile.x, frontTile.y - 1)))
-            {
-                Gizmos.DrawLine(
-                    tileGrid.GetWorldPosition(frontTile),
-                    tileGrid.GetWorldPosition(new Vector2Int(frontTile.x, frontTile.y - 1))
-                );
-            }
         }
     }
 }

@@ -13,7 +13,7 @@ namespace SkillSystem
         [SerializeField] private GameObject projectilePrefab;
         [SerializeField] private GameObject explosionEffectPrefab;
         [SerializeField] private float explosionEffectDuration = 1.0f;
-        [SerializeField] private float manaCost = 1.5f; // Mana cost for casting this skill
+        [SerializeField] public float manaCost = 1.5f; // Mana cost for casting this skill
         [SerializeField] public float cooldownDuration = 1.5f; // Cooldown duration in seconds - make public so SkillCast can access it
 
         [Header("Grid-Based Settings")]

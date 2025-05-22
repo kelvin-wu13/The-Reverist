@@ -5,6 +5,10 @@ using SkillSystem;
 
 public class PulseFall : Skill
 {
+    [Header("Skill Properties")]
+    [SerializeField] public float cooldownDuration = 3.0f;
+    [SerializeField] public float manaCost = 15.0f;
+
     [Header("QE Skill Settings")]
     [SerializeField] private int damageAmount = 20;
     [SerializeField] private int horizontalRange = 1; // 1 means 3 tiles total (center + 1 on each side)
@@ -26,6 +30,7 @@ public class PulseFall : Skill
     private List<Vector2Int> crackedTilePositions = new List<Vector2Int>();
     private List<Vector2Int> enemyTilePositions = new List<Vector2Int>(); // Track enemy positions
     private AudioSource audioSource;
+    private PlayerStats playerStats;
     
     private void Awake()
     {
@@ -34,13 +39,19 @@ public class PulseFall : Skill
         {
             Debug.LogError("QESkill: Could not find TileGrid in the scene!");
         }
-        
+
+        playerStats = FindObjectOfType<PlayerStats>();
+        if (playerStats == null)
+        {
+            Debug.Log("PulseFall : Cant find playerStats component");
+        }
+
         playerCrosshair = FindObjectOfType<PlayerCrosshair>();
         if (playerCrosshair == null)
         {
             Debug.LogError("QESkill: Could not find PlayerCrosshair in the scene!");
         }
-        
+
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null && impactSound != null)
         {
@@ -54,6 +65,13 @@ public class PulseFall : Skill
         base.ExecuteSkillEffect(targetPosition, casterTransform);
         
         if (tileGrid == null) return;
+
+        //Check Mana Cost
+        if (playerStats != null && !playerStats.TryUseMana(manaCost))
+        {
+            Debug.Log("Not enough mana to cast PulseFall!");
+            return;
+        }
         
         // Get the target world position using the PlayerCrosshair
         Vector3 targetWorldPos;
