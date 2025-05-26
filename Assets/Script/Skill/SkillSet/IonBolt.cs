@@ -27,6 +27,7 @@ namespace SkillSystem
         private Vector2Int currentGridPosition;
         private PlayerMovement playerMovement;
         private PlayerStats playerStats;
+        private Animator animator;
 
         private void Awake()
         {

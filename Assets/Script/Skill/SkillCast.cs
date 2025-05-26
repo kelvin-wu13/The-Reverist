@@ -24,6 +24,7 @@ namespace SkillSystem
         public bool showDebugLogs = true;
 
         private SkillType firstSkill = SkillType.None;
+        private ComboTracker comboTracker;
 
         private Dictionary<SkillCombination, float> skillCooldowns = new();
         private Dictionary<SkillCombination, float> cooldownDurations = new();
@@ -161,6 +162,26 @@ namespace SkillSystem
                     Debug.Log($"Cast {combo} at {gridPos}");
 
                 StartSkillCooldown(combo);
+            }
+
+            if (comboTracker == null)
+            {
+                GameObject player = GameObject.FindGameObjectWithTag("Player");
+                if (player != null)
+                {
+                    comboTracker = player.GetComponent<ComboTracker>();
+                }
+            }
+
+            Animator animator = GameObject.FindGameObjectWithTag("Player")?.GetComponent<Animator>();
+            if (animator != null)
+            {
+                animator.SetBool("IsShooting", true);
+            }
+
+            if (comboTracker != null)
+            {
+                comboTracker.TriggerCombo();
             }
         }
 

@@ -1,17 +1,8 @@
 version: 2
 tpsheetFileNames:
 - Assets/codeandweb.com/Example/SpriteSheet/sprites.tpsheet
-- Assets/Sprite/MC/Dash/MC Dash.tpsheet
-- Assets/Sprite/MC/MC New Atk/MC NEW ATTACK.tpsheet
-- Assets/Sprite/MC/Shoot/MC Animation.tpsheet
 textureFileNames:
 - Assets/codeandweb.com/Example/SpriteSheet/sprites.png
-- Assets/Sprite/MC/Dash/MC Dash.png
-- Assets/Sprite/MC/MC New Atk/MC NEW ATTACK.png
-- Assets/Sprite/MC/Shoot/MC Animation.png
 normalmapFileNames:
 - Assets/codeandweb.com/Example/SpriteSheet/sprites_n.png
-- 
-- 
-- 
 enableDebugOutput: 0

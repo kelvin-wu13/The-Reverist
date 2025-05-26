@@ -799,6 +799,7 @@ GameObject:
   - component: {fileID: 1573556184}
   - component: {fileID: 1573556187}
   - component: {fileID: 1573556186}
+  - component: {fileID: 1573556193}
   - component: {fileID: 1573556188}
   - component: {fileID: 1573556190}
   - component: {fileID: 1573556191}
@@ -1054,6 +1055,20 @@ MonoBehaviour:
   OnPlayerDeath:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1573556193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1573556180}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e23209020ef6a4428235b935a580a4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  waitTime: 1.5
+  comboAmount: 3
 --- !u!1 &1585159248
 GameObject:
   m_ObjectHideFlags: 0

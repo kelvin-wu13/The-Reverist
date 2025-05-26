@@ -139,12 +139,12 @@ TextureImporter:
       name: MC_Attack_Spritesheet_0
       rect:
         serializedVersion: 2
-        x: 41
-        y: 1079
-        width: 601
-        height: 1072
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 1065
+        width: 1080
+        height: 1080
+      alignment: 9
+      pivot: {x: 0.35007995, y: 0.47125617}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -161,10 +161,10 @@ TextureImporter:
       name: MC_Attack_Spritesheet_1
       rect:
         serializedVersion: 2
-        x: 42
-        y: 0
-        width: 533
-        height: 1081
+        x: 1080
+        y: 1080
+        width: 1080
+        height: 1080
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,10 +183,10 @@ TextureImporter:
       name: MC_Attack_Spritesheet_2
       rect:
         serializedVersion: 2
-        x: 1151
-        y: 1079
-        width: 736
-        height: 932
+        x: 2160
+        y: 1080
+        width: 1080
+        height: 1080
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -205,10 +205,10 @@ TextureImporter:
       name: MC_Attack_Spritesheet_3
       rect:
         serializedVersion: 2
-        x: 2382
-        y: 1079
-        width: 562
-        height: 996
+        x: 3240
+        y: 1080
+        width: 1080
+        height: 1080
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -227,10 +227,10 @@ TextureImporter:
       name: MC_Attack_Spritesheet_4
       rect:
         serializedVersion: 2
-        x: 3508
-        y: 1079
-        width: 704
-        height: 1074
+        x: 4320
+        y: 1080
+        width: 1080
+        height: 1080
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -249,10 +249,10 @@ TextureImporter:
       name: MC_Attack_Spritesheet_5
       rect:
         serializedVersion: 2
-        x: 4707
-        y: 1079
-        width: 487
-        height: 1066
+        x: 5400
+        y: 1080
+        width: 1080
+        height: 1080
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -271,10 +271,10 @@ TextureImporter:
       name: MC_Attack_Spritesheet_6
       rect:
         serializedVersion: 2
-        x: 5455
-        y: 1079
-        width: 785
-        height: 970
+        x: 6480
+        y: 1080
+        width: 1080
+        height: 1080
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -293,10 +293,10 @@ TextureImporter:
       name: MC_Attack_Spritesheet_7
       rect:
         serializedVersion: 2
-        x: 6583
-        y: 1079
-        width: 731
-        height: 991
+        x: 0
+        y: 0
+        width: 1080
+        height: 1080
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -315,10 +315,10 @@ TextureImporter:
       name: MC_Attack_Spritesheet_8
       rect:
         serializedVersion: 2
-        x: 1179
+        x: 1080
         y: 0
-        width: 692
-        height: 963
+        width: 1080
+        height: 1080
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -337,10 +337,10 @@ TextureImporter:
       name: MC_Attack_Spritesheet_9
       rect:
         serializedVersion: 2
-        x: 2427
+        x: 2160
         y: 0
-        width: 687
-        height: 1075
+        width: 1080
+        height: 1080
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -359,10 +359,10 @@ TextureImporter:
       name: MC_Attack_Spritesheet_10
       rect:
         serializedVersion: 2
-        x: 3507
+        x: 3240
         y: 0
-        width: 687
-        height: 1074
+        width: 1080
+        height: 1080
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -381,10 +381,10 @@ TextureImporter:
       name: MC_Attack_Spritesheet_11
       rect:
         serializedVersion: 2
-        x: 4707
+        x: 4320
         y: 0
-        width: 487
-        height: 1065
+        width: 1080
+        height: 1080
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -403,10 +403,10 @@ TextureImporter:
       name: MC_Attack_Spritesheet_12
       rect:
         serializedVersion: 2
-        x: 5503
+        x: 5400
         y: 0
-        width: 733
-        height: 989
+        width: 1080
+        height: 1080
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -421,11 +421,33 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: MC_Attack_Spritesheet_13
+      rect:
+        serializedVersion: 2
+        x: 6480
+        y: 0
+        width: 1080
+        height: 1080
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: faa35877dcd43f1478675352f15ed056
+      internalID: 1035924866
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: ee50a4baa613db949b381cab93bcae91
     internalID: 0
     vertices: []
     indices: 
@@ -433,13 +455,16 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":7.0,"y":2.0},"gridSpriteSize":{"x":1080.0,"y":1080.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
       MC_Attack_Spritesheet_0: 4462789833941335868
       MC_Attack_Spritesheet_1: -6900980539354003606
       MC_Attack_Spritesheet_10: -6272413223872595202
       MC_Attack_Spritesheet_11: 4588809724741169879
       MC_Attack_Spritesheet_12: -169797024097285820
+      MC_Attack_Spritesheet_13: 1035924866
       MC_Attack_Spritesheet_2: 3718920987081009429
       MC_Attack_Spritesheet_3: 9010018683992343678
       MC_Attack_Spritesheet_4: 6617107332181585437
