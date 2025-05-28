@@ -81,9 +81,6 @@ namespace SkillSystem
             // Reset all triggers to ensure clean state
             animator.ResetTrigger("QuickSlash");
             animator.ResetTrigger("SwiftStrike");
-            
-            // Set isMelee to true
-            animator.SetBool("isMelee", true);
 
             // Small delay to ensure state changes are processed
             StartCoroutine(SetTriggerWithDelay(combo, animator));
@@ -222,7 +219,6 @@ namespace SkillSystem
                 else
                 {
                     // For ranged skills, use the existing shooting animation
-                    animator.SetBool("isMelee", false);
                     animator.SetBool("IsShooting", true);
                 }
             }

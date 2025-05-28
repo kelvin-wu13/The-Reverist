@@ -156,32 +156,25 @@ namespace SkillSystem
             base.ExecuteSkillEffect(targetPosition, casterTransform);
 
             // Reset melee animation after a short delay
-            StartCoroutine(ResetAnimationAfterDelay(1.0f));
+            ResetMeleeAnimation();
         }
 
         private void ResetMeleeAnimation()
         {
-            // Find the player's animator and reset melee state
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player != null)
             {
                 Animator animator = player.GetComponent<Animator>();
-                Debug.Log("Current animator state: " + animator.GetCurrentAnimatorStateInfo(0).IsName("YourMeleeState"));
                 if (animator != null)
                 {
-                    // Reset trigger and bool
                     animator.ResetTrigger("QuickSlash");
-                    animator.SetBool("isMelee", false);
-                    animator.Play("Idle");
+
+                    // Optional: force transition to idle
+                    animator.Play("PlayerIdle"); // replace "Idle" with your real idle state name
+
                     Debug.Log("QuickSlash: Reset melee animation state");
                 }
             }
-        }
-
-        private System.Collections.IEnumerator ResetAnimationAfterDelay(float delay)
-        {
-            yield return new WaitForSeconds(delay);
-            ResetMeleeAnimation();
         }
     }
 }

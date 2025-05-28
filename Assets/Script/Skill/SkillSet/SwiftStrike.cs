@@ -450,7 +450,6 @@ namespace SkillSystem
                 if (animator != null)
                 {
                     animator.ResetTrigger("SwiftStrike"); // or SwiftStrike
-                    animator.SetBool("isMelee", false);
                     animator.Play("Idle"); // Force state reset if needed
                     Debug.Log("SwiftStrike: Reset melee animation state");
                 }
