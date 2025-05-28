@@ -9,7 +9,7 @@ namespace SkillSystem
         [SerializeField] private float effectRadius = 0.5f;
         [SerializeField] public float manaCost = 2f;
         [SerializeField] public float cooldownDuration = 2f;
-        
+
         private TileGrid tileGrid;
         private PlayerStats playerStats;
 
@@ -18,7 +18,7 @@ namespace SkillSystem
             FindTileGrid();
             FindPlayerStats();
         }
-        
+
         private void FindTileGrid()
         {
             if (tileGrid == null)
@@ -152,9 +152,36 @@ namespace SkillSystem
                     }
                 }
             }
-
             // Call the base implementation if needed
             base.ExecuteSkillEffect(targetPosition, casterTransform);
+
+            // Reset melee animation after a short delay
+            StartCoroutine(ResetAnimationAfterDelay(1.0f));
+        }
+
+        private void ResetMeleeAnimation()
+        {
+            // Find the player's animator and reset melee state
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null)
+            {
+                Animator animator = player.GetComponent<Animator>();
+                Debug.Log("Current animator state: " + animator.GetCurrentAnimatorStateInfo(0).IsName("YourMeleeState"));
+                if (animator != null)
+                {
+                    // Reset trigger and bool
+                    animator.ResetTrigger("QuickSlash");
+                    animator.SetBool("isMelee", false);
+                    animator.Play("Idle");
+                    Debug.Log("QuickSlash: Reset melee animation state");
+                }
+            }
+        }
+
+        private System.Collections.IEnumerator ResetAnimationAfterDelay(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            ResetMeleeAnimation();
         }
     }
 }

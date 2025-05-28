@@ -71,6 +71,43 @@ namespace SkillSystem
             }
         }
 
+        private void TriggerMeleeAnimation(SkillCombination combo, Animator animator)
+        {
+            if (animator == null) return;
+
+            // Cancel all current animations first
+            animator.SetBool("IsShooting", false);
+            
+            // Reset all triggers to ensure clean state
+            animator.ResetTrigger("QuickSlash");
+            animator.ResetTrigger("SwiftStrike");
+            
+            // Set isMelee to true
+            animator.SetBool("isMelee", true);
+
+            // Small delay to ensure state changes are processed
+            StartCoroutine(SetTriggerWithDelay(combo, animator));
+        }
+
+        private System.Collections.IEnumerator SetTriggerWithDelay(SkillCombination combo, Animator animator)
+        {
+            yield return new WaitForEndOfFrame(); // Wait one frame
+            
+            // Trigger specific melee animation based on combo
+            switch (combo)
+            {
+                case SkillCombination.WQ: // QuickSlash
+                    animator.SetTrigger("QuickSlash");
+                    if (showDebugLogs) Debug.Log("Triggered QuickSlash animation");
+                    break;
+                    
+                case SkillCombination.WW: // SwiftStrike
+                    animator.SetTrigger("SwiftStrike");
+                    if (showDebugLogs) Debug.Log("Triggered SwiftStrike animation");
+                    break;
+            }
+        }
+
         private void CancelSkillInput()
         {
             if (firstSkill != SkillType.None)
@@ -173,10 +210,21 @@ namespace SkillSystem
                 }
             }
 
+            // Handle animations based on skill type
             Animator animator = GameObject.FindGameObjectWithTag("Player")?.GetComponent<Animator>();
             if (animator != null)
             {
-                animator.SetBool("IsShooting", true);
+                // Check if it's a melee skill
+                if (combo == SkillCombination.WQ || combo == SkillCombination.WW)
+                {
+                    TriggerMeleeAnimation(combo, animator);
+                }
+                else
+                {
+                    // For ranged skills, use the existing shooting animation
+                    animator.SetBool("isMelee", false);
+                    animator.SetBool("IsShooting", true);
+                }
             }
 
             if (comboTracker != null)

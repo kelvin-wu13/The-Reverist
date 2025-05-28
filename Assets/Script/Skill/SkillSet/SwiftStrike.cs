@@ -395,6 +395,9 @@ namespace SkillSystem
             // Ensure player is at exactly the return position
             playerTransform.position = returnPosition;
             isDashing = false;
+
+            //Reset melee animation before destroying
+            ResetMeleeAnimation();
             
             // Destroy this skill object after completion
             Destroy(gameObject, 0.5f);
@@ -437,7 +440,24 @@ namespace SkillSystem
             return Vector3.Lerp(path[index], path[index + 1], remainder);
         }
         
-        // Override OnDestroy to handle cleanup
+        private void ResetMeleeAnimation()
+        {
+            // Find the player's animator and reset melee state
+            if (playerTransform != null)
+            {
+                Animator animator = playerTransform.GetComponent<Animator>();
+                Debug.Log("Current animator state: " + animator.GetCurrentAnimatorStateInfo(0).IsName("YourMeleeState"));
+                if (animator != null)
+                {
+                    animator.ResetTrigger("SwiftStrike"); // or SwiftStrike
+                    animator.SetBool("isMelee", false);
+                    animator.Play("Idle"); // Force state reset if needed
+                    Debug.Log("SwiftStrike: Reset melee animation state");
+                }
+            }
+        }
+
+        // Modify your existing OnDestroy method to include animation reset
         private void OnDestroy()
         {
             // If the player was dashing when this was destroyed, ensure they can move again
@@ -451,75 +471,9 @@ namespace SkillSystem
                     playerTransform.position = originalWorldPosition;
                 }
             }
-        }
-        
-        private void OnDrawGizmos()
-        {
-            if (Application.isPlaying && tileGrid != null && playerTransform != null)
-            {
-                // Draw the dash path
-                Gizmos.color = Color.blue;
-                Vector3 dashTarget = tileGrid.GetWorldPosition(targetPosition) + new Vector3(0.5f, 0.5f, 0);
-                Gizmos.DrawLine(playerTransform.position, dashTarget);
-                
-                // Draw the attack pattern (vertical 3-tile)
-                Gizmos.color = new Color(1f, 0f, 0f, 0.3f);
-                
-                // Get player's forward direction
-                Vector2 forwardDirection = playerTransform.right;
-                
-                // Get the dash position
-                Vector2Int playerPos = tileGrid.GetGridPosition(playerTransform.position);
-                Vector2Int direction = targetPosition - playerPos;
-                if (direction.x != 0) direction.x = direction.x / Mathf.Abs(direction.x);
-                if (direction.y != 0) direction.y = direction.y / Mathf.Abs(direction.y);
-                Vector2Int dashPosition = targetPosition - direction;
-                
-                // Calculate position 1 tile in front of dash position
-                Vector2Int frontTile;
-                if (Mathf.Abs(forwardDirection.x) > Mathf.Abs(forwardDirection.y))
-                {
-                    // Facing horizontally (right or left)
-                    frontTile = new Vector2Int(
-                        dashPosition.x + (forwardDirection.x > 0 ? 1 : -1),
-                        dashPosition.y
-                    );
-                }
-                else
-                {
-                    // Facing vertically (up or down)
-                    frontTile = new Vector2Int(
-                        dashPosition.x,
-                        dashPosition.y + (forwardDirection.y > 0 ? 1 : -1)
-                    );
-                }
-                
-                // Draw the three vertical tiles
-                List<Vector2Int> attackPositions = new List<Vector2Int>();
-                attackPositions.Add(frontTile);
-                attackPositions.Add(new Vector2Int(frontTile.x, frontTile.y + 1));
-                attackPositions.Add(new Vector2Int(frontTile.x, frontTile.y - 1));
-                
-                foreach (Vector2Int pos in attackPositions)
-                {
-                    if (tileGrid.IsValidGridPosition(pos))
-                    {
-                        Vector3 worldPos = tileGrid.GetWorldPosition(pos) + new Vector3(0.5f, 0.5f, 0);
-                        Gizmos.DrawCube(worldPos, new Vector3(1f, 1f, 0.1f));
-                        
-                        // Draw effect radius
-                        Gizmos.color = Color.red;
-                        Gizmos.DrawWireSphere(worldPos, effectRadius);
-                    }
-                }
-                
-                // Draw return path
-                if (originalWorldPosition != Vector3.zero)
-                {
-                    Gizmos.color = Color.green;
-                    Gizmos.DrawLine(dashTarget, originalWorldPosition);
-                }
-            }
+            
+            // Reset melee animation state when skill is destroyed
+            ResetMeleeAnimation();
         }
     }
 }

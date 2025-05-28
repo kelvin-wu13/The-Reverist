@@ -29,7 +29,10 @@ public class TileSet
 
 public class TileGrid : MonoBehaviour
 {
-    [Header("Grid Setting")] 
+    [Header("Grid Setting")]
+    [SerializeField] private float gridXRotation = 120f;
+    [SerializeField] private float gridYRotation = 15f;
+    [SerializeField] private float gridZRotation = 15f;
     [SerializeField] public int gridWidth = 8;
     [SerializeField] public int gridHeight = 4;
     
@@ -109,11 +112,17 @@ public class TileGrid : MonoBehaviour
         horizontalSpacing = Mathf.Max(0f, horizontalSpacing);
         verticalSpacing = Mathf.Max(0f, verticalSpacing);
 
-        // If the grid is already initialized in play mode, update it
-        if (Application.isPlaying && grid != null)
+        //Apply rotation change
+        if (Application.isPlaying)
         {
-            UpdateGridLayout();
+            transform.rotation = Quaternion.Euler(gridXRotation, gridYRotation, gridZRotation);
         }
+
+        // If the grid is already initialized in play mode, update it
+            if (Application.isPlaying && grid != null)
+            {
+                UpdateGridLayout();
+            }
     }
     
     private void UpdateGridLayout()
@@ -196,6 +205,8 @@ public class TileGrid : MonoBehaviour
     
     private void CreateGrid()
     {
+        //Apply Rotation
+        transform.rotation = Quaternion.Euler(gridXRotation, gridYRotation, gridZRotation);
         for (int x = 0; x < gridWidth; x++)
         {
             for (int y = 0; y < gridHeight; y++)
@@ -205,16 +216,52 @@ public class TileGrid : MonoBehaviour
         }
     }
     
+    public Vector3 GetWorldPositionWith3DEffect(Vector2Int gridPosition)
+    {
+        // Base position
+        float x = gridPosition.x * totalTileWidth + gridOffset.x;
+        float y = gridPosition.y * totalTileHeight + gridOffset.y;
+        
+        // Add 3D perspective effect
+        float depthFactor = (float)gridPosition.y / gridHeight; // 0 to 1
+        float perspectiveOffset = depthFactor * 0.5f; // Adjust this value
+        
+        // Scale tiles based on depth (further tiles smaller)
+        float scaleReduction = 1f - (depthFactor * 0.2f);
+        
+        return new Vector3(x, y + perspectiveOffset, -depthFactor);
+    }
+
+    public Vector3 GetWorldPositionWithSimpleArena(Vector2Int gridPosition)
+    {
+        // Standard grid positioning (keep this structured)
+        float x = gridPosition.x * totalTileWidth + gridOffset.x;
+        float y = gridPosition.y * totalTileHeight + gridOffset.y;
+        
+        // Add VERY subtle depth effect only
+        // Back rows (higher Y) pushed slightly back
+        float depth = -gridPosition.y * 0.2f;
+        
+        // Optional: Very subtle Y offset for back rows (makes them appear slightly higher)
+        float heightOffset = gridPosition.y * 0.05f;
+        
+        return new Vector3(x, y + heightOffset, depth);
+    }
+    
     private void CreateTile(Vector2Int position)
     {
-        Vector3 worldPosition = GetWorldPosition(position);
+        // Use simple positioning that maintains grid structure
+        Vector3 worldPosition = GetWorldPositionWithSimpleArena(position);
         GameObject tile = Instantiate(tilePrefab, worldPosition, Quaternion.identity, transform);
         tile.name = $"Tile_{position.x}_{position.y}";
         
-        // Scale the tile to match the specified width and height
+        // Keep uniform scaling - don't vary tile sizes
         tile.transform.localScale = new Vector3(tileWidth, tileHeight, 1f);
         
-        // Set the rendering order to be behind other elements
+        // NO rotation - keep tiles aligned
+        // tile.transform.rotation = Quaternion.identity; (default)
+        
+        // Set up sprite renderer
         SpriteRenderer spriteRenderer = tile.GetComponent<SpriteRenderer>();
         if (spriteRenderer == null)
         {
@@ -222,7 +269,10 @@ public class TileGrid : MonoBehaviour
         }
         spriteRenderer.sortingOrder = tileRenderingLayer;
         
-        // All tiles start as empty
+        // Uniform color - no lighting variations
+        spriteRenderer.color = Color.white;
+        
+        // Initialize tile type
         grid[position.x, position.y] = TileType.Empty;
         originalTileTypes[position.x, position.y] = TileType.Empty;
         spriteRenderer.sprite = tileSet.emptyTileSprite;
@@ -235,15 +285,21 @@ public class TileGrid : MonoBehaviour
         GameObject tile = tileObjects[position.x, position.y];
         if (tile != null)
         {
-            // Update position and scale
-            tile.transform.position = GetWorldPosition(position);
+            // Update position with simple arena effect
+            tile.transform.position = GetWorldPositionWithSimpleArena(position);
+            
+            // Keep uniform scale
             tile.transform.localScale = new Vector3(tileWidth, tileHeight, 1f);
             
-            // Update the sorting order
+            // No rotation
+            tile.transform.rotation = Quaternion.identity;
+            
+            // Update sorting order
             SpriteRenderer spriteRenderer = tile.GetComponent<SpriteRenderer>();
             if (spriteRenderer != null)
             {
                 spriteRenderer.sortingOrder = tileRenderingLayer;
+                spriteRenderer.color = Color.white;
             }
         }
     }
@@ -549,10 +605,7 @@ public class TileGrid : MonoBehaviour
     
     public Vector3 GetWorldPosition(Vector2Int gridPosition)
     {
-        // Calculate world position with spacing
-        float x = gridPosition.x * totalTileWidth + gridOffset.x;
-        float y = gridPosition.y * totalTileHeight + gridOffset.y;
-        return new Vector3(x, y, 0);
+        return GetWorldPositionWithSimpleArena(gridPosition);
     }
     
     public Vector2Int GetGridPosition(Vector3 worldPosition)
