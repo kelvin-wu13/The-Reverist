@@ -17,7 +17,16 @@ public class PlayerMovement : MonoBehaviour
     
     [Header("Position Offset")]
     [SerializeField] private Vector2 positionOffset = new Vector2(0.5f, 0.5f); // Offset to center character on tile
-    
+
+    [Header("Animation Settings")]
+    [SerializeField] private bool smoothDirectionTransition = true;
+    [SerializeField] private float directionSmoothTime = 0.1f;
+
+    // Smooth direction transition variables
+    private Vector2 currentAnimDirection = Vector2.zero;
+    private Vector2 targetAnimDirection = Vector2.zero;
+    private Vector2 directionVelocity = Vector2.zero;
+
     private bool isMoving = false;
     private Vector2Int currentGridPosition = new Vector2Int(0, 0);
     private Vector2Int lastDirection = Vector2Int.down; // Default facing direction
@@ -38,12 +47,20 @@ public class PlayerMovement : MonoBehaviour
         {
             animator = GetComponent<Animator>();
         }
-        
+
         // Set initial animation state
-        UpdateAnimationParameters(Vector2Int.zero, false);
+        targetAnimDirection = Vector2.down;
+        currentAnimDirection = Vector2.down;
+        UpdateAnimationParameters(false);
     }
 
     private void Update()
+    {
+        HandleInput();
+        UpdateAnimationDirection();
+    }
+
+    private void HandleInput()
     {
         if (!isMoving)
         {
@@ -69,9 +86,31 @@ public class PlayerMovement : MonoBehaviour
             if (moveDirection != Vector2Int.zero)
             {
                 lastDirection = moveDirection;
+                targetAnimDirection = new Vector2(moveDirection.x, moveDirection.y);
                 TryMove(moveDirection);
             }
         }
+    }
+
+    private void UpdateAnimationDirection()
+    {
+        if (smoothDirectionTransition)
+        {
+            //Smooth transition
+            currentAnimDirection = Vector2.SmoothDamp(
+                currentAnimDirection,
+                targetAnimDirection,
+                ref directionVelocity,
+                directionSmoothTime
+            );
+        }
+        else
+        {
+            //Instant direction change
+            currentAnimDirection = targetAnimDirection;
+        }
+        //Update animator
+        UpdateAnimationParameters(isMoving);
     }
 
     private void TryMove(Vector2Int direction)
@@ -81,14 +120,7 @@ public class PlayerMovement : MonoBehaviour
         // Check if the target position is valid
         if (tileGrid.IsValidPlayerPosition(targetGridPosition))
         {
-            // Update animation parameters before starting movement
-            UpdateAnimationParameters(direction, true);
             StartCoroutine(Move(targetGridPosition));
-        }
-        else
-        {
-            // Just face the direction without moving
-            UpdateAnimationParameters(direction, false);
         }
     }
 
@@ -112,31 +144,41 @@ public class PlayerMovement : MonoBehaviour
         currentGridPosition = targetGridPosition;
         isMoving = false;
         
-        // Reset to idle state when movement is complete
-        UpdateAnimationParameters(Vector2Int.zero, false);
     }
     
-    private void UpdateAnimationParameters(Vector2Int direction, bool isMoving)
+    private void UpdateAnimationParameters(bool moving)
     {
         if (animator != null)
         {
-            // If we received a zero direction but we're supposed to be moving,
-            // use the last non-zero direction (for continuing an animation)
-            if (direction == Vector2Int.zero && isMoving)
-            {
-                direction = lastDirection;
-            }
+            // Set movement state
+            animator.SetBool(isMovingParam, moving);
             
-            // Set animator parameters
-            animator.SetBool(isMovingParam, isMoving);
-            
-            // Only update direction if we have a non-zero direction
-            if (direction != Vector2Int.zero)
-            {
-                animator.SetFloat(directionXParam, direction.x);
-                animator.SetFloat(directionYParam, direction.y);
-            }
+            // Set direction parameters for blend tree
+            animator.SetFloat(directionXParam, currentAnimDirection.x);
+            animator.SetFloat(directionYParam, currentAnimDirection.y);
         }
+    }
+    
+    // Method to manually set facing direction (useful for other systems)
+    public void SetFacingDirection(Vector2Int direction)
+    {
+        if (direction != Vector2Int.zero)
+        {
+            lastDirection = direction;
+            targetAnimDirection = new Vector2(direction.x, direction.y);
+        }
+    }
+    
+    // Method to get current facing direction
+    public Vector2Int GetFacingDirection()
+    {
+        return lastDirection;
+    }
+    
+    // Method to check if player is currently moving
+    public bool IsMoving()
+    {
+        return isMoving;
     }
     
     // New method to calculate adjusted world position with offset
@@ -144,18 +186,18 @@ public class PlayerMovement : MonoBehaviour
     {
         // Get the base position from TileGrid
         Vector3 basePosition = tileGrid.GetWorldPosition(gridPosition);
-        
+
         // Add the offset to center the character on the tile
         // The offset is scaled by tile size
         float tileWidth = tileGrid.GetTileWidth();
         float tileHeight = tileGrid.GetTileHeight();
-        
+
         Vector3 offset = new Vector3(
             positionOffset.x * tileWidth,
             positionOffset.y * tileHeight,
             0f
         );
-        
+
         return basePosition + offset;
     }
 }
