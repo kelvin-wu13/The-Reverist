@@ -33,6 +33,7 @@ namespace SkillSystem
         private Vector3 originalWorldPosition;
         private bool isDashing = false;
         private PlayerStats playerStats;
+        private PlayerCrosshair playerCrosshair; // Add reference to crosshair
 
         private void Start()
         {
@@ -60,12 +61,24 @@ namespace SkillSystem
                 playerStats = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerStats>();
             }
 
+            // Find PlayerCrosshair component
+            playerCrosshair = FindObjectOfType<PlayerCrosshair>();
+            if (playerCrosshair == null)
+            {
+                Debug.LogWarning("SwiftStrike: Could not find PlayerCrosshair in the scene!");
+            }
+
             // Check if player has enough mana before executing the skill
             if (playerStats != null)
             {
                 if (playerStats.TryUseMana(manaCost))
                 {
                     Debug.Log($"SwiftStrike: Used {manaCost} mana to cast skill");
+                    // Freeze crosshair before executing the skill
+                    if (playerCrosshair != null)
+                    {
+                        playerCrosshair.FreezeCrosshair();
+                    }
                     // Execute the dash immediately
                     StartCoroutine(ExecuteDash());
                 }
@@ -143,10 +156,14 @@ namespace SkillSystem
                     }
                 }
                 
-                // If still invalid, cancel the dash
+                // If still invalid, cancel the dash and unfreeze crosshair
                 if (!IsValidDashPosition(dashPosition))
                 {
                     Debug.LogWarning("SwiftStrike: Could not find a valid dash position, canceling skill");
+                    if (playerCrosshair != null)
+                    {
+                        playerCrosshair.UnfreezeCrosshair();
+                    }
                     Destroy(gameObject);
                     yield break;
                 }
@@ -399,6 +416,12 @@ namespace SkillSystem
             //Reset melee animation before destroying
             ResetMeleeAnimation();
             
+            // Unfreeze crosshair after skill completion
+            if (playerCrosshair != null)
+            {
+                playerCrosshair.UnfreezeCrosshair();
+            }
+            
             // Destroy this skill object after completion
             Destroy(gameObject, 0.5f);
         }
@@ -473,6 +496,13 @@ namespace SkillSystem
             
             // Reset melee animation state when skill is destroyed
             ResetMeleeAnimation();
+            
+            // Always unfreeze crosshair when skill is destroyed (safety measure)
+            if (playerCrosshair != null && playerCrosshair.IsFrozen())
+            {
+                playerCrosshair.UnfreezeCrosshair();
+                Debug.Log("SwiftStrike: Unfroze crosshair on destroy");
+            }
         }
     }
 }

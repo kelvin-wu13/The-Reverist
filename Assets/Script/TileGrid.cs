@@ -65,6 +65,19 @@ public class TileGrid : MonoBehaviour
     // Dictionary to store objects currently in each grid position
     private Dictionary<Vector2Int, List<GameObject>> objectsInTiles = new Dictionary<Vector2Int, List<GameObject>>();
 
+    private Dictionary<Vector2Int, bool> tileOccupationStatus = new Dictionary<Vector2Int, bool>();
+
+    public void SetTileOccupied(Vector2Int pos, bool occupied)
+    {
+        if (IsValidGridPosition(pos))
+            tileOccupationStatus[pos] = occupied;
+    }
+
+    public bool IsTileOccupied(Vector2Int pos)
+    {
+        return tileOccupationStatus.ContainsKey(pos) && tileOccupationStatus[pos];
+    }
+
     // Calculated total tile size including spacing
     private float totalTileWidth => tileWidth + horizontalSpacing;
     private float totalTileHeight => tileHeight + verticalSpacing;
@@ -78,11 +91,14 @@ public class TileGrid : MonoBehaviour
     private void InitializeObjectsInTilesDict()
     {
         objectsInTiles.Clear();
+        tileOccupationStatus.Clear();
         for (int x = 0; x < gridWidth; x++)
         {
             for (int y = 0; y < gridHeight; y++)
             {
-                objectsInTiles[new Vector2Int(x, y)] = new List<GameObject>();
+                Vector2Int pos = new Vector2Int(x, y);
+                objectsInTiles[pos] = new List<GameObject>();
+                tileOccupationStatus[pos] = false;
             }
         }
     }
@@ -552,9 +568,6 @@ public class TileGrid : MonoBehaviour
             // Reset to the original tile type
             TileType originalType = originalTileTypes[gridPosition.x, gridPosition.y];
             SetTileType(gridPosition, originalType);
-            
-            // Add a subtle repair effect
-            StartCoroutine(TileRepairEffect(gridPosition));
         }
     }
     
@@ -571,38 +584,9 @@ public class TileGrid : MonoBehaviour
             // Reset to the original tile type
             TileType originalType = originalTileTypes[gridPosition.x, gridPosition.y];
             SetTileType(gridPosition, originalType);
-            
-            // Add a subtle repair effect
-            StartCoroutine(TileRepairEffect(gridPosition));
         }
-    }
-    
-    private IEnumerator TileRepairEffect(Vector2Int gridPosition)
-    {
-        // Get the tile game object
-        GameObject tile = tileObjects[gridPosition.x, gridPosition.y];
-        if (tile == null) yield break;
-        
-        // Flash the tile
-        SpriteRenderer renderer = tile.GetComponent<SpriteRenderer>();
-        Color originalColor = renderer.color;
-        
-        // Quick flash effect - blue for repair
-        renderer.color = Color.cyan;
-        yield return new WaitForSeconds(0.1f);
-        renderer.color = originalColor;
-        
-        // Subtle pop effect
-        Vector3 originalScale = tile.transform.localScale;
-        
-        // Quick scale up
-        tile.transform.localScale = originalScale * 1.2f;
-        yield return new WaitForSeconds(0.1f);
-        
-        // Return to original scale
-        tile.transform.localScale = originalScale;
-    }
-    
+    } 
+
     public Vector3 GetWorldPosition(Vector2Int gridPosition)
     {
         return GetWorldPositionWithSimpleArena(gridPosition);
@@ -615,164 +599,5 @@ public class TileGrid : MonoBehaviour
         int y = Mathf.FloorToInt((worldPosition.y - gridOffset.y) / totalTileHeight);
         
         return new Vector2Int(x, y);
-    }
-    
-    // Methods for managing objects in tiles
-    public void RegisterObjectInTile(GameObject obj, Vector2Int gridPosition)
-    {
-        if (IsValidGridPosition(gridPosition))
-        {
-            if (!objectsInTiles.ContainsKey(gridPosition))
-            {
-                objectsInTiles[gridPosition] = new List<GameObject>();
-            }
-            
-            if (!objectsInTiles[gridPosition].Contains(obj))
-            {
-                objectsInTiles[gridPosition].Add(obj);
-            }
-        }
-    }
-    
-    public void UnregisterObjectFromTile(GameObject obj, Vector2Int gridPosition)
-    {
-        if (IsValidGridPosition(gridPosition) && objectsInTiles.ContainsKey(gridPosition))
-        {
-            objectsInTiles[gridPosition].Remove(obj);
-        }
-    }
-    
-    public List<GameObject> GetObjectsInTile(Vector2Int gridPosition)
-    {
-        if (IsValidGridPosition(gridPosition) && objectsInTiles.ContainsKey(gridPosition))
-        {
-            return new List<GameObject>(objectsInTiles[gridPosition]);
-        }
-        return new List<GameObject>();
-    }
-    
-    public bool HasObjectWithTag(Vector2Int gridPosition, string tag)
-    {
-        if (IsValidGridPosition(gridPosition) && objectsInTiles.ContainsKey(gridPosition))
-        {
-            foreach (GameObject obj in objectsInTiles[gridPosition])
-            {
-                if (obj != null && obj.CompareTag(tag))
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    
-    public List<GameObject> GetObjectsWithTagInTile(Vector2Int gridPosition, string tag)
-    {
-        List<GameObject> result = new List<GameObject>();
-        
-        if (IsValidGridPosition(gridPosition) && objectsInTiles.ContainsKey(gridPosition))
-        {
-            foreach (GameObject obj in objectsInTiles[gridPosition])
-            {
-                if (obj != null && obj.CompareTag(tag))
-                {
-                    result.Add(obj);
-                }
-            }
-        }
-        
-        return result;
-    }
-    
-    // Draw grid lines in the scene view
-    private void OnDrawGizmos()
-    {
-        if (!showGridInEditor) return;
-        
-        Vector3 startPos = transform.position + new Vector3(gridOffset.x, gridOffset.y, 0);
-        
-        // Draw horizontal grid lines
-        for (int y = 0; y <= gridHeight; y++)
-        {
-            float yPos = y * totalTileHeight;
-            Vector3 lineStart = startPos + new Vector3(0, yPos, 0);
-            Vector3 lineEnd = startPos + new Vector3(gridWidth * totalTileWidth, yPos, 0);
-            Gizmos.color = gridLineColor;
-            Gizmos.DrawLine(lineStart, lineEnd);
-        }
-        
-        // Draw vertical grid lines
-        for (int x = 0; x <= gridWidth; x++)
-        {
-            float xPos = x * totalTileWidth;
-            Vector3 lineStart = startPos + new Vector3(xPos, 0, 0);
-            Vector3 lineEnd = startPos + new Vector3(xPos, gridHeight * totalTileHeight, 0);
-            Gizmos.color = gridLineColor;
-            Gizmos.DrawLine(lineStart, lineEnd);
-        }
-        
-        // Draw player area and enemy area if not in play mode
-        if (!Application.isPlaying)
-        {
-            // Player area (left half)
-            Vector3 playerAreaStart = startPos;
-            Vector3 playerAreaSize = new Vector3(gridWidth * totalTileWidth / 2, gridHeight * totalTileHeight, 0.1f);
-            Gizmos.color = playerAreaColor;
-            Gizmos.DrawCube(playerAreaStart + playerAreaSize / 2, playerAreaSize);
-            
-            // Enemy area (right half)
-            Vector3 enemyAreaStart = startPos + new Vector3(gridWidth * totalTileWidth / 2, 0, 0);
-            Vector3 enemyAreaSize = new Vector3(gridWidth * totalTileWidth / 2, gridHeight * totalTileHeight, 0.1f);
-            Gizmos.color = enemyAreaColor;
-            Gizmos.DrawCube(enemyAreaStart + enemyAreaSize / 2, enemyAreaSize);
-        }
-        
-        // Draw tile types if in play mode
-        if (Application.isPlaying && grid != null)
-        {
-            for (int x = 0; x < gridWidth; x++)
-            {
-                for (int y = 0; y < gridHeight; y++)
-                {
-                    Vector3 tilePos = GetWorldPosition(new Vector2Int(x, y));
-                    Vector3 tileCenter = tilePos + new Vector3(tileWidth / 2, tileHeight / 2, 0);
-                    Vector3 tileSize3D = new Vector3(tileWidth * 0.8f, tileHeight * 0.8f, 0.1f);
-                    
-                    // Color based on tile type
-                    switch (grid[x, y])
-                    {
-                        case TileType.Player:
-                            Gizmos.color = new Color(0, 1, 0, 0.3f); // Green
-                            break;
-                        case TileType.Enemy:
-                            Gizmos.color = new Color(1, 0, 0, 0.3f); // Red
-                            break;
-                        case TileType.Empty:
-                            Gizmos.color = new Color(0.7f, 0.7f, 0.7f, 0.3f); // Gray
-                            break;
-                        case TileType.PlayerCracked:
-                            Gizmos.color = new Color(0.5f, 1, 0.5f, 0.3f); // Light Green
-                            break;
-                        case TileType.PlayerBroken:
-                            Gizmos.color = new Color(0, 0.5f, 0, 0.3f); // Dark Green
-                            break;
-                        case TileType.EnemyCracked:
-                            Gizmos.color = new Color(1, 0.5f, 0.5f, 0.3f); // Light Red
-                            break;
-                        case TileType.EnemyBroken:
-                            Gizmos.color = new Color(0.5f, 0, 0, 0.3f); // Dark Red
-                            break;
-                        case TileType.Cracked:
-                            Gizmos.color = new Color(1, 1, 0, 0.3f); // Yellow
-                            break;
-                        case TileType.Broken:
-                            Gizmos.color = new Color(0, 0, 0, 0.3f); // Black
-                            break;
-                    }
-                    
-                    Gizmos.DrawCube(tileCenter, tileSize3D);
-                }
-            }
-        }
     }
 }

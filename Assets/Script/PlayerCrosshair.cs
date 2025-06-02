@@ -18,6 +18,10 @@ public class PlayerCrosshair : MonoBehaviour
     private Vector2Int targetGridPosition;
     private SpriteRenderer crosshairRenderer;
     
+    // Skill freeze state
+    private bool isFrozen = false;
+    private Vector2Int frozenPosition;
+    
     private void Start()
     {
         if (playerTransform == null)
@@ -54,6 +58,16 @@ public class PlayerCrosshair : MonoBehaviour
     
     private void UpdatePositions()
     {
+        // If frozen, don't update positions
+        if (isFrozen)
+        {
+            // Keep crosshair at frozen position
+            Vector3 frozenTileWorldPos = tileGrid.GetWorldPosition(frozenPosition);
+            Vector3 frozenTileCenterPos = frozenTileWorldPos + new Vector3(-0.05f, -0.01f, 0);
+            transform.position = frozenTileCenterPos;
+            return;
+        }
+        
         // Get current player grid position
         playerGridPosition = tileGrid.GetGridPosition(playerTransform.position);
         
@@ -124,18 +138,41 @@ public class PlayerCrosshair : MonoBehaviour
     
     public Vector2Int GetTargetGridPosition()
     {
-        return targetGridPosition;
+        return isFrozen ? frozenPosition : targetGridPosition;
     }
     
     public Vector3 GetTargetWorldPosition()
     {
         // Return the center of the targeted tile
-        return tileGrid.GetWorldPosition(targetGridPosition) + new Vector3(-5f, 0f, 0);
+        Vector2Int currentTarget = isFrozen ? frozenPosition : targetGridPosition;
+        return tileGrid.GetWorldPosition(currentTarget) + new Vector3(-5f, 0f, 0);
     }
     
     public bool IsCellTargeted(Vector2Int cellPosition)
     {
-        return cellPosition == targetGridPosition;
+        Vector2Int currentTarget = isFrozen ? frozenPosition : targetGridPosition;
+        return cellPosition == currentTarget;
+    }
+    
+    // Methods to control crosshair freezing during skills
+    public void FreezeCrosshair()
+    {
+        isFrozen = true;
+        frozenPosition = targetGridPosition;
+        Debug.Log($"PlayerCrosshair: Frozen at position {frozenPosition}");
+    }
+    
+    public void UnfreezeCrosshair()
+    {
+        isFrozen = false;
+        Debug.Log("PlayerCrosshair: Unfrozen");
+        // Force an immediate position update
+        UpdatePositions();
+    }
+    
+    public bool IsFrozen()
+    {
+        return isFrozen;
     }
     
     // Visual debugging
@@ -143,15 +180,18 @@ public class PlayerCrosshair : MonoBehaviour
     {
         if (Application.isPlaying && tileGrid != null)
         {
-            Gizmos.color = new Color(1f, 1f, 0f, 0.5f);
-            Vector3 targetPos = tileGrid.GetWorldPosition(targetGridPosition);
+            Vector2Int currentTarget = isFrozen ? frozenPosition : targetGridPosition;
+            
+            // Change color if frozen
+            Gizmos.color = isFrozen ? new Color(1f, 0f, 0f, 0.5f) : new Color(1f, 1f, 0f, 0.5f);
+            Vector3 targetPos = tileGrid.GetWorldPosition(currentTarget);
             Vector3 targetCenter = targetPos + new Vector3(0.5f, 0.5f, 0);
             Gizmos.DrawCube(targetCenter, new Vector3(1, 1, 0.1f));
             
             // Draw a line from player to crosshair
             if (playerTransform != null)
             {
-                Gizmos.color = new Color(1f, 1f, 0f, 0.2f);
+                Gizmos.color = isFrozen ? new Color(1f, 0f, 0f, 0.2f) : new Color(1f, 1f, 0f, 0.2f);
                 Gizmos.DrawLine(
                     playerTransform.position,
                     targetCenter
@@ -163,7 +203,7 @@ public class PlayerCrosshair : MonoBehaviour
     // Method to update the player's facing direction (can be called by input or movement scripts)
     public void SetPlayerFacingDirection(Vector2Int newDirection)
     {
-        if (newDirection != Vector2Int.zero)
+        if (newDirection != Vector2Int.zero && !isFrozen)
         {
             playerFacingDirection = newDirection;
             UpdatePositions();

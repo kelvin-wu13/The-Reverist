@@ -49,3 +49,5 @@ MonoBehaviour:
   pushDuration: 0.5
   postPullStunDuration: 1
   preserveExactYPosition: 1
+  cooldownDuration: 1
+  manaCost: 2

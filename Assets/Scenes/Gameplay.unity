@@ -556,7 +556,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93cc1806d1f48df43ab8b2d5df2df962, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numberOfEnemies: 3
+  numberOfEnemies: 5
   spawnOnStart: 1
   useRandomPositions: 1
   tileGrid: {fileID: 334597318}
@@ -922,6 +922,8 @@ MonoBehaviour:
   tileGrid: {fileID: 334597318}
   animator: {fileID: 1573556188}
   positionOffset: {x: 0, y: 1}
+  smoothDirectionTransition: 1
+  directionSmoothTime: 0.1
 --- !u!114 &1573556187
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1108,9 +1110,9 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 414196452}
+  - {fileID: 1573556183}
   - {fileID: 334597319}
   - {fileID: 1585159249}
   - {fileID: 286594910}
-  - {fileID: 1573556183}
   - {fileID: 1144395321}
   - {fileID: 368758682}

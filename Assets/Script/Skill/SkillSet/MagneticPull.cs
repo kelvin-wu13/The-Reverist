@@ -7,7 +7,6 @@ namespace SkillSystem
     public class MagneticPull : Skill
     {
         [SerializeField] private float pushDuration = 0.5f;
-        [SerializeField] private float postPullStunDuration = 1f;
         [SerializeField] private bool preserveExactYPosition = true; // Flag to control Y position preservation
         [SerializeField] public float cooldownDuration = 2.0f;
         [SerializeField] public float manaCost = 2.0f;
@@ -129,11 +128,6 @@ namespace SkillSystem
                 {
                     StartCoroutine(PullAnimation(enemy, currentPositions[i], targetGridPositions[i], offsets[i]));
                 }
-                else
-                {
-                    Debug.Log("Pull invalid — enemy will be stunned.");
-                    enemy.Stun(postPullStunDuration);
-                }
             }
         }
 
@@ -191,6 +185,12 @@ namespace SkillSystem
                     }
                 }
 
+                if (tileGrid.IsTileOccupied(targetGridPos))
+                {
+                    Debug.Log($"Tile at {targetGridPos} is logically occupied, skipping.");
+                    continue;
+                }
+
                 // Create and add the pull candidate
                 PullCandidate candidate = new PullCandidate
                 {
@@ -218,27 +218,30 @@ namespace SkillSystem
         {
             // Get current position to ensure we start from exactly where the enemy is
             Vector3 start = enemy.transform.position;
-            
+
             // Calculate the target end position
             TileGrid tileGrid = enemy.GetTileGrid();
             Vector3 target = tileGrid.GetWorldPosition(targetGridPos);
-            
+
             // If preserveExactYPosition is true, keep the same Y as the starting position
             Vector3 end;
-            if (preserveExactYPosition) {
+            if (preserveExactYPosition)
+            {
                 end = new Vector3(
                     target.x + offset.x,
                     start.y, // Keep the exact same Y position
                     0
                 );
-            } else {
+            }
+            else
+            {
                 end = new Vector3(
                     target.x + offset.x,
-                    target.y + offset.y, 
+                    target.y + offset.y,
                     0
                 );
             }
-            
+
             Debug.Log($"Pull animation from {start} to {end}");
 
             float elapsed = 0f;
@@ -252,7 +255,9 @@ namespace SkillSystem
 
             enemy.transform.position = end;
             enemy.ApplyPushEffect(targetGridPos, end);
-            enemy.Stun(postPullStunDuration);
+            tileGrid.SetTileOccupied(targetGridPos, true);
+            tileGrid.SetTileOccupied(currentPos, false); // Clear the old tile
+
         }
     }
 }
