@@ -18,7 +18,7 @@ public class PlayerShoot : MonoBehaviour
     [SerializeField] private int comboAmount = 3;
 
     private float Time_elapsed;
-    [SerializeField] private float WaitTime = 1.5f;
+    [SerializeField] private float WaitTime = 1f;
     private int currentComboIndex = 0;
     private float lastShootTime;
     private bool isHoldingFireButton = false;
@@ -60,7 +60,7 @@ public class PlayerShoot : MonoBehaviour
 
     private void Update()
     {
-        // Handle shooting input
+        // Handle shooting input 
         isHoldingFireButton = Input.GetButton("Fire1") || Input.GetKey(KeyCode.Space);
 
         if (isHoldingFireButton)
@@ -111,31 +111,22 @@ public class PlayerShoot : MonoBehaviour
 
     private void ShootBulletFromCurrentTile()
     {
-        Vector2Int currentGridPosition = Vector2Int.zero;
+        // Get the tile the player is currently on (used for logic, not spawning)
+        Vector2Int currentGridPosition = playerMovement != null
+            ? playerMovement.GetCurrentGridPosition()
+            : tileGrid.GetGridPosition(transform.position);
 
-        if (playerMovement != null)
-        {
-            currentGridPosition = playerMovement.GetCurrentGridPosition();
-        }
-        else
-        {
-            currentGridPosition = tileGrid.GetGridPosition(transform.position);
-        }
+        // World position of the bullet spawn (based on FirePoint)
+        Vector3 spawnPosition = bulletSpawnPoint.position;
 
-        Vector3 tileWorldPos = tileGrid.GetWorldPosition(currentGridPosition);
-        float tileWidth = tileGrid.GetTileWidth();
-        Vector3 spawnPosition = new Vector3(
-            tileWorldPos.x + tileWidth,
-            tileWorldPos.y + (tileGrid.GetTileHeight() / 2),
-            0
-        );
-
+        // Instantiate bullet at FirePoint position
         GameObject bulletObject = Instantiate(bulletPrefab, spawnPosition, Quaternion.identity);
         Time_elapsed = 0;
 
         Bullet bullet = bulletObject.GetComponent<Bullet>();
         if (bullet != null)
         {
+            // Still use tile-based grid logic for things like homing, AoE, or stacking effects
             bullet.Initialize(Vector2.right, stats.BulletSpeed, stats.BulletDamage, tileGrid);
         }
         else

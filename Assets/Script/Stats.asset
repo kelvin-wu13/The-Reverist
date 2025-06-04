@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: acebe03434c14a348a976c8fa61e2715, type: 3}
   m_Name: Stats
   m_EditorClassIdentifier: 
-  maxHealth: 1000000
+  maxHealth: 1000
   bulletDamage: 10
-  bulletSpeed: 17
+  bulletSpeed: 19
   shootCooldown: 0.2
   maxMana: 10
   manaRegenRate: 5

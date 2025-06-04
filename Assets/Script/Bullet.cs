@@ -61,27 +61,29 @@ public class Bullet : MonoBehaviour
     
     private void CheckForEnemyHit(Vector2Int gridPosition)
     {
-        
-        // For demonstration purposes, we can detect if we're in an enemy tile area
-        if (IsEnemyTilePosition(gridPosition))
+        if (!IsEnemyTilePosition(gridPosition)) return;
+
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+
+        foreach (GameObject enemy in enemies)
         {
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.zero, 0.1f, LayerMask.GetMask("Enemy"));
-            if (hit.collider != null)
+            Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
+            if (enemyGridPos == gridPosition)
             {
-                // Deal damage to the enemy
-                hit.collider.GetComponent<Enemy>()?.TakeDamage(damage);
-                
-                Debug.Log("Hit enemy at position: " + gridPosition);
-                
-                // Visual effect
-                SpawnHitEffect();
-                
-                // Destroy bullet
-                DestroyBullet();
+                Enemy enemyComponent = enemy.GetComponent<Enemy>();
+                if (enemyComponent != null)
+                {
+                    enemyComponent.TakeDamage(damage);
+                    Debug.Log("Hit enemy at tile: " + gridPosition);
+
+                    SpawnHitEffect();
+                    DestroyBullet();
+                    break;
+                }
             }
         }
     }
-    
+
     private void CheckIfPastRightmostGrid()
     {
         // If we're beyond the rightmost enemy grid column, destroy the bullet
@@ -154,19 +156,19 @@ public class Bullet : MonoBehaviour
     
     // Helper method that can be called when the bullet collides with enemies
     // This would be used if you're using Unity's collision system
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        // Check if the collision is with an enemy
-        if (collision.gameObject.CompareTag("Enemy"))
-        {
-            // Deal damage to the enemy
-            collision.GetComponent<Enemy>()?.TakeDamage(damage);
+    // private void OnTriggerEnter2D(Collider2D collision)
+    // {
+    //     // Check if the collision is with an enemy
+    //     if (collision.gameObject.CompareTag("Enemy"))
+    //     {
+    //         // Deal damage to the enemy
+    //         collision.GetComponent<Enemy>()?.TakeDamage(damage);
             
-            // Visual effect
-            SpawnHitEffect();
+    //         // Visual effect
+    //         SpawnHitEffect();
             
-            // Destroy bullet
-            DestroyBullet();
-        }
-    }
+    //         // Destroy bullet
+    //         DestroyBullet();
+    //     }
+    // }
 }
