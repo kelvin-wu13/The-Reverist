@@ -23,6 +23,7 @@ namespace SkillSystem
         private bool isProjectileFired = false;
         private bool isOnCooldown = false;
         private Vector3 direction;
+        private Vector3 projectileStartPosition;
         private TileGrid tileGrid;
         private Vector2Int currentGridPosition;
         private PlayerMovement playerMovement;
@@ -34,6 +35,46 @@ namespace SkillSystem
             FindTileGrid();
             FindPlayerMovement();
             FindPlayerStats();
+        }
+
+        private void Update()
+        {
+            if (isProjectileFired && activeProjectile != null)
+            {
+                // Move projectile
+                activeProjectile.transform.position += direction * projectileSpeed * Time.deltaTime;
+                
+                // Get the current grid position
+                Vector2Int newGridPosition = tileGrid.GetGridPosition(activeProjectile.transform.position);
+                
+                // Check if we've moved to a new grid cell
+                if (newGridPosition != currentGridPosition)
+                {
+                    currentGridPosition = newGridPosition;
+                    
+                    // Check if the projectile is in enemy territory
+                    if (IsEnemyTilePosition(currentGridPosition))
+                    {
+                        // Check for enemies at this position
+                        CheckForEnemyHit(currentGridPosition);
+                    }
+                }
+                
+                // Check if projectile has gone out of bounds in any direction
+                if (!tileGrid.IsValidGridPosition(currentGridPosition))
+                {
+                    Debug.Log("IonBolt: Projectile went out of bounds, destroying...");
+                    Destroy(activeProjectile);
+                    isProjectileFired = false;
+                }
+                // Additional failsafe - destroy if projectile travels too far from start
+                else if (Vector3.Distance(projectileStartPosition, activeProjectile.transform.position) > 50f)
+                {
+                    Debug.Log("IonBolt: Projectile traveled too far, destroying...");
+                    Destroy(activeProjectile);
+                    isProjectileFired = false;
+                }
+            }
         }
 
         private void FindTileGrid()
@@ -132,6 +173,9 @@ namespace SkillSystem
                 0
             );
 
+            // Store the starting position for distance checking
+            projectileStartPosition = spawnPosition;
+
             // Always shoot to the right
             direction = Vector3.right;
 
@@ -146,7 +190,7 @@ namespace SkillSystem
             // Set initial grid position for the projectile
             currentGridPosition = tileGrid.GetGridPosition(activeProjectile.transform.position);
 
-            Debug.Log($"QQ Skill: Fired grid-based projectile from player tile {playerGridPos}");
+            Debug.Log($"IonBolt: Fired grid-based projectile from player tile {playerGridPos}");
         }
 
         private void FireProjectile(Vector3 startPosition, Vector2Int targetGridPosition)
@@ -154,9 +198,12 @@ namespace SkillSystem
             // Ensure TileGrid is available
             if (tileGrid == null)
             {
-                Debug.LogError("QQSkill: TileGrid reference is null when trying to fire projectile!");
+                Debug.LogError("IonBolt: TileGrid reference is null when trying to fire projectile!");
                 return;
             }
+
+            // Store the starting position for distance checking
+            projectileStartPosition = startPosition;
 
             // Convert target grid position to world position
             Vector3 targetPosition = tileGrid.GetWorldPosition(targetGridPosition);
@@ -175,46 +222,7 @@ namespace SkillSystem
             // Set initial grid position for the projectile
             currentGridPosition = tileGrid.GetGridPosition(activeProjectile.transform.position);
             
-            Debug.Log($"QQ Skill: Fired projectile toward {targetGridPosition}");
-        }
-        
-        private void Update()
-        {
-            if (isProjectileFired && activeProjectile != null)
-            {
-                // Move projectile
-                activeProjectile.transform.position += direction * projectileSpeed * Time.deltaTime;
-                
-                // Get the current grid position
-                Vector2Int newGridPosition = tileGrid.GetGridPosition(activeProjectile.transform.position);
-                
-                // Check if we've moved to a new grid cell
-                if (newGridPosition != currentGridPosition)
-                {
-                    currentGridPosition = newGridPosition;
-                    
-                    // Check if the projectile is in enemy territory
-                    if (IsEnemyTilePosition(currentGridPosition))
-                    {
-                        // Check for enemies at this position
-                        CheckForEnemyHit(currentGridPosition);
-                    }
-                    
-                    // Check if projectile has gone past the rightmost grid
-                    if (currentGridPosition.x >= tileGrid.gridWidth)
-                    {
-                        Destroy(activeProjectile);
-                        isProjectileFired = false;
-                    }
-                }
-                
-                // Destroy projectile if it goes too far (failsafe)
-                if (Vector3.Distance(transform.position, activeProjectile.transform.position) > 50f)
-                {
-                    Destroy(activeProjectile);
-                    isProjectileFired = false;
-                }
-            }
+            Debug.Log($"IonBolt: Fired projectile toward {targetGridPosition}");
         }
         
         private void CheckForEnemyHit(Vector2Int gridPosition)
@@ -256,11 +264,7 @@ namespace SkillSystem
             GameObject explosionEffect = null;
 
             // Create basic explosion effect if we don't have the asset yet
-            if (explosionEffectPrefab == null)
-            {
-                explosionEffect = CreateBasicExplosionEffect(worldPosition);
-            }
-            else
+            if (explosionEffectPrefab != null)
             {
                 explosionEffect = Instantiate(explosionEffectPrefab, worldPosition, Quaternion.identity);
                 Destroy(explosionEffect, explosionEffectDuration);
@@ -311,67 +315,7 @@ namespace SkillSystem
                     }
                 }
             }
-            
             return affectedTiles;
-        }
-        
-        private GameObject CreateBasicExplosionEffect(Vector3 position)
-        {
-            // Create a simple explosion effect
-            GameObject explosion = new GameObject("ExplosionEffect");
-            explosion.transform.position = position;
-            
-            // Add a simple particle system
-            ParticleSystem particles = explosion.AddComponent<ParticleSystem>();
-            var main = particles.main;
-            main.startColor = Color.red;
-            main.startSize = 3f;
-            main.startSpeed = 5f;
-            main.startLifetime = 0.5f;
-            main.duration = 0.5f;
-            
-            // Emission module
-            var emission = particles.emission;
-            emission.rateOverTime = 0;
-            var burst = new ParticleSystem.Burst(0f, 30);
-            emission.SetBurst(0, burst);
-            
-            // Shape module
-            var shape = particles.shape;
-            shape.shapeType = ParticleSystemShapeType.Circle;
-            
-            float safeRadius = explosionTileRadius;
-            if (tileGrid != null)
-            {
-                safeRadius = explosionTileRadius * tileGrid.GetTileWidth();
-            }
-            shape.radius = safeRadius;
-            
-            // Auto-destroy after effect completes
-            Destroy(explosion, explosionEffectDuration);
-            
-            return explosion;
-        }
-        
-        // Visualize the explosion radius in the Scene view
-        private void OnDrawGizmosSelected()
-        {
-            if (tileGrid == null) tileGrid = FindObjectOfType<TileGrid>();
-            if (tileGrid != null)
-            {
-                Gizmos.color = Color.red;
-                
-                // Get the center position of this skill's object
-                Vector2Int centerGridPos = tileGrid.GetGridPosition(transform.position);
-                
-                // Draw wire cube for each affected tile
-                List<Vector2Int> affectedTiles = GetAffectedTiles(centerGridPos, explosionTileRadius);
-                foreach (Vector2Int tilePos in affectedTiles)
-                {
-                    Vector3 tileWorldPos = tileGrid.GetWorldPosition(tilePos);
-                    Gizmos.DrawWireCube(tileWorldPos, new Vector3(1f, 1f, 0.1f));
-                }
-            }
         }
     }
 }

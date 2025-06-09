@@ -92,7 +92,6 @@ public class Enemy : MonoBehaviour
 
     private void Start()
     {
-        EnemyManager.Instance?.RegisterEnemy(this);
         currentHealth = maxHealth;
         currentGridPosition = tileGrid.GetGridPosition(transform.position);
         targetGridPosition = currentGridPosition;
@@ -428,12 +427,6 @@ public class Enemy : MonoBehaviour
             c.enabled = false;
         Destroy(gameObject);
     }
-
-    private void OnDestroy()
-    {
-        EnemyManager.Instance?.UnregisterEnemy(this);
-    }
-
 
     public void Stun(float duration)
     {

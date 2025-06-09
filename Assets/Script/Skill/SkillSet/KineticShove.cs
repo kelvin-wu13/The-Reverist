@@ -11,11 +11,13 @@ namespace SkillSystem
         [SerializeField] private float knockbackForce = 1f;
         [SerializeField] private float manaCost = 1.5f;
         [SerializeField] public float cooldownDuration = 2f;
-        [SerializeField] private float movementLockDuration = 1f; // Duration to lock movement after knockback
+        [SerializeField] private float stunDuration = 2f; // Duration to stun enemy when collision occurs
 
         [Header("Effects")]
         [SerializeField] private ParticleSystem hitEffect;
+        [SerializeField] private ParticleSystem collisionEffect; // Effect when enemy hits obstacle
         [SerializeField] private AudioClip hitSound;
+        [SerializeField] private AudioClip collisionSound; // Sound when enemy hits obstacle
         [SerializeField] private GameObject aoeIndicatorPrefab;
         [SerializeField] private float indicatorDuration = 0.5f;
         [SerializeField] private Color indicatorColor = new Color(0, 1, 1, 0.5f); // Cyan semi-transparent
@@ -40,7 +42,7 @@ namespace SkillSystem
 
         public override void ExecuteSkillEffect(Vector2Int targetPosition, Transform casterTransform)
         {
-            // Check mana cost - FIXED: Changed || to &&
+            // Check mana cost
             if (playerStats == null || !playerStats.TryUseMana(manaCost))
             {
                 Debug.Log("Not enough mana to cast KineticShove!");
@@ -69,7 +71,7 @@ namespace SkillSystem
                     if (enemy != null)
                     {
                         enemy.TakeDamage(damageAmount);
-                        TryKnockback(enemy, hitPos, direction);
+                        ProcessKnockbackOrStun(enemy, hitPos, direction);
 
                         if (hitEffect != null)
                             Instantiate(hitEffect, tileGrid.GetWorldPosition(hitPos), Quaternion.identity);
@@ -95,37 +97,87 @@ namespace SkillSystem
             return null;
         }
 
-        // UPDATED: Simplified knockback to always push exactly 1 tile
-        private void TryKnockback(Enemy enemy, Vector2Int currentPos, Vector2Int direction)
+        private void ProcessKnockbackOrStun(Enemy enemy, Vector2Int currentPos, Vector2Int direction)
         {
             Vector2Int knockbackPos = currentPos + direction;
 
-            // Check if the knockback position is valid
-            if (!tileGrid.IsValidGridPosition(knockbackPos)) 
-            {
-                Debug.Log($"Knockback failed: Position {knockbackPos} is outside grid bounds");
-                return;
-            }
-            
-            // Check if the knockback position is a broken tile
-            if (tileGrid.grid[knockbackPos.x, knockbackPos.y] == TileType.Broken || 
-                tileGrid.grid[knockbackPos.x, knockbackPos.y] == TileType.PlayerBroken || 
-                tileGrid.grid[knockbackPos.x, knockbackPos.y] == TileType.EnemyBroken) 
-            {
-                Debug.Log($"Knockback failed: Position {knockbackPos} is a broken tile");
-                return;
-            }
+            // Check if knockback is possible
+            bool canKnockback = CanKnockbackToPosition(knockbackPos);
 
+            if (canKnockback)
+            {
+                // Apply normal knockback
+                ApplyKnockback(enemy, currentPos, knockbackPos);
+                Debug.Log($"Enemy at {currentPos} knocked back to {knockbackPos}");
+            }
+            else
+            {
+                // Enemy hits obstacle - apply stun instead
+                ApplyCollisionStun(enemy, currentPos, knockbackPos);
+                Debug.Log($"Enemy at {currentPos} stunned due to collision with obstacle at {knockbackPos}");
+            }
+        }
+
+        private bool CanKnockbackToPosition(Vector2Int knockbackPos)
+        {
+            // Only check for enemies and objects, not tile types or bounds
+            
             // Check if there's another enemy at the knockback position
             Enemy obstacleEnemy = FindEnemyAtPosition(knockbackPos);
             if (obstacleEnemy != null)
             {
-                Debug.Log($"Knockback failed: Position {knockbackPos} is occupied by another enemy");
-                return;
+                return false; // Enemy collision - will cause stun
             }
 
-            // All checks passed, apply knockback
-            ApplyKnockback(enemy, currentPos, knockbackPos);
+            // Check if the tile is occupied by other entities (objects, not tiles)
+            if (tileGrid.IsTileOccupied(knockbackPos))
+            {
+                return false; // Object collision - will cause stun
+            }
+
+            // If destination is free (even if out of bounds or broken tile), allow knockback
+            return true;
+        }
+
+        private void ApplyCollisionStun(Enemy enemy, Vector2Int currentPos, Vector2Int blockedPos)
+        {
+            // Apply stun effect to the enemy
+            enemy.Stun(stunDuration);
+
+            // Create collision effects
+            Vector3 collisionWorldPos = tileGrid.GetWorldPosition(currentPos);
+
+            if (collisionEffect != null)
+                Instantiate(collisionEffect, collisionWorldPos, Quaternion.identity);
+
+            if (collisionSound != null)
+                AudioSource.PlayClipAtPoint(collisionSound, collisionWorldPos);
+
+            // Optional: Create a brief visual indication of the blocked movement
+            StartCoroutine(ShowCollisionFeedback(enemy));
+        }
+
+        private IEnumerator ShowCollisionFeedback(Enemy enemy)
+        {
+            if (enemy == null) yield break;
+
+            SpriteRenderer renderer = enemy.GetComponent<SpriteRenderer>();
+            if (renderer == null) yield break;
+
+            Color originalColor = renderer.color;
+            
+            // Flash between original color and a collision color (like orange/red)
+            Color collisionColor = Color.red;
+            float flashDuration = 0.1f;
+            int flashCount = 3;
+
+            for (int i = 0; i < flashCount; i++)
+            {
+                renderer.color = collisionColor;
+                yield return new WaitForSeconds(flashDuration);
+                renderer.color = originalColor;
+                yield return new WaitForSeconds(flashDuration);
+            }
         }
 
         private void ApplyKnockback(Enemy enemy, Vector2Int startPos, Vector2Int endPos)
@@ -179,8 +231,6 @@ namespace SkillSystem
 
                 if (renderer != null)
                     renderer.color = originalColor;
-
-                // Note: The movement lock for 1 second is now handled in the SetPositionWithOffset method
             }
         }
     }

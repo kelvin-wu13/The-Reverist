@@ -1,0 +1,338 @@
+fileFormatVersion: 2
+guid: 40b40602f619c234aab7c9f7d2d1b34d
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -1435601509975917192
+    second: UI hp mana_0
+  - first:
+      213: -7820785643133329
+    second: UI hp mana_1
+  - first:
+      213: 5998761483463319724
+    second: UI hp mana_2
+  - first:
+      213: -456217958728942059
+    second: UI hp mana_3
+  - first:
+      213: -8180152388803806203
+    second: UI hp mana_4
+  - first:
+      213: 4620253522374334271
+    second: UI hp mana_5
+  - first:
+      213: -6566785471066471551
+    second: UI hp mana_6
+  - first:
+      213: 6383352683447027437
+    second: UI hp mana_7
+  - first:
+      213: -8238179429118575252
+    second: UI hp mana_8
+  - first:
+      213: -487912607436850159
+    second: UI hp mana_9
+  - first:
+      213: 1476021618498634223
+    second: UI hp mana_10
+  - first:
+      213: 5058764407276141564
+    second: UI hp mana_11
+  - first:
+      213: -3253527809641718410
+    second: UI hp mana_12
+  - first:
+      213: 7492280132246400650
+    second: UI hp mana_13
+  - first:
+      213: -3379909864423873671
+    second: UI hp mana_14
+  - first:
+      213: -2304597618763912741
+    second: UI hp mana_15
+  - first:
+      213: 9053878049633067190
+    second: UI hp mana_16
+  - first:
+      213: 6624965006378728127
+    second: UI hp mana_17
+  - first:
+      213: -4367054911594328222
+    second: UI hp mana_18
+  - first:
+      213: -4296605144413769395
+    second: UI hp mana_19
+  - first:
+      213: -5946930873637941149
+    second: UI hp mana_20
+  - first:
+      213: 9156471261270142952
+    second: UI hp mana_21
+  - first:
+      213: -265438500318996010
+    second: UI hp mana_22
+  - first:
+      213: -6235106558421583321
+    second: UI hp mana_23
+  - first:
+      213: 6267941939707376261
+    second: UI hp mana_24
+  - first:
+      213: 8937745882544062714
+    second: UI hp mana_25
+  - first:
+      213: -9072381568276906186
+    second: UI hp mana_26
+  - first:
+      213: -8061715606058229737
+    second: UI hp mana_27
+  - first:
+      213: -593351209720891464
+    second: UI hp mana_28
+  - first:
+      213: 1395884890740357485
+    second: UI hp mana_29
+  - first:
+      213: 5182162804480159554
+    second: UI hp mana_30
+  - first:
+      213: 8261727190833085078
+    second: UI hp mana_31
+  - first:
+      213: 4114252062090490712
+    second: UI hp mana_32
+  - first:
+      213: 3725624352542786752
+    second: UI hp mana_33
+  - first:
+      213: -779400702550410270
+    second: UI hp mana_34
+  - first:
+      213: -4110800184724832865
+    second: UI hp mana_35
+  - first:
+      213: 6846179741408614255
+    second: UI hp mana_36
+  - first:
+      213: 984872113938590296
+    second: UI hp mana_37
+  - first:
+      213: 8269183108479344213
+    second: UI hp mana_38
+  - first:
+      213: 4760129902762378477
+    second: UI hp mana_39
+  - first:
+      213: -7186667864547839062
+    second: UI hp mana_40
+  - first:
+      213: 3428201248196251493
+    second: UI hp mana_41
+  - first:
+      213: -9057429851359490955
+    second: UI hp mana_42
+  - first:
+      213: -6718431363390684870
+    second: UI hp mana_43
+  - first:
+      213: 4119763716980690109
+    second: UI hp mana_44
+  - first:
+      213: 4143576418719381090
+    second: UI hp mana_45
+  - first:
+      213: -2311388575974737131
+    second: UI hp mana_46
+  - first:
+      213: 1307155659686220913
+    second: UI hp mana_47
+  - first:
+      213: -2235820971832423660
+    second: UI hp mana_48
+  - first:
+      213: 356826401955362075
+    second: UI hp mana_49
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: UI hp mana_0
+      rect:
+        serializedVersion: 2
+        x: 66
+        y: 1575
+        width: 1312
+        height: 370
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d767686dfbb9fe74dac03abc9df378f1
+      internalID: -55701762
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI hp mana_1
+      rect:
+        serializedVersion: 2
+        x: 115
+        y: 1184
+        width: 906
+        height: 172
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: da34cbc46e9916043a128c341f31e851
+      internalID: -580048335
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI hp mana_2
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 797
+        width: 1036
+        height: 152
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7ec3097351ff0924e8b2087ef35dd519
+      internalID: 747190471
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: b518a64902b70bd4aaae670b7f3e3274
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":4.0},"gridSpriteSize":{"x":2048.0,"y":512.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      UI hp mana_0: -55701762
+      UI hp mana_1: -580048335
+      UI hp mana_2: 747190471
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -37,12 +37,6 @@ public class EnemyManager : MonoBehaviour
         return enemies.Where(e => e != null).ToList();
     }
 
-    public void InterruptAllEnemies()
-    {
-        foreach (var e in GetAllEnemies())
-            e.InterruptMovementForSkill();
-    }
-
     public IEnumerator WaitUntilAllStopped(float maxWaitTime)
     {
         float elapsed = 0f;

@@ -55,14 +55,56 @@ namespace SkillSystem
             // Start the pull sequence with proper synchronization
             StartCoroutine(ExecutePullSequence());
         }
-        
+
         private IEnumerator ExecutePullSequence()
         {
-            Enemy.ClearAllReservations();
-            EnemyManager.Instance?.InterruptAllEnemies();
-            if (EnemyManager.Instance != null)
-                yield return EnemyManager.Instance.WaitUntilAllStopped(maxWaitTime);
+            // Step 1: Find all enemies and stop their movement
+            List<Enemy> allEnemies = FindObjectsOfType<Enemy>().ToList();
+            
+            // Interrupt all enemy movements and prepare them for pull
+            foreach (Enemy enemy in allEnemies)
+            {
+                enemy.InterruptMovementForSkill();
+            }
+
+            // Step 2: Wait for all enemies to finish their current movements
+            yield return StartCoroutine(WaitForAllEnemiesToStop(allEnemies));
+
+            // Step 3: Now execute the pull with all enemies in stable positions
             ExecutePullLogic();
+        }
+
+        private IEnumerator WaitForAllEnemiesToStop(List<Enemy> enemies)
+        {
+            float waitTime = 0f;
+            
+            while (waitTime < maxWaitTime)
+            {
+                bool allStopped = true;
+                
+                foreach (Enemy enemy in enemies)
+                {
+                    if (enemy != null && enemy.IsMoving())
+                    {
+                        allStopped = false;
+                        break;
+                    }
+                }
+                
+                if (allStopped)
+                {
+                    Debug.Log("All enemies have stopped moving, proceeding with pull");
+                    break;
+                }
+                
+                waitTime += Time.deltaTime;
+                yield return null;
+            }
+            
+            if (waitTime >= maxWaitTime)
+            {
+                Debug.LogWarning("Timeout waiting for enemies to stop, proceeding anyway");
+            }
         }
 
         private void ExecutePullLogic()

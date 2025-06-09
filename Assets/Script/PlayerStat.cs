@@ -1,6 +1,7 @@
+using System.Collections;
 using System.Collections.Generic;
+using SkillSystem;
 using UnityEngine;
-using UnityEngine.Events;
 
 public class PlayerStats : MonoBehaviour
 {
@@ -11,17 +12,19 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private float manaRegenAmount = 1f;  // Amount of mana to regenerate
     [SerializeField] private float manaRegenInterval = 0.5f;  // Time between mana regeneration in seconds
     
+    [Header("Death Animation")]
+    [SerializeField] private Animator playerAnimator;  // Reference to player's Animator
+    [SerializeField] private string deathAnimationTrigger = "Death";  // Name of death animation trigger
+    [SerializeField] private float deathAnimationDuration = 2f;  // How long to wait before destroying/respawning
+    [SerializeField] private bool useDeathAnimation = true;  // Toggle death animation on/off
+    
     [Header("Current Values")]
     [SerializeField] private int currentHealth;
     [SerializeField] private float currentMana;  // Changed to float for fractional mana
     
-    // Events
-    public UnityEvent<int, int> OnHealthChanged; // Current, Max
-    public UnityEvent<float, int> OnManaChanged; // Current, Max (changed first parameter to float)
-    public UnityEvent OnPlayerDeath;
-    
     // Current stats
     private float manaRegenTimer;
+    private bool isDead = false;  // Track if player is dead to prevent multiple death calls
     
     // Properties for easy access
     public int CurrentHealth { 
@@ -34,9 +37,16 @@ public class PlayerStats : MonoBehaviour
         private set => currentMana = value; 
     }
     public int MaxMana => stats ? stats.MaxMana : 0;
+    public bool IsDead => isDead;  // Public property to check if player is dead
     
     private void Start()
     {
+        // Auto-assign animator if not set
+        if (playerAnimator == null)
+        {
+            playerAnimator = GetComponent<Animator>();
+        }
+        
         // Validate that we have stats
         if (stats == null)
         {
@@ -50,30 +60,40 @@ public class PlayerStats : MonoBehaviour
         {
             ResetToMaxStats();
         }
-        
-        // Trigger initial UI updates
-        OnHealthChanged?.Invoke(currentHealth, stats.MaxHealth);
-        OnManaChanged?.Invoke(currentMana, stats.MaxMana);
     }
-    
-    /// <summary>
+
     /// Resets health and mana to their maximum values based on the Stats scriptable object
-    /// </summary>
     public void ResetToMaxStats()
     {
         if (stats == null) return;
-        
+
         currentHealth = stats.MaxHealth;
         currentMana = stats.MaxMana;
+        isDead = false;  // Reset death state
+
+        // Re-enable components that might have been disabled
+        PlayerShoot shootComponent = GetComponent<PlayerShoot>();
+        if (shootComponent != null)
+        {
+            shootComponent.enabled = true;
+        }
         
-        // Notify UI
-        OnHealthChanged?.Invoke(currentHealth, stats.MaxHealth);
-        OnManaChanged?.Invoke(currentMana, stats.MaxMana);
+        PlayerMovement moveComponent = GetComponent<PlayerMovement>();
+        if (moveComponent != null)
+        {
+            moveComponent.enabled = true;
+        }
+
+        SkillCast skillComponent = GetComponent<SkillCast>();
+        if (skillComponent != null)
+        {
+            skillComponent.enabled = true;
+        }
     }
     
     private void Update()
     {
-        if (stats == null) return;
+        if (stats == null || isDead) return;  // Don't regenerate mana if dead
         
         // Only regenerate mana if not at max
         if (currentMana < stats.MaxMana)
@@ -84,36 +104,21 @@ public class PlayerStats : MonoBehaviour
             // Check if it's time to regenerate mana
             if (manaRegenTimer >= manaRegenInterval)
             {
-                // Store previous mana value to check if it changes
-                float previousMana = currentMana;
-                
                 // Add the regenerated mana
                 currentMana = Mathf.Min(stats.MaxMana, currentMana + manaRegenAmount);
                 
                 // Reset timer, but keep leftover time for next cycle
                 manaRegenTimer -= manaRegenInterval;
-                
-                // Only invoke event if mana actually changed
-                if (!Mathf.Approximately(previousMana, currentMana))
-                {
-                    OnManaChanged?.Invoke(currentMana, stats.MaxMana);
-                }
             }
         }
     }
     
-    /// <summary>
-    /// Deals damage to the player and updates health UI
-    /// </summary>
-    /// <param name="damage">Amount of damage to apply</param>
+    // Deals damage to the player and updates health UI
     public void TakeDamage(int damage)
     {
-        if (stats == null) return;
+        if (stats == null || isDead) return;  // Don't take damage if already dead
         
         currentHealth = Mathf.Max(0, currentHealth - damage);
-        
-        // Notify listeners about health change
-        OnHealthChanged?.Invoke(currentHealth, stats.MaxHealth);
         
         // Check if player died
         if (currentHealth <= 0)
@@ -122,70 +127,129 @@ public class PlayerStats : MonoBehaviour
         }
     }
     
-    /// <summary>
-    /// Heals the player by the specified amount
-    /// </summary>
-    /// <param name="amount">Amount of health to restore</param>
-    // public void Heal(int amount)
-    // {
-    //     if (stats == null) return;
-        
-    //     currentHealth = Mathf.Min(stats.MaxHealth, currentHealth + amount);
-        
-    //     // Notify listeners about health change
-    //     OnHealthChanged?.Invoke(currentHealth, stats.MaxHealth);
-    // }
-    
-    /// <summary>
-    /// Called when player health reaches zero
-    /// </summary>
+    // Called when player health reaches zero
     private void Die()
     {
-        // Trigger death event
-        OnPlayerDeath?.Invoke();
+        if (isDead) return;  // Prevent multiple death calls
         
-        // Optional: Disable player controls, play death animation, etc.
+        isDead = true;
+        
+        // Disable player controls immediately
         PlayerShoot shootComponent = GetComponent<PlayerShoot>();
         if (shootComponent != null)
         {
             shootComponent.enabled = false;
         }
+
+        PlayerMovement moveComponent = GetComponent<PlayerMovement>();
+        if (moveComponent != null)
+        {
+            moveComponent.enabled = false;
+        }
+
+        SkillCast skillComponent = GetComponent<SkillCast>();
+        if (skillComponent != null)
+        {
+            skillComponent.enabled = false;
+        }
+        
+        // Start death sequence
+        StartCoroutine(DeathSequence());
+    }
+    
+    // Handles the death animation sequence
+    private IEnumerator DeathSequence()
+    {
+        // Play death animation if enabled and animator is available
+        if (useDeathAnimation && playerAnimator != null)
+        {
+            // Check if the death trigger parameter exists
+            bool hasTrigger = false;
+            foreach (AnimatorControllerParameter param in playerAnimator.parameters)
+            {
+                if (param.name == deathAnimationTrigger && param.type == AnimatorControllerParameterType.Trigger)
+                {
+                    hasTrigger = true;
+                    break;
+                }
+            }
+            
+            if (hasTrigger)
+            {
+                playerAnimator.SetTrigger(deathAnimationTrigger);
+                
+                // Wait for the death animation to complete
+                yield return new WaitForSeconds(deathAnimationDuration);
+            }
+            else
+            {
+                Debug.LogWarning($"Death animation trigger '{deathAnimationTrigger}' not found in Animator!");
+                // Still wait a bit for visual feedback
+                yield return new WaitForSeconds(1f);
+            }
+        }
+        else
+        {
+            // If no animation, still wait a moment for visual feedback
+            yield return new WaitForSeconds(0.5f);
+        }
+        
+        // Handle post-death logic (you can customize this)
+        HandlePostDeath();
+    }
+    
+    protected virtual void HandlePostDeath()
+    {
+        // Default behavior: destroy the game object
+        // You can change this to respawn, show game over screen, etc.
         Destroy(gameObject);
-        // Optional: Restart level, show game over screen, etc.
-        // Example:
-        // StartCoroutine(GameOverSequence());
+        
+        // Alternative examples:
+        // Respawn();
+        // GameManager.Instance.ShowGameOverScreen();
+        // SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
     
     /// <summary>
-    /// Attempts to use mana and returns whether successful
+    /// Respawns the player (resets stats and position)
     /// </summary>
-    /// <param name="amount">Amount of mana to consume</param>
-    /// <returns>True if mana was successfully used</returns>
+    public void Respawn()
+    {
+        // Reset to spawn position (you'll need to implement this based on your game)
+        // transform.position = spawnPoint.position;
+        
+        // Reset stats
+        ResetToMaxStats();
+        
+        // Reset animator state if needed
+        if (playerAnimator != null)
+        {
+            playerAnimator.Rebind();
+            playerAnimator.Update(0f);
+        }
+    }
+
+    // Attempts to use mana and returns whether successful
     public bool TryUseMana(float amount)  // Changed to float
     {
-        if (stats == null) return false;
+        if (stats == null || isDead) return false;  // Can't use mana if dead
         
         // Check if we have enough mana
         if (currentMana >= amount)
         {
             currentMana -= amount;
-            OnManaChanged?.Invoke(currentMana, stats.MaxMana);
             return true;
         }
         
         return false;
     }
     
-    /// <summary>
-    /// Restores mana by the specified amount
-    /// </summary>
-    /// <param name="amount">Amount of mana to restore</param>
+    // Restores mana by the specified amount
     public void RestoreMana(float amount)  // Changed to float
     {
-        if (stats == null) return;
+        if (stats == null || isDead) return;  // Can't restore mana if dead
         
         currentMana = Mathf.Min(stats.MaxMana, currentMana + amount);
-        OnManaChanged?.Invoke(currentMana, stats.MaxMana);
     }
     
     // Get current health percentage (0-1)
