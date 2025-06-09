@@ -259,9 +259,9 @@ public class TileGrid : MonoBehaviour
         float depth = -gridPosition.y * 0.2f;
         
         // Optional: Very subtle Y offset for back rows (makes them appear slightly higher)
-        float heightOffset = gridPosition.y * 0.05f;
+        // float heightOffset = gridPosition.y * 0.05f;
         
-        return new Vector3(x, y + heightOffset, depth);
+        return new Vector3(x, y, depth);
     }
     
     private void CreateTile(Vector2Int position)
