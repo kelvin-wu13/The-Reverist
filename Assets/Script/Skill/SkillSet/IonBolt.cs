@@ -9,145 +9,119 @@ namespace SkillSystem
         [Header("IonBolt Skill Settings")]
         [SerializeField] private float projectileSpeed = 10f;
         [SerializeField] private int explosionTileRadius = 1; // Number of tiles in each direction from center
-        [SerializeField] private int damage = 20;
+        [SerializeField] private int damage = 20; // Direct hit damage
+        [SerializeField] private int explosionDamage = 15; // Explosion area damage
         [SerializeField] private GameObject projectilePrefab;
         [SerializeField] private GameObject explosionEffectPrefab;
         [SerializeField] private float explosionEffectDuration = 1.0f;
         [SerializeField] public float manaCost = 1.5f; // Mana cost for casting this skill
-        [SerializeField] public float cooldownDuration = 1.5f; // Cooldown duration in seconds - make public so SkillCast can access it
+        [SerializeField] public float cooldownDuration = 1.5f; // Cooldown duration in seconds
 
-        [Header("Grid-Based Settings")]
-        [SerializeField] private bool useGridBasedShooting = true; // Toggle for grid-based or direct shooting
+        [Header("References")]
+        [SerializeField] private Transform bulletSpawnPoint;
         
         private GameObject activeProjectile;
         private bool isProjectileFired = false;
         private bool isOnCooldown = false;
-        private Vector3 direction;
-        private Vector3 projectileStartPosition;
-        private TileGrid tileGrid;
         private Vector2Int currentGridPosition;
+        private TileGrid tileGrid;
         private PlayerMovement playerMovement;
         private PlayerStats playerStats;
-        private Animator animator;
 
         private void Awake()
         {
-            FindTileGrid();
-            FindPlayerMovement();
-            FindPlayerStats();
+            FindReferences();
         }
 
         private void Update()
         {
             if (isProjectileFired && activeProjectile != null)
             {
-                // Move projectile
-                activeProjectile.transform.position += direction * projectileSpeed * Time.deltaTime;
+                // Move the projectile to the right
+                activeProjectile.transform.Translate(Vector2.right * projectileSpeed * Time.deltaTime, Space.World);
                 
-                // Get the current grid position
+                // Check if we've moved to a new grid position
                 Vector2Int newGridPosition = tileGrid.GetGridPosition(activeProjectile.transform.position);
                 
-                // Check if we've moved to a new grid cell
+                // If we changed grid cells, check for hits
                 if (newGridPosition != currentGridPosition)
                 {
                     currentGridPosition = newGridPosition;
                     
-                    // Check if the projectile is in enemy territory
-                    if (IsEnemyTilePosition(currentGridPosition))
-                    {
-                        // Check for enemies at this position
-                        CheckForEnemyHit(currentGridPosition);
-                    }
-                }
-                
-                // Check if projectile has gone out of bounds in any direction
-                if (!tileGrid.IsValidGridPosition(currentGridPosition))
-                {
-                    Debug.Log("IonBolt: Projectile went out of bounds, destroying...");
-                    Destroy(activeProjectile);
-                    isProjectileFired = false;
-                }
-                // Additional failsafe - destroy if projectile travels too far from start
-                else if (Vector3.Distance(projectileStartPosition, activeProjectile.transform.position) > 50f)
-                {
-                    Debug.Log("IonBolt: Projectile traveled too far, destroying...");
-                    Destroy(activeProjectile);
-                    isProjectileFired = false;
+                    // Check for enemies at this position
+                    CheckForEnemyHit(currentGridPosition);
+                    
+                    // Check if projectile has gone past the rightmost grid
+                    CheckIfPastRightmostGrid();
                 }
             }
         }
 
-        private void FindTileGrid()
+        private void FindReferences()
         {
             if (tileGrid == null)
             {
-                // Find the TileGrid in the scene
                 tileGrid = FindObjectOfType<TileGrid>();
                 if (tileGrid == null)
                 {
-                    Debug.LogError("QQSkill: Could not find TileGrid in the scene!");
+                    Debug.LogError("IonBolt: Could not find TileGrid in the scene!");
                 }
             }
-        }
-        
-        private void FindPlayerMovement()
-        {
+            
             if (playerMovement == null)
             {
                 playerMovement = FindObjectOfType<PlayerMovement>();
                 if (playerMovement == null)
                 {
-                    Debug.LogWarning("QQSkill: Could not find PlayerMovement in the scene. Grid-based targeting may not work correctly.");
+                    Debug.LogWarning("IonBolt: Could not find PlayerMovement in the scene.");
                 }
             }
-        }
-        
-        private void FindPlayerStats()
-        {
+            
             if (playerStats == null)
             {
                 playerStats = FindObjectOfType<PlayerStats>();
                 if (playerStats == null)
                 {
-                    Debug.LogWarning("QQSkill: Could not find PlayerStats in the scene. Mana consumption will not work correctly.");
+                    Debug.LogWarning("IonBolt: Could not find PlayerStats in the scene.");
+                }
+            }
+
+            // Find bullet spawn point if not assigned
+            if (bulletSpawnPoint == null)
+            {
+                PlayerShoot playerShoot = FindObjectOfType<PlayerShoot>();
+                if (playerShoot != null)
+                {
+                    // Try to get the bullet spawn point from PlayerShoot
+                    bulletSpawnPoint = playerShoot.transform; // Fallback to player transform
+                }
+                else
+                {
+                    bulletSpawnPoint = transform;
                 }
             }
         }
 
-        // Override the parent class's method
         public override void ExecuteSkillEffect(Vector2Int targetPosition, Transform casterTransform)
         {
-            // Find the grid and player stats if not already found
-            FindTileGrid();
-            FindPlayerStats();
+            FindReferences();
 
-             // Check if skill is on cooldown
+            // Check if skill is on cooldown
             if (isOnCooldown)
             {
                 Debug.Log("IonBolt is on cooldown!");
                 return;
             }
 
-
             // Check if player has enough mana
             if (playerStats == null || playerStats.TryUseMana(Mathf.CeilToInt(manaCost)))
             {
-                if (useGridBasedShooting && playerMovement != null)
-                {
-                    // Use grid-based shooting (shoot along the grid row)
-                    FireGridBasedProjectile(casterTransform);
-                    StartCoroutine(StartCooldown());
-                }
-                else
-                {
-                    // Use the original targeting method (shoot toward a specific target position)
-                    FireProjectile(casterTransform.position, targetPosition);
-                    StartCoroutine(StartCooldown());
-                }
+                FireProjectileFromSpawnPoint();
+                StartCoroutine(StartCooldown());
             }
             else
             {
-                Debug.Log("QQ Skill: Not enough mana to cast!");
+                Debug.Log("IonBolt: Not enough mana to cast!");
             }
         }
         
@@ -156,93 +130,73 @@ namespace SkillSystem
             isOnCooldown = true;
             yield return new WaitForSeconds(cooldownDuration);
             isOnCooldown = false;
-            Debug.Log("PlasmaSurge cooldown finished!");
+            Debug.Log("IonBolt cooldown finished!");
         }
         
-        private void FireGridBasedProjectile(Transform casterTransform)
+        private void FireProjectileFromSpawnPoint()
         {
-            // Get the player's current grid position
-            Vector2Int playerGridPos = playerMovement.GetCurrentGridPosition();
+            // Use the same spawn position as PlayerShoot
+            Vector3 spawnPosition = bulletSpawnPoint.position;
 
-            // Calculate spawn position - on the right edge of the current tile
-            Vector3 tileWorldPos = tileGrid.GetWorldPosition(playerGridPos);
-            float tileWidth = tileGrid.GetTileWidth();
-            Vector3 spawnPosition = new Vector3(
-                tileWorldPos.x + tileWidth,
-                tileWorldPos.y + (tileGrid.GetTileHeight() / 2),
-                0
-            );
-
-            // Store the starting position for distance checking
-            projectileStartPosition = spawnPosition;
-
-            // Always shoot to the right
-            direction = Vector3.right;
-
-            // Instantiate projectile
+            // Instantiate projectile at the spawn point
             activeProjectile = Instantiate(projectilePrefab, spawnPosition, Quaternion.identity);
-
-            // Set the projectile's forward direction to match the firing direction
-            activeProjectile.transform.up = direction;
+            
+            // Adjust rotation to match direction (same as Bullet.cs)
+            float angle = Mathf.Atan2(Vector2.right.y, Vector2.right.x) * Mathf.Rad2Deg;
+            activeProjectile.transform.rotation = Quaternion.Euler(0, 0, angle);
 
             isProjectileFired = true;
 
             // Set initial grid position for the projectile
             currentGridPosition = tileGrid.GetGridPosition(activeProjectile.transform.position);
 
-            Debug.Log($"IonBolt: Fired grid-based projectile from player tile {playerGridPos}");
+            Debug.Log($"IonBolt: Fired projectile from spawn point");
         }
 
-        private void FireProjectile(Vector3 startPosition, Vector2Int targetGridPosition)
-        {
-            // Ensure TileGrid is available
-            if (tileGrid == null)
-            {
-                Debug.LogError("IonBolt: TileGrid reference is null when trying to fire projectile!");
-                return;
-            }
-
-            // Store the starting position for distance checking
-            projectileStartPosition = startPosition;
-
-            // Convert target grid position to world position
-            Vector3 targetPosition = tileGrid.GetWorldPosition(targetGridPosition);
-            
-            // Calculate direction
-            direction = (targetPosition - startPosition).normalized;
-            
-            // Instantiate projectile
-            activeProjectile = Instantiate(projectilePrefab, startPosition, Quaternion.identity);
-            
-            // Set the projectile's forward direction to match the firing direction
-            activeProjectile.transform.up = direction;
-            
-            isProjectileFired = true;
-
-            // Set initial grid position for the projectile
-            currentGridPosition = tileGrid.GetGridPosition(activeProjectile.transform.position);
-            
-            Debug.Log($"IonBolt: Fired projectile toward {targetGridPosition}");
-        }
-        
         private void CheckForEnemyHit(Vector2Int gridPosition)
         {
-            // Get world position of this tile's center
-            Vector3 tileWorldPos = tileGrid.GetWorldPosition(gridPosition);
-            
-            // Get all colliders at this tile position
-            Collider2D[] hitColliders = Physics2D.OverlapCircleAll(tileWorldPos, 0.4f);
-            
-            foreach (Collider2D collider in hitColliders)
+            if (!IsEnemyTilePosition(gridPosition)) return;
+
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+
+            foreach (GameObject enemy in enemies)
             {
-                if (collider.CompareTag("Enemy"))
+                Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
+                if (enemyGridPos == gridPosition)
                 {
-                    // Hit an enemy, trigger explosion at its grid position
-                    ExplodeAtGridPosition(gridPosition);
-                    Destroy(activeProjectile);
-                    isProjectileFired = false;
-                    break;
+                    Enemy enemyComponent = enemy.GetComponent<Enemy>();
+                    if (enemyComponent != null)
+                    {                        
+                        enemyComponent.TakeDamage(damage);
+                        Debug.Log($"IonBolt: Hit enemy at tile {gridPosition} for {damage} damage");
+
+                        // Trigger explosion at enemy position
+                        ExplodeAtGridPosition(gridPosition);
+                        
+                        // Destroy projectile
+                        Destroy(activeProjectile);
+                        isProjectileFired = false;
+                        break;
+                    }
                 }
+            }
+        }
+
+        private void CheckIfPastRightmostGrid()
+        {
+            // If we're beyond the rightmost enemy grid column, destroy the projectile
+            if (currentGridPosition.x >= tileGrid.gridWidth)
+            {
+                Destroy(activeProjectile);
+                isProjectileFired = false;
+                return;
+            }
+            
+            // If we're past the rightmost column, destroy the projectile
+            if (currentGridPosition.x > tileGrid.gridWidth - 1)
+            {
+                Destroy(activeProjectile);
+                isProjectileFired = false;
             }
         }
         
@@ -255,18 +209,15 @@ namespace SkillSystem
         
         private void ExplodeAtGridPosition(Vector2Int centerGridPosition)
         {
-            Debug.Log($"QQ Skill: Explosion at grid position {centerGridPosition}");
+            Debug.Log($"IonBolt: Explosion at grid position {centerGridPosition}");
             
             // Create visual explosion effect at world position
             Vector3 worldPosition = tileGrid.GetWorldPosition(centerGridPosition);
             
-            //Create and manage explosion
-            GameObject explosionEffect = null;
-
-            // Create basic explosion effect if we don't have the asset yet
+            // Create explosion effect
             if (explosionEffectPrefab != null)
             {
-                explosionEffect = Instantiate(explosionEffectPrefab, worldPosition, Quaternion.identity);
+                GameObject explosionEffect = Instantiate(explosionEffectPrefab, worldPosition, Quaternion.identity);
                 Destroy(explosionEffect, explosionEffectDuration);
             }
             
@@ -276,21 +227,22 @@ namespace SkillSystem
             // Find enemies in each affected tile
             foreach (Vector2Int tilePos in affectedTiles)
             {
-                // Get world position of this tile's center
-                Vector3 tileWorldPos = tileGrid.GetWorldPosition(tilePos);
+                // Skip the center tile as it was already damaged by direct hit
+                if (tilePos == centerGridPosition) continue;
                 
-                // Get all colliders at this tile position (using a small radius to detect objects in this tile)
-                Collider2D[] hitColliders = Physics2D.OverlapCircleAll(tileWorldPos, 0.4f);
+                GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
                 
-                foreach (Collider2D collider in hitColliders)
+                foreach (GameObject enemy in enemies)
                 {
-                    if (collider.CompareTag("Enemy"))
+                    Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
+                    if (enemyGridPos == tilePos)
                     {
-                        Enemy enemy = collider.GetComponent<Enemy>();
-                        if (enemy != null)
+                        Enemy enemyComponent = enemy.GetComponent<Enemy>();
+                        if (enemyComponent != null)
                         {
-                            enemy.TakeDamage(damage);
-                            Debug.Log($"QQ Skill: Dealt {damage} damage to enemy at tile {tilePos}");
+                            // Use explosion damage for area effect
+                            enemyComponent.TakeDamage(explosionDamage);
+                            Debug.Log($"IonBolt: Explosion dealt {explosionDamage} damage to enemy at tile {tilePos}");
                         }
                     }
                 }

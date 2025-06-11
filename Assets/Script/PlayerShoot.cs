@@ -74,6 +74,10 @@ public class PlayerShoot : MonoBehaviour
 
         UpdateShootTimer();
     }
+    public Transform GetBulletSpawnPoint()
+    {
+        return bulletSpawnPoint;
+    }
 
     private void TryShoot()
     {

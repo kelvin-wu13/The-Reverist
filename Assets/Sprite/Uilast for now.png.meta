@@ -1,0 +1,294 @@
+fileFormatVersion: 2
+guid: b6af511370195014b9ba4d58540fa9c0
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7963545645099614500
+    second: Uilast for now_0
+  - first:
+      213: 6660491252673807991
+    second: Uilast for now_1
+  - first:
+      213: 1229626319976788370
+    second: Uilast for now_2
+  - first:
+      213: 3323333662297779587
+    second: Uilast for now_3
+  - first:
+      213: -4955357070526875612
+    second: Uilast for now_4
+  - first:
+      213: 2832847070952143678
+    second: Uilast for now_5
+  - first:
+      213: -3186811273614942491
+    second: Uilast for now_6
+  - first:
+      213: -5978912027591419041
+    second: Uilast for now_7
+  - first:
+      213: -988253180385740546
+    second: Uilast for now_8
+  - first:
+      213: 5685309725748400910
+    second: Uilast for now_9
+  - first:
+      213: -5986202086019433705
+    second: Uilast for now_10
+  - first:
+      213: 1134890758372900360
+    second: Uilast for now_11
+  - first:
+      213: -7329512953791301637
+    second: Uilast for now_12
+  - first:
+      213: -6521835933371457699
+    second: Uilast for now_13
+  - first:
+      213: -4316825323414267652
+    second: Uilast for now_14
+  - first:
+      213: 7093793699801720400
+    second: Uilast for now_15
+  - first:
+      213: 9132664744847144657
+    second: Uilast for now_16
+  - first:
+      213: 4559917917061581022
+    second: Uilast for now_17
+  - first:
+      213: 3536152084431698953
+    second: Uilast for now_18
+  - first:
+      213: -88364627895667940
+    second: Uilast for now_19
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Uilast for now_0
+      rect:
+        serializedVersion: 2
+        x: 86
+        y: 1633
+        width: 1747
+        height: 277
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 784003df711ada9479fdd92cbc972f91
+      internalID: -63313020
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Uilast for now_1
+      rect:
+        serializedVersion: 2
+        x: 102
+        y: 1167
+        width: 921
+        height: 198
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 653f0da33b9bb5743852b16bed2599a8
+      internalID: 1448741440
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Uilast for now_2
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 767
+        width: 1105
+        height: 215
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fee4761cc21f04e4d860bc905a8c42b0
+      internalID: -991633938
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Uilast for now_3
+      rect:
+        serializedVersion: 2
+        x: 107
+        y: 523
+        width: 1470
+        height: 108
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6793af83760de7f4fb1e0cba40358649
+      internalID: 1482694978
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Uilast for now_4
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 170
+        width: 1461
+        height: 156
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e4981ca7cee8e254089f15ba820b5ab6
+      internalID: -736693015
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 607719cdbe5c6784893c493c10eb5d4d
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":3840.0,"y":2048.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      Uilast for now_0: -63313020
+      Uilast for now_1: 1448741440
+      Uilast for now_2: -991633938
+      Uilast for now_3: 1482694978
+      Uilast for now_4: -736693015
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
