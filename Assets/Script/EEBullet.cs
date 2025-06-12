@@ -60,7 +60,7 @@ namespace SkillSystem
             
             StartCoroutine(MoveAlongGrid());
         }
-        
+
         private IEnumerator MoveAlongGrid()
         {
             // Continue moving until we hit something or go off-grid
@@ -68,7 +68,7 @@ namespace SkillSystem
             {
                 // Calculate next grid position (one tile to the right)
                 Vector2Int nextPosition = currentGridPosition + Vector2Int.right;
-                
+
                 // Check if the next position is valid
                 if (!tileGrid.IsValidGridPosition(nextPosition))
                 {
@@ -77,14 +77,14 @@ namespace SkillSystem
                     DestroyBullet();
                     yield break;
                 }
-                
+
                 // Move to the next position first, then check for enemies
                 isMoving = true;
                 targetGridPosition = nextPosition;
-                
+
                 Vector3 startPos = transform.position;
                 Vector3 endPos = tileGrid.GetWorldPosition(targetGridPosition);
-                
+
                 float elapsedTime = 0;
                 while (elapsedTime < tileMoveDuration)
                 {
@@ -93,57 +93,34 @@ namespace SkillSystem
                     transform.position = Vector3.Lerp(startPos, endPos, percent);
                     yield return null;
                 }
-                
+
                 // Ensure we land exactly on the target position
                 transform.position = endPos;
                 currentGridPosition = targetGridPosition;
                 isMoving = false;
-                
-                // Now check if there's an enemy at our current position
-                Collider2D[] hitColliders = Physics2D.OverlapCircleAll(
-                    transform.position,
-                    0.4f); // Radius to check for enemies
-                
-                bool hitEnemy = false;
-                foreach (Collider2D collider in hitColliders)
+
+                // Now check if there's an enemy at our current tile
+                GameObject[] enemies = GameObject.FindGameObjectsWithTag(targetTag);
+                foreach (GameObject enemy in enemies)
                 {
-                    if (collider.CompareTag(targetTag))
+                    Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
+                    if (enemyGridPos == currentGridPosition)
                     {
-                        // We found an enemy, damage it
-                        Enemy enemy = collider.GetComponent<Enemy>();
-                        if (enemy != null)
+                        Enemy enemyComponent = enemy.GetComponent<Enemy>();
+                        if (enemyComponent != null)
                         {
-                            // Check if the enemy is in the same row (y-coordinate) as the bullet
-                            Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
-                            if (enemyGridPos.y == currentGridPosition.y)
+                            enemyComponent.TakeDamage(damage);
+                            enemyComponent.Stun(stunDuration);
+
+                            if (hitEffect != null)
                             {
-                                if (showDebugInfo) Debug.Log("Bullet hit enemy at " + currentGridPosition);
-                                enemy.TakeDamage(damage);
-                                enemy.Stun(stunDuration);
-                                
-                                // Spawn hit effect
-                                if (hitEffect != null)
-                                {
-                                    Instantiate(hitEffect, transform.position, Quaternion.identity);
-                                }
-                                
-                                hitEnemy = true;
-                                break;
+                                Instantiate(hitEffect, transform.position, Quaternion.identity);
                             }
-                            else if (showDebugInfo)
-                            {
-                                Debug.Log("Enemy detected but not in same row. Enemy Y: " + 
-                                          enemyGridPos.y + ", Bullet Y: " + currentGridPosition.y);
-                            }
+
+                            DestroyBullet();
+                            yield break;
                         }
                     }
-                }
-                
-                if (hitEnemy)
-                {
-                    // We hit an enemy, destroy the bullet
-                    DestroyBullet();
-                    yield break;
                 }
             }
         }
@@ -152,14 +129,14 @@ namespace SkillSystem
         {
             if (isDestroying) return;
             isDestroying = true;
-            
+
             // Disable collider if present
             Collider2D collider = GetComponent<Collider2D>();
             if (collider != null)
             {
                 collider.enabled = false;
             }
-            
+
             // Start fade-out animation
             StartCoroutine(FadeOutAndDestroy());
         }

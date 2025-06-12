@@ -153,22 +153,4 @@ public class Bullet : MonoBehaviour
         // Destroy the gameObject
         Destroy(gameObject);
     }
-    
-    // Helper method that can be called when the bullet collides with enemies
-    // This would be used if you're using Unity's collision system
-    // private void OnTriggerEnter2D(Collider2D collision)
-    // {
-    //     // Check if the collision is with an enemy
-    //     if (collision.gameObject.CompareTag("Enemy"))
-    //     {
-    //         // Deal damage to the enemy
-    //         collision.GetComponent<Enemy>()?.TakeDamage(damage);
-            
-    //         // Visual effect
-    //         SpawnHitEffect();
-            
-    //         // Destroy bullet
-    //         DestroyBullet();
-    //     }
-    // }
 }

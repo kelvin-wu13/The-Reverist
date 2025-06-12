@@ -268,42 +268,6 @@ namespace SkillSystem
             }
         }
 
-        // Create a simple particle effect for return if no prefab is available
-        private void CreateSimpleReturnEffect(Vector3 position, float duration)
-        {
-            GameObject returnEffectObj = new GameObject("ReturnEffect");
-            returnEffectObj.transform.position = position;
-
-            // Create particle system
-            ParticleSystem particleSystem = returnEffectObj.AddComponent<ParticleSystem>();
-            var main = particleSystem.main;
-            main.startSpeed = 2f;
-            main.startSize = 0.2f;
-            main.startLifetime = 0.5f;
-            main.duration = duration;
-            
-            // Particle system renderer
-            var renderer = particleSystem.GetComponent<ParticleSystemRenderer>();
-            renderer.material = new Material(Shader.Find("Sprites/Default"));
-
-            // Set emission
-            var emission = particleSystem.emission;
-            emission.rateOverTime = 20;
-
-            // Set color over lifetime
-            var colorOverLifetime = particleSystem.colorOverLifetime;
-            colorOverLifetime.enabled = true;
-            Gradient gradient = new Gradient();
-            gradient.SetKeys(
-                new GradientColorKey[] { new GradientColorKey(Color.green, 0.0f), new GradientColorKey(Color.white, 1.0f) },
-                new GradientAlphaKey[] { new GradientAlphaKey(1.0f, 0.0f), new GradientAlphaKey(0.0f, 1.0f) }
-            );
-            colorOverLifetime.color = gradient;
-
-            // Destroy after duration
-            Destroy(returnEffectObj, duration + 1f);
-        }
-        
         // New method to check if position is valid for dashing (allows enemy tiles but not broken tiles)
         private bool IsValidDashPosition(Vector2Int gridPosition)
         {
@@ -313,80 +277,63 @@ namespace SkillSystem
         }
         
         // New method to execute the WQ-style attack (vertical 3-tile pattern)
-        private void ExecuteWQStyleAttack(Vector2Int frontTile, Transform casterTransform)
+        private void ExecuteWQStyleAttack(Vector2Int _, Transform casterTransform)
         {
-            // Log the skill execution
-            Debug.Log($"Executing WW skill at grid position {frontTile}");
-            
-            // Get the forward direction based on caster's facing direction (default is right)
-            Vector2 forwardDirection = casterTransform.right;
-            
-            // Calculate the three vertical tiles centered on the frontTile
-            //Tambahin lagi damage di playerPosition
-            List<Vector2Int> damageGridPositions = new List<Vector2Int>();
-            damageGridPositions.Add(frontTile);
-            damageGridPositions.Add(new Vector2Int(frontTile.x, frontTile.y + 1)); // Above
-            damageGridPositions.Add(new Vector2Int(frontTile.x, frontTile.y - 1)); // Below
-            
-            // Convert grid positions to world positions for damage application
+            if (tileGrid == null || casterTransform == null) return;
+
+            Vector2Int playerGridPos = tileGrid.GetGridPosition(casterTransform.position);
+
+            List<Vector2Int> damageGridPositions = new List<Vector2Int>
+            {
+                new Vector2Int(playerGridPos.x + 1, playerGridPos.y - 1),
+                new Vector2Int(playerGridPos.x + 1, playerGridPos.y),
+                new Vector2Int(playerGridPos.x + 1, playerGridPos.y + 1)
+            };
+
+            float yOffset = 0f;
+            PlayerMovement move = casterTransform.GetComponent<PlayerMovement>();
+            if (move != null)
+                yOffset = move.GetPositionOffset().y;
+
             List<Vector2> damageWorldPositions = new List<Vector2>();
             foreach (Vector2Int gridPos in damageGridPositions)
             {
                 if (tileGrid.IsValidGridPosition(gridPos))
                 {
-                    damageWorldPositions.Add(tileGrid.GetWorldPosition(gridPos));
-                    
-                    // Visual effect - you could add additional effects here
-                    // tileGrid.CrackTile(gridPos);
+                    Vector3 basePos = tileGrid.GetWorldPosition(gridPos);
+                    Vector3 tileCenter = basePos + new Vector3(tileGrid.GetTileWidth(), tileGrid.GetTileHeight()) * 0.5f;
+                    tileCenter += new Vector3(0, yOffset, 0);
+                    damageWorldPositions.Add(tileCenter);
                 }
             }
-            
-            // Apply damage to each position
+
             foreach (Vector2 pos in damageWorldPositions)
             {
-                // Debug visualization during runtime
                 Debug.DrawLine(casterTransform.position, pos, Color.red, 1f);
-                
-                // Find all colliders at this position
                 Collider2D[] hitColliders = Physics2D.OverlapCircleAll(pos, effectRadius);
-                
-                // Apply damage to any enemies found
                 foreach (Collider2D collider in hitColliders)
                 {
-                    // Check if the hit object has the "Enemy" tag
                     if (collider.CompareTag("Enemy"))
                     {
-                        // Look for Enemy component
                         Enemy enemy = collider.GetComponent<Enemy>();
                         if (enemy != null)
                         {
                             enemy.TakeDamage(damageAmount);
-                            Debug.Log($"WW Skill hit enemy: {collider.name} for {damageAmount} damage");
+                            Debug.Log($"SwiftStrike hit enemy: {collider.name} for {damageAmount} damage");
                         }
                         else
                         {
-                            Debug.LogWarning($"Object tagged as 'Enemy' {collider.name} found but has no Enemy component");
+                            Debug.LogWarning($"Enemy tag on {collider.name} but no Enemy script");
                         }
                     }
                 }
             }
         }
+
         
         private IEnumerator ReturnToOriginalPosition()
         {
             if (playerTransform == null) yield break;
-            
-            // Spawn return effect if available
-            if (returnEffectPrefab != null)
-            {
-                GameObject returnEffect = Instantiate(returnEffectPrefab, playerTransform.position, Quaternion.identity);
-                Destroy(returnEffect, returnDuration + 0.5f);
-            }
-            else
-            {
-                // Create a simple visual effect if no prefab is available
-                CreateSimpleReturnEffect(playerTransform.position, returnDuration);
-            }
             
             Vector3 currentPosition = playerTransform.position;
             Vector3 returnPosition = originalWorldPosition; // Use the stored world position directly

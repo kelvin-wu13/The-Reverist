@@ -37,11 +37,18 @@ public class PlayerMovement : MonoBehaviour
         return currentGridPosition;
     }
     
+    // Public getter for Skill position
+    public Vector2 GetPositionOffset()
+    {
+        return positionOffset;
+    }
+
+    
     private void Start()
     {
         // Initialize player position
         transform.position = GetAdjustedWorldPosition(currentGridPosition);
-        
+
         // If animator wasn't assigned in inspector, try to get it
         if (animator == null)
         {
@@ -58,6 +65,7 @@ public class PlayerMovement : MonoBehaviour
     {
         HandleInput();
         UpdateAnimationDirection();
+        UpdateAnimationParameters(true);
     }
 
     private void HandleInput()
@@ -127,6 +135,7 @@ public class PlayerMovement : MonoBehaviour
     private IEnumerator Move(Vector2Int targetGridPosition)
     {
         isMoving = true;
+        animator.SetBool(isMovingParam, true);
 
         Vector3 startPos = transform.position;
         Vector3 endPos = GetAdjustedWorldPosition(targetGridPosition);
@@ -143,8 +152,14 @@ public class PlayerMovement : MonoBehaviour
         transform.position = endPos;
         currentGridPosition = targetGridPosition;
         isMoving = false;
-        
+        animator.SetBool(isMovingParam, false);
+
+        // 👉 Reset direction to idle (important!)
+        targetAnimDirection = Vector2.zero;
+        UpdateAnimationDirection(); // Immediately apply idle direction
     }
+
+
     
     private void UpdateAnimationParameters(bool moving)
     {

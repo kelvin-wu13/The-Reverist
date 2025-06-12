@@ -27,7 +27,7 @@ namespace SkillSystem
                 tileGrid = FindObjectOfType<TileGrid>();
                 if (tileGrid == null)
                 {
-                    Debug.LogError("QQSkill: Could not find TileGrid in the scene!");
+                    Debug.LogError("WQSkill: Could not find TileGrid in the scene!");
                 }
             }
         }
@@ -39,24 +39,20 @@ namespace SkillSystem
                 playerStats = FindObjectOfType<PlayerStats>();
                 if (playerStats == null)
                 {
-                    Debug.LogWarning("QQSkill: Could not find PlayerStats in the scene. Mana consumption will not work correctly.");
+                    Debug.LogWarning("WQSkill: Could not find PlayerStats in the scene. Mana consumption will not work correctly.");
                 }
             }
         }
 
         public override void ExecuteSkillEffect(Vector2Int targetPosition, Transform casterTransform)
         {
-            // Log the skill execution
             Debug.Log($"Executing WQ skill at grid position {targetPosition}");
 
+            if (tileGrid == null) tileGrid = FindObjectOfType<TileGrid>();
             if (tileGrid == null)
             {
-                tileGrid = FindObjectOfType<TileGrid>();
-                if (tileGrid == null)
-                {
-                    Debug.LogError("WQSkill: Could not find TileGrid in the scene!");
-                    return;
-                }
+                Debug.LogError("WQSkill: Could not find TileGrid in the scene!");
+                return;
             }
 
             if (playerStats == null)
@@ -67,78 +63,55 @@ namespace SkillSystem
                     playerStats = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerStats>();
                     if (playerStats == null)
                     {
-                        Debug.Log("QuickSlash : Cant find player Stat");
+                        Debug.Log("QuickSlash : Can't find player stats");
                         return;
                     }
                 }
             }
 
-            //Check if player has enought mana
             if (!playerStats.TryUseMana(manaCost))
             {
                 Debug.Log($"QuickSlash: Not enough mana! Required: {manaCost}, Current: {playerStats.CurrentMana}");
                 return;
             }
 
-            // Get the forward direction based on caster's facing direction (default is right)
-            Vector2 forwardDirection = casterTransform.right;
-
-            // Get player's current grid position
+            // Always face right
             Vector2Int playerGridPos = tileGrid.GetGridPosition(casterTransform.position);
 
-            // Calculate the target grid positions (1 tile in front of player, vertically aligned)
-            Vector2Int frontTile;
-
-            // Determine which direction is "front" based on player's facing direction
-            if (Mathf.Abs(forwardDirection.x) > Mathf.Abs(forwardDirection.y))
+            // Hit 3 vertical tiles in front (x + 1)
+            List<Vector2Int> damageGridPositions = new List<Vector2Int>
             {
-                // Facing horizontally (right or left)
-                frontTile = new Vector2Int(
-                    playerGridPos.x + (forwardDirection.x > 0 ? 1 : -1),
-                    playerGridPos.y
-                );
-            }
-            else
-            {
-                // Facing vertically (up or down)
-                frontTile = new Vector2Int(
-                    playerGridPos.x,
-                    playerGridPos.y + (forwardDirection.y > 0 ? 1 : -1)
-                );
-            }
+                new Vector2Int(playerGridPos.x + 1, playerGridPos.y - 1),
+                new Vector2Int(playerGridPos.x + 1, playerGridPos.y),
+                new Vector2Int(playerGridPos.x + 1, playerGridPos.y + 1)
+            };
 
-            // Calculate the three vertical tiles
-            List<Vector2Int> damageGridPositions = new List<Vector2Int>();
-            damageGridPositions.Add(frontTile);
-            damageGridPositions.Add(new Vector2Int(frontTile.x, frontTile.y + 1)); // Above
-            damageGridPositions.Add(new Vector2Int(frontTile.x, frontTile.y - 1)); // Below
+            // Get Y offset from PlayerMovement (e.g. 1)
+            float yOffset = 0f;
+            PlayerMovement move = casterTransform.GetComponent<PlayerMovement>();
+            if (move != null) yOffset = move.GetPositionOffset().y;
 
-            // Convert grid positions to world positions for damage application
             List<Vector2> damageWorldPositions = new List<Vector2>();
             foreach (Vector2Int gridPos in damageGridPositions)
             {
                 if (tileGrid.IsValidGridPosition(gridPos))
                 {
-                    damageWorldPositions.Add(tileGrid.GetWorldPosition(gridPos));
+                    Vector3 basePos = tileGrid.GetWorldPosition(gridPos);
+                    Vector3 tileCenter = basePos + new Vector3(tileGrid.GetTileWidth(), tileGrid.GetTileHeight()) * 0.5f;
+                    tileCenter += new Vector3(0, yOffset, 0);
+                    damageWorldPositions.Add(tileCenter);
                 }
             }
 
-            // Apply damage to each position
             foreach (Vector2 pos in damageWorldPositions)
             {
-                // Debug visualization during runtime
                 Debug.DrawLine(casterTransform.position, pos, Color.red, 1f);
 
-                // Find all colliders at this position
                 Collider2D[] hitColliders = Physics2D.OverlapCircleAll(pos, effectRadius);
-
-                // Apply damage to any enemies found
                 foreach (Collider2D collider in hitColliders)
                 {
-                    // Check if the hit object has the "Enemy" tag
                     if (collider.CompareTag("Enemy"))
                     {
-                        // Look for Enemy component
                         Enemy enemy = collider.GetComponent<Enemy>();
                         if (enemy != null)
                         {
@@ -147,17 +120,17 @@ namespace SkillSystem
                         }
                         else
                         {
-                            Debug.LogWarning($"Object tagged as 'Enemy' {collider.name} found but has no Enemy component");
+                            Debug.LogWarning($"Enemy tag on {collider.name} but no Enemy script");
                         }
                     }
                 }
             }
-            // Call the base implementation if needed
-            base.ExecuteSkillEffect(targetPosition, casterTransform);
 
-            // Reset melee animation after a short delay
+            base.ExecuteSkillEffect(targetPosition, casterTransform);
             ResetMeleeAnimation();
         }
+
+
 
         private void ResetMeleeAnimation()
         {

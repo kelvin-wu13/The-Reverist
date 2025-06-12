@@ -12,16 +12,25 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private float manaRegenAmount = 1f;  // Amount of mana to regenerate
     [SerializeField] private float manaRegenInterval = 0.5f;  // Time between mana regeneration in seconds
     
-    [Header("Death Animation")]
+    [Header("Animation")]
     [SerializeField] private Animator playerAnimator;  // Reference to player's Animator
     [SerializeField] private string deathAnimationTrigger = "Death";  // Name of death animation trigger
     [SerializeField] private float deathAnimationDuration = 2f;  // How long to wait before destroying/respawning
     [SerializeField] private bool useDeathAnimation = true;  // Toggle death animation on/off
-    
+    [SerializeField] private string hitAnimationTrigger = "Hit";
+
+
     [Header("Current Values")]
     [SerializeField] private int currentHealth;
     [SerializeField] private float currentMana;  // Changed to float for fractional mana
-    
+
+    [Header("Visual")]
+    [SerializeField] private SpriteRenderer spriteRenderer;
+    [SerializeField] private float hitFlashDuration = 0.1f;
+    [SerializeField] private Color hitColor = Color.red;
+
+    private Color originalColor;
+
     // Current stats
     private float manaRegenTimer;
     private bool isDead = false;  // Track if player is dead to prevent multiple death calls
@@ -46,6 +55,9 @@ public class PlayerStats : MonoBehaviour
         {
             playerAnimator = GetComponent<Animator>();
         }
+
+        if (spriteRenderer != null)
+            originalColor = spriteRenderer.color;
         
         // Validate that we have stats
         if (stats == null)
@@ -119,21 +131,44 @@ public class PlayerStats : MonoBehaviour
         if (stats == null || isDead) return;  // Don't take damage if already dead
         
         currentHealth = Mathf.Max(0, currentHealth - damage);
-        
+
+        StartCoroutine(FlashColor());
+
+        // Play hit animation if available
+        if (playerAnimator != null)
+        {
+            playerAnimator.SetTrigger(hitAnimationTrigger);
+        }
+            
         // Check if player died
         if (currentHealth <= 0)
         {
             Die();
         }
     }
+
+    private IEnumerator FlashColor()
+    {
+        // Don't proceed if no sprite renderer available
+        if (spriteRenderer == null) yield break;
+
+        // Change to hit color
+        spriteRenderer.color = hitColor;
+
+        // Wait for flash duration
+        yield return new WaitForSeconds(hitFlashDuration);
+
+        //Change sprite color back
+        spriteRenderer.color = originalColor;
+    }
     
     // Called when player health reaches zero
     private void Die()
     {
         if (isDead) return;  // Prevent multiple death calls
-        
+
         isDead = true;
-        
+
         // Disable player controls immediately
         PlayerShoot shootComponent = GetComponent<PlayerShoot>();
         if (shootComponent != null)
@@ -152,7 +187,7 @@ public class PlayerStats : MonoBehaviour
         {
             skillComponent.enabled = false;
         }
-        
+
         // Start death sequence
         StartCoroutine(DeathSequence());
     }

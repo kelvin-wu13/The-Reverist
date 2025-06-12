@@ -102,7 +102,7 @@ public class Enemy : MonoBehaviour
         tileGrid.SetTileOccupied(currentGridPosition, true);
         moveTimer = moveInterval;
         shootTimer = Random.Range(0f, shootInterval);
-        StartCoroutine(RandomMovement());
+        //StartCoroutine(RandomMovement());
     }
     
     private void Update()
@@ -202,7 +202,7 @@ public class Enemy : MonoBehaviour
         isBeingPulled = false;
         
         // Resume normal behavior
-        StartCoroutine(RandomMovement());
+        //StartCoroutine(RandomMovement());
         
         Debug.Log($"Enemy pull completed at {currentGridPosition}");
     }
@@ -504,7 +504,7 @@ public class Enemy : MonoBehaviour
         Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
         targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
 
-        StartCoroutine(RandomMovement()); // <-- This ensures movement resumes
+        //StartCoroutine(RandomMovement()); // <-- This ensures movement resumes
     }
 
     

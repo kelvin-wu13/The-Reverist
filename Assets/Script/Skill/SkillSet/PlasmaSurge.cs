@@ -12,7 +12,8 @@ namespace SkillSystem
         [SerializeField] private float animDuration = 1f;
 
         [Header("Cooldown")]
-        public float cooldownDuration = 2f;
+        [SerializeField] public float cooldownDuration = 2f;
+        [SerializeField] public float manaCost = 1.5f;
 
         [Header("References")]
         private PlayerShoot playerShoot;
@@ -32,11 +33,19 @@ namespace SkillSystem
             playerMovement = player.GetComponent<PlayerMovement>();
             tileGrid = FindObjectOfType<TileGrid>();
 
+            // Check if enough mana
+            PlayerStats stats = player.GetComponent<PlayerStats>();
+            if (stats != null && !stats.TryUseMana(manaCost))
+            {
+                Debug.Log("Not enough mana to cast PlasmaSurge.");
+                Destroy(gameObject); // Cancel skill
+                return;
+            }
+
             if (spawnOffsetReference != null)
                 transform.position = spawnOffsetReference.position + offsetFromReference;
             else
-                transform.position = GetFirepointPosition(); // fallback
-
+                transform.position = GetFirepointPosition();
 
             Animator anim = GetComponent<Animator>();
             if (anim != null)
@@ -44,6 +53,7 @@ namespace SkillSystem
 
             StartCoroutine(ExecutePlasmaSurge());
         }
+
 
 
 
