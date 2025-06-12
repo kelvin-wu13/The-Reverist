@@ -184,7 +184,10 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      MC_Dash_Sprite 1_0: 556045626963328683
+      MC_Dash_Sprite 1_1: 7969689800580898510
+      MC_Dash_Sprite 1_2: -2343337989631187747
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

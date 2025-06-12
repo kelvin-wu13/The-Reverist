@@ -784,7 +784,34 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Saffron_Sprite_0: 8516717769709242484
+      Saffron_Sprite_1: -6256053255688372999
+      Saffron_Sprite_10: -2110118594160115383
+      Saffron_Sprite_11: -3591477946461585415
+      Saffron_Sprite_12: 5457105413728234247
+      Saffron_Sprite_13: 1034620175513806740
+      Saffron_Sprite_14: -6563617527492261986
+      Saffron_Sprite_15: -451076301356268615
+      Saffron_Sprite_16: 5040352315948059571
+      Saffron_Sprite_17: 5101143989339680743
+      Saffron_Sprite_18: 4203015902995718436
+      Saffron_Sprite_19: 6682759036113403941
+      Saffron_Sprite_2: 885580847377309638
+      Saffron_Sprite_20: 6618141795135893713
+      Saffron_Sprite_21: -1234786489525725891
+      Saffron_Sprite_22: 1670728268478310981
+      Saffron_Sprite_23: 4607236061358139391
+      Saffron_Sprite_24: 8518837257125902199
+      Saffron_Sprite_25: -8146787634304503292
+      Saffron_Sprite_26: 6057595194200309239
+      Saffron_Sprite_3: 3132649343988327197
+      Saffron_Sprite_4: -159354644754831878
+      Saffron_Sprite_5: -6420179087795478444
+      Saffron_Sprite_6: 8590928135231099165
+      Saffron_Sprite_7: -2977783234394393130
+      Saffron_Sprite_8: 2328888962595160317
+      Saffron_Sprite_9: 6352806554499445113
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
