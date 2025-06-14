@@ -285,9 +285,9 @@ namespace SkillSystem
 
             List<Vector2Int> damageGridPositions = new List<Vector2Int>
             {
-                new Vector2Int(playerGridPos.x + 1, playerGridPos.y - 1),
+                new Vector2Int(playerGridPos.x + 1, playerGridPos.y - 2),
                 new Vector2Int(playerGridPos.x + 1, playerGridPos.y),
-                new Vector2Int(playerGridPos.x + 1, playerGridPos.y + 1)
+                new Vector2Int(playerGridPos.x + 1, playerGridPos.y -1)
             };
 
             float yOffset = 0f;

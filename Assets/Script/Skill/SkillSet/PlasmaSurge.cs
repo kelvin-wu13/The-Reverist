@@ -8,44 +8,34 @@ namespace SkillSystem
     {
         [Header("Plasma Surge Settings")]
         [SerializeField] private int damage = 25;
-        [SerializeField] private float hitRadius = 0.4f;
         [SerializeField] private float animDuration = 1f;
 
         [Header("Cooldown")]
         [SerializeField] public float cooldownDuration = 2f;
         [SerializeField] public float manaCost = 1.5f;
 
-        [Header("References")]
         private PlayerShoot playerShoot;
         private TileGrid tileGrid;
         private Transform player;
         private PlayerMovement playerMovement;
-        [SerializeField] private Transform spawnOffsetReference;
-        [SerializeField] private Vector3 offsetFromReference = Vector3.zero;
-
-
+        
         public override void Initialize(Vector2Int targetPosition, SkillCombination combo, Transform playerTransform)
         {
             base.Initialize(targetPosition, combo, playerTransform);
-
             player = playerTransform;
             playerShoot = player.GetComponent<PlayerShoot>();
             playerMovement = player.GetComponent<PlayerMovement>();
             tileGrid = FindObjectOfType<TileGrid>();
 
-            // Check if enough mana
             PlayerStats stats = player.GetComponent<PlayerStats>();
             if (stats != null && !stats.TryUseMana(manaCost))
             {
                 Debug.Log("Not enough mana to cast PlasmaSurge.");
-                Destroy(gameObject); // Cancel skill
+                Destroy(gameObject);
                 return;
             }
 
-            if (spawnOffsetReference != null)
-                transform.position = spawnOffsetReference.position + offsetFromReference;
-            else
-                transform.position = GetFirepointPosition();
+            transform.position = GetFirepointPosition();
 
             Animator anim = GetComponent<Animator>();
             if (anim != null)
@@ -53,9 +43,6 @@ namespace SkillSystem
 
             StartCoroutine(ExecutePlasmaSurge());
         }
-
-
-
 
         private Vector3 GetFirepointPosition()
         {
@@ -67,9 +54,9 @@ namespace SkillSystem
             }
 
             Transform firepoint = player.Find("FirePoint") ??
-                                 player.Find("BulletSpawnPoint") ??
-                                 player.Find("Firepoint") ??
-                                 player.Find("SpawnPoint");
+                                  player.Find("BulletSpawnPoint") ??
+                                  player.Find("Firepoint") ??
+                                  player.Find("SpawnPoint");
 
             return firepoint != null ? firepoint.position : player.position + Vector3.right * 0.5f;
         }
@@ -80,18 +67,13 @@ namespace SkillSystem
                 ? playerMovement.GetCurrentGridPosition()
                 : tileGrid.GetGridPosition(player.position);
 
-            float tileW = tileGrid.GetTileWidth();
-            float tileH = tileGrid.GetTileHeight();
-            Vector3 laserStartPos = tileGrid.GetWorldPosition(playerGridPos) + new Vector3(tileW * 0.5f, tileH * 0.5f, 0f);
-
+            Vector3 laserStartPos = GetTileCenter(playerGridPos);
             Vector3 laserEndPos = CalculateLaserEndPosition(laserStartPos, playerGridPos);
 
-            DamageEnemiesInLaserPath(laserStartPos, laserEndPos, playerGridPos);
+            DamageEnemiesInLaserPath(playerGridPos);
             yield return new WaitForSeconds(animDuration);
             Destroy(gameObject);
         }
-
-
 
         private Vector3 CalculateLaserEndPosition(Vector3 startPos, Vector2Int playerGridPos)
         {
@@ -101,42 +83,52 @@ namespace SkillSystem
             return new Vector3(endWorldPos.x + 1f, startPos.y, startPos.z);
         }
 
-        private void DamageEnemiesInLaserPath(Vector3 laserStart, Vector3 laserEnd, Vector2Int playerGridPos)
-        {
-            CheckEnemiesByGridTiles(playerGridPos);
-        }
-
-        private void CheckEnemiesByGridTiles(Vector2Int playerGridPos)
+        private void DamageEnemiesInLaserPath(Vector2Int playerGridPos)
         {
             for (int x = playerGridPos.x + 1; x < tileGrid.gridWidth; x++)
             {
                 Vector2Int checkPos = new Vector2Int(x, playerGridPos.y);
-                if (tileGrid.IsValidGridPosition(checkPos))
+                if (tileGrid.IsValidGridPosition(checkPos) && IsEnemyTilePosition(checkPos))
+                {
                     DamageEnemiesOnTile(checkPos);
+                }
             }
         }
 
-
         private void DamageEnemiesOnTile(Vector2Int gridPos)
         {
-            float tileW = tileGrid.GetTileWidth();
-            float tileH = tileGrid.GetTileHeight();
-            Vector3 worldPos = tileGrid.GetWorldPosition(gridPos) + new Vector3(tileW * 0.5f, tileH * 0.5f, 0f);
-
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(worldPos, hitRadius);
-
-            foreach (Collider2D collider in colliders)
-                if (collider.CompareTag("Enemy"))
-                    DamageEnemyDirect(collider);
-
-            float tileSize = tileGrid.GetTileHeight();
+            // Use the same hit detection method as Bullet.cs and IonBolt.cs
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+            
+            foreach (GameObject enemy in enemies)
+            {
+                // Use the same center alignment adjustment as Bullet.cs
+                Vector3 enemyAdjusted = enemy.transform.position - new Vector3(0, tileGrid.GetTileHeight() * 0.5f, 0);
+                Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemyAdjusted);
+                
+                if (enemyGridPos == gridPos)
+                {
+                    Enemy enemyComponent = enemy.GetComponent<Enemy>();
+                    if (enemyComponent != null)
+                    {
+                        enemyComponent.TakeDamage(damage);
+                        Debug.Log($"PlasmaSurge: Hit enemy at tile {gridPos} for {damage} damage");
+                    }
+                }
+            }
         }
 
-        private void DamageEnemyDirect(Collider2D enemyCollider)
+        private Vector3 GetTileCenter(Vector2Int gridPos)
         {
-            var enemy = enemyCollider.GetComponent<Enemy>();
-            if (enemy != null)
-                enemy.TakeDamage(damage);
+            Vector3 basePos = tileGrid.GetWorldPosition(gridPos);
+            return basePos + new Vector3(tileGrid.GetTileWidth(), tileGrid.GetTileHeight()) * 0.5f;
+        }
+
+        private bool IsEnemyTilePosition(Vector2Int gridPosition)
+        {
+            // Same enemy tile detection as Bullet.cs and IonBolt.cs
+            return tileGrid.IsValidGridPosition(gridPosition) && 
+                   gridPosition.x >= tileGrid.gridWidth / 2;
         }
     }
 }

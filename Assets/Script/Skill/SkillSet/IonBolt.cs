@@ -17,16 +17,18 @@ namespace SkillSystem
         [SerializeField] public float manaCost = 1.5f; // Mana cost for casting this skill
         [SerializeField] public float cooldownDuration = 1.5f; // Cooldown duration in seconds
 
-        [Header("References")]
-        [SerializeField] private Transform bulletSpawnPoint;
+        [Header("Manual Speed Adjustment")]
+        [SerializeField] private float speedMultiplier = 1.0f; // Manual speed adjustment multiplier
         
         private GameObject activeProjectile;
         private bool isProjectileFired = false;
         private bool isOnCooldown = false;
         private Vector2Int currentGridPosition;
+        private Vector2 direction = Vector2.right; // Direction for movement
         private TileGrid tileGrid;
         private PlayerMovement playerMovement;
         private PlayerStats playerStats;
+        private PlayerShoot playerShoot;
 
         private void Awake()
         {
@@ -37,11 +39,14 @@ namespace SkillSystem
         {
             if (isProjectileFired && activeProjectile != null)
             {
-                // Move the projectile to the right
-                activeProjectile.transform.Translate(Vector2.right * projectileSpeed * Time.deltaTime, Space.World);
+                // Move the projectile using the same method as Bullet.cs
+                float adjustedSpeed = projectileSpeed * speedMultiplier;
+                activeProjectile.transform.Translate(direction * adjustedSpeed * Time.deltaTime, Space.World);
                 
-                // Check if we've moved to a new grid position
-                Vector2Int newGridPosition = tileGrid.GetGridPosition(activeProjectile.transform.position);
+                // Use the same center alignment adjustment as Bullet.cs
+                float tileCenterYOffset = tileGrid.GetTileHeight() * 0.5f;
+                Vector3 adjusted = activeProjectile.transform.position - new Vector3(0, tileCenterYOffset, 0);
+                Vector2Int newGridPosition = tileGrid.GetGridPosition(adjusted);
                 
                 // If we changed grid cells, check for hits
                 if (newGridPosition != currentGridPosition)
@@ -86,18 +91,12 @@ namespace SkillSystem
                 }
             }
 
-            // Find bullet spawn point if not assigned
-            if (bulletSpawnPoint == null)
+            if (playerShoot == null)
             {
-                PlayerShoot playerShoot = FindObjectOfType<PlayerShoot>();
-                if (playerShoot != null)
+                playerShoot = FindObjectOfType<PlayerShoot>();
+                if (playerShoot == null)
                 {
-                    // Try to get the bullet spawn point from PlayerShoot
-                    bulletSpawnPoint = playerShoot.transform; // Fallback to player transform
-                }
-                else
-                {
-                    bulletSpawnPoint = transform;
+                    Debug.LogWarning("IonBolt: Could not find PlayerShoot in the scene.");
                 }
             }
         }
@@ -135,22 +134,36 @@ namespace SkillSystem
         
         private void FireProjectileFromSpawnPoint()
         {
-            // Use the same spawn position as PlayerShoot
+            // Get the bullet spawn point from PlayerShoot (same as Bullet.cs)
+            Transform bulletSpawnPoint = null;
+            if (playerShoot != null)
+            {
+                bulletSpawnPoint = playerShoot.GetBulletSpawnPoint();
+            }
+
+            // Fallback to player transform if PlayerShoot not found
+            if (bulletSpawnPoint == null)
+            {
+                bulletSpawnPoint = transform;
+            }
+
             Vector3 spawnPosition = bulletSpawnPoint.position;
 
             // Instantiate projectile at the spawn point
             activeProjectile = Instantiate(projectilePrefab, spawnPosition, Quaternion.identity);
             
-            // Adjust rotation to match direction (same as Bullet.cs)
-            float angle = Mathf.Atan2(Vector2.right.y, Vector2.right.x) * Mathf.Rad2Deg;
+            // Set rotation to match direction (same as Bullet.cs)
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             activeProjectile.transform.rotation = Quaternion.Euler(0, 0, angle);
 
             isProjectileFired = true;
 
-            // Set initial grid position for the projectile
-            currentGridPosition = tileGrid.GetGridPosition(activeProjectile.transform.position);
+            // Set initial grid position for the projectile using the same adjustment as Bullet.cs
+            float tileCenterYOffset = tileGrid.GetTileHeight() * 0.5f;
+            Vector3 adjusted = activeProjectile.transform.position - new Vector3(0, tileCenterYOffset, 0);
+            currentGridPosition = tileGrid.GetGridPosition(adjusted);
 
-            Debug.Log($"IonBolt: Fired projectile from spawn point");
+            Debug.Log($"IonBolt: Fired projectile from spawn point at speed {projectileSpeed * speedMultiplier}");
         }
 
         private void CheckForEnemyHit(Vector2Int gridPosition)
@@ -161,7 +174,10 @@ namespace SkillSystem
 
             foreach (GameObject enemy in enemies)
             {
-                Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
+                // Use the same center alignment adjustment as Bullet.cs
+                Vector3 enemyAdjusted = enemy.transform.position - new Vector3(0, tileGrid.GetTileHeight() * 0.5f, 0);
+                Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemyAdjusted);
+                
                 if (enemyGridPos == gridPosition)
                 {
                     Enemy enemyComponent = enemy.GetComponent<Enemy>();
@@ -184,16 +200,8 @@ namespace SkillSystem
 
         private void CheckIfPastRightmostGrid()
         {
-            // If we're beyond the rightmost enemy grid column, destroy the projectile
-            if (currentGridPosition.x >= tileGrid.gridWidth)
-            {
-                Destroy(activeProjectile);
-                isProjectileFired = false;
-                return;
-            }
-            
-            // If we're past the rightmost column, destroy the projectile
-            if (currentGridPosition.x > tileGrid.gridWidth - 1)
+            // Use the same boundary checking as Bullet.cs
+            if (currentGridPosition.x >= tileGrid.gridWidth || currentGridPosition.x > tileGrid.gridWidth - 1)
             {
                 Destroy(activeProjectile);
                 isProjectileFired = false;
@@ -202,7 +210,7 @@ namespace SkillSystem
         
         private bool IsEnemyTilePosition(Vector2Int gridPosition)
         {
-            // Based on your TileGrid.cs, enemy tiles are on the right half
+            // Same enemy tile detection as Bullet.cs
             return tileGrid.IsValidGridPosition(gridPosition) && 
                    gridPosition.x >= tileGrid.gridWidth / 2;
         }
@@ -234,7 +242,10 @@ namespace SkillSystem
                 
                 foreach (GameObject enemy in enemies)
                 {
-                    Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
+                    // Use the same center alignment adjustment as Bullet.cs for explosion targets
+                    Vector3 enemyAdjusted = enemy.transform.position - new Vector3(0, tileGrid.GetTileHeight() * 0.5f, 0);
+                    Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemyAdjusted);
+                    
                     if (enemyGridPos == tilePos)
                     {
                         Enemy enemyComponent = enemy.GetComponent<Enemy>();
@@ -268,6 +279,19 @@ namespace SkillSystem
                 }
             }
             return affectedTiles;
+        }
+
+        // Public method to adjust speed at runtime
+        public void SetSpeedMultiplier(float multiplier)
+        {
+            speedMultiplier = Mathf.Max(0.1f, multiplier); // Ensure minimum speed
+            Debug.Log($"IonBolt: Speed multiplier set to {speedMultiplier}");
+        }
+
+        // Public method to get current effective speed
+        public float GetEffectiveSpeed()
+        {
+            return projectileSpeed * speedMultiplier;
         }
     }
 }

@@ -7,7 +7,7 @@ namespace SkillSystem
     {
         [Header("Projectile Settings")]
         [SerializeField] private GameObject bulletPrefab;
-        [SerializeField] private float bulletSpeed = 2f; // Speed in tiles per second
+        [SerializeField] private float bulletSpeed = 5f; // Manually editable speed for EEBullet
         [SerializeField] private int bulletDamage = 15;
         [SerializeField] private float enemyStunDuration = 3f;
         [SerializeField] public float cooldownDuration = 2.5f;
@@ -20,6 +20,7 @@ namespace SkillSystem
         private bool isOnCooldown = false;
         private float cooldownTimer = 0f;
         private PlayerStats playerStats;
+        private PlayerShoot playerShoot; // Reference to get FirePoint
         
         private void Awake()
         {
@@ -33,6 +34,12 @@ namespace SkillSystem
             if (playerStats == null)
             {
                 Debug.LogError("PlayerStats not found in scene!");
+            }
+            
+            playerShoot = FindObjectOfType<PlayerShoot>();
+            if (playerShoot == null)
+            {
+                Debug.LogError("PlayerShoot not found in scene!");
             }
         }
         
@@ -55,13 +62,13 @@ namespace SkillSystem
             base.ExecuteSkillEffect(targetPosition, casterTransform);
 
             // Check if we can cast the skill
-            if (!CanCastSkill() || bulletPrefab == null || tileGrid == null) return;
+            if (!CanCastSkill() || bulletPrefab == null || tileGrid == null || playerShoot == null) return;
             
-            // Get player's current grid position
-            Vector2Int playerGridPos = tileGrid.GetGridPosition(casterTransform.position);
+            // Get player's FirePoint position (same as regular bullets)
+            Transform firePoint = playerShoot.GetBulletSpawnPoint();
+            Vector3 spawnPosition = firePoint.position;
             
-            // Create bullet at player's grid position
-            Vector3 spawnPosition = tileGrid.GetWorldPosition(playerGridPos);
+            // Create bullet at FirePoint position (same as regular bullets)
             GameObject bullet = Instantiate(bulletPrefab, spawnPosition, Quaternion.identity);
 
             // Get the bullet component
@@ -69,13 +76,17 @@ namespace SkillSystem
             if (bulletScript != null)
             {
                 // Initialize the bullet with properties - will always fire to the right (east)
-                bulletScript.InitializeGridBased(playerGridPos, bulletSpeed, bulletDamage, enemyStunDuration, tileGrid);
+                // No longer need startPosition since bullet spawns at FirePoint
+                bulletScript.InitializeGridBased(bulletSpeed, bulletDamage, enemyStunDuration, tileGrid);
                 
                 if (showDebugPath)
                 {
-                    // Draw debug path from player position to the right edge of the grid
+                    // Get player's current grid position for debug line
+                    Vector2Int playerGridPos = tileGrid.GetGridPosition(casterTransform.position);
+                    
+                    // Draw debug path from FirePoint position to the right edge of the grid
                     Debug.DrawLine(
-                        tileGrid.GetWorldPosition(playerGridPos),
+                        spawnPosition,
                         tileGrid.GetWorldPosition(new Vector2Int(tileGrid.gridWidth - 1, playerGridPos.y)),
                         Color.cyan, 1.0f);
                 }
@@ -126,41 +137,6 @@ namespace SkillSystem
         {
             isOnCooldown = true;
             cooldownTimer = cooldownDuration;
-        }
-        
-        // Additional method to set cooldown state - can be used by skill system if needed
-        public void SetCooldownState(bool onCooldown, float remainingTime = 0f)
-        {
-            isOnCooldown = onCooldown;
-            if (onCooldown)
-            {
-                cooldownTimer = remainingTime > 0f ? remainingTime : cooldownDuration;
-            }
-            else
-            {
-                cooldownTimer = 0f;
-            }
-        }
-        
-        // These methods help with UI feedback for cooldowns
-        public float GetCooldownDuration()
-        {
-            return cooldownDuration;
-        }
-        
-        public float GetRemainingCooldown()
-        {
-            return cooldownTimer;
-        }
-        
-        public bool IsOnCooldown()
-        {
-            return isOnCooldown;
-        }
-        
-        public float GetManaCost()
-        {
-            return manaCost;
         }
     }
 }

@@ -15,113 +15,47 @@ namespace SkillSystem
 
         private void Awake()
         {
-            FindTileGrid();
-            FindPlayerStats();
-        }
-
-        private void FindTileGrid()
-        {
-            if (tileGrid == null)
-            {
-                // Find the TileGrid in the scene
-                tileGrid = FindObjectOfType<TileGrid>();
-                if (tileGrid == null)
-                {
-                    Debug.LogError("WQSkill: Could not find TileGrid in the scene!");
-                }
-            }
-        }
-
-        private void FindPlayerStats()
-        {
-            if (playerStats == null)
-            {
-                playerStats = FindObjectOfType<PlayerStats>();
-                if (playerStats == null)
-                {
-                    Debug.LogWarning("WQSkill: Could not find PlayerStats in the scene. Mana consumption will not work correctly.");
-                }
-            }
+            tileGrid = FindObjectOfType<TileGrid>();
+            playerStats = FindObjectOfType<PlayerStats>();
         }
 
         public override void ExecuteSkillEffect(Vector2Int targetPosition, Transform casterTransform)
         {
-            Debug.Log($"Executing WQ skill at grid position {targetPosition}");
+            if (tileGrid == null || playerStats == null) return;
+            if (!playerStats.TryUseMana(manaCost)) return;
 
-            if (tileGrid == null) tileGrid = FindObjectOfType<TileGrid>();
-            if (tileGrid == null)
-            {
-                Debug.LogError("WQSkill: Could not find TileGrid in the scene!");
-                return;
-            }
-
-            if (playerStats == null)
-            {
-                playerStats = casterTransform.GetComponent<PlayerStats>();
-                if (playerStats == null)
-                {
-                    playerStats = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerStats>();
-                    if (playerStats == null)
-                    {
-                        Debug.Log("QuickSlash : Can't find player stats");
-                        return;
-                    }
-                }
-            }
-
-            if (!playerStats.TryUseMana(manaCost))
-            {
-                Debug.Log($"QuickSlash: Not enough mana! Required: {manaCost}, Current: {playerStats.CurrentMana}");
-                return;
-            }
-
-            // Always face right
             Vector2Int playerGridPos = tileGrid.GetGridPosition(casterTransform.position);
 
-            // Hit 3 vertical tiles in front (x + 1)
+            // Match SwiftStrike's vertical forward line
             List<Vector2Int> damageGridPositions = new List<Vector2Int>
             {
-                new Vector2Int(playerGridPos.x + 1, playerGridPos.y - 1),
-                new Vector2Int(playerGridPos.x + 1, playerGridPos.y),
-                new Vector2Int(playerGridPos.x + 1, playerGridPos.y + 1)
+                new Vector2Int(playerGridPos.x + 2, playerGridPos.y - 1), // front-up
+                new Vector2Int(playerGridPos.x + 2, playerGridPos.y),     // front-middle
+                new Vector2Int(playerGridPos.x + 2, playerGridPos.y - 2)  // front-down
             };
 
-            // Get Y offset from PlayerMovement (e.g. 1)
+
             float yOffset = 0f;
             PlayerMovement move = casterTransform.GetComponent<PlayerMovement>();
             if (move != null) yOffset = move.GetPositionOffset().y;
 
-            List<Vector2> damageWorldPositions = new List<Vector2>();
             foreach (Vector2Int gridPos in damageGridPositions)
             {
-                if (tileGrid.IsValidGridPosition(gridPos))
-                {
-                    Vector3 basePos = tileGrid.GetWorldPosition(gridPos);
-                    Vector3 tileCenter = basePos + new Vector3(tileGrid.GetTileWidth(), tileGrid.GetTileHeight()) * 0.5f;
-                    tileCenter += new Vector3(0, yOffset, 0);
-                    damageWorldPositions.Add(tileCenter);
-                }
-            }
+                if (!tileGrid.IsValidGridPosition(gridPos)) continue;
 
-            foreach (Vector2 pos in damageWorldPositions)
-            {
-                Debug.DrawLine(casterTransform.position, pos, Color.red, 1f);
+                Vector3 basePos = tileGrid.GetWorldPosition(gridPos);
+                Vector3 center = basePos + new Vector3(tileGrid.GetTileWidth(), tileGrid.GetTileHeight()) * 0.5f;
+                center += new Vector3(0, yOffset, 0);
 
-                Collider2D[] hitColliders = Physics2D.OverlapCircleAll(pos, effectRadius);
-                foreach (Collider2D collider in hitColliders)
+                Debug.DrawLine(casterTransform.position, center, Color.red, 1f);
+
+                Collider2D[] hits = Physics2D.OverlapCircleAll(center, effectRadius);
+                foreach (Collider2D hit in hits)
                 {
-                    if (collider.CompareTag("Enemy"))
+                    if (hit.CompareTag("Enemy") && hit.TryGetComponent(out Enemy enemy))
                     {
-                        Enemy enemy = collider.GetComponent<Enemy>();
-                        if (enemy != null)
-                        {
-                            enemy.TakeDamage(damageAmount);
-                            Debug.Log($"WQ Skill hit enemy: {collider.name} for {damageAmount} damage");
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"Enemy tag on {collider.name} but no Enemy script");
-                        }
+                        enemy.TakeDamage(damageAmount);
+                        Debug.Log($"QuickSlash hit: {hit.name} for {damageAmount} damage");
                     }
                 }
             }
@@ -129,8 +63,6 @@ namespace SkillSystem
             base.ExecuteSkillEffect(targetPosition, casterTransform);
             ResetMeleeAnimation();
         }
-
-
 
         private void ResetMeleeAnimation()
         {
@@ -141,11 +73,7 @@ namespace SkillSystem
                 if (animator != null)
                 {
                     animator.ResetTrigger("QuickSlash");
-
-                    // Optional: force transition to idle
-                    animator.Play("PlayerIdle"); // replace "Idle" with your real idle state name
-
-                    Debug.Log("QuickSlash: Reset melee animation state");
+                    animator.Play("PlayerIdle");
                 }
             }
         }

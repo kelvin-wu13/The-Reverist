@@ -4,79 +4,66 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    // Bullet properties
     private Vector2 direction;
     private float speed;
     private int damage;
     private TileGrid tileGrid;
-        
-    // Animation properties
+
     [SerializeField] private float fadeOutTime = 0.1f;
-    
-    // Effect properties
     [SerializeField] private GameObject hitEffectPrefab;
-    
-    // Internal tracking
+
     private Vector2Int currentGridPosition;
     private bool isDestroying = false;
-    
+
     public void Initialize(Vector2 dir, float spd, int dmg, TileGrid grid)
     {
-        // Set the bullet properties
         direction = dir.normalized;
         speed = spd;
         damage = dmg;
         tileGrid = grid;
-        
-        // Adjust rotation to match direction
+
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(0, 0, angle);
-        
-        // Set initial grid position
+
         currentGridPosition = tileGrid.GetGridPosition(transform.position);
     }
-    
+
     private void Update()
     {
         if (isDestroying) return;
-        
-        // Move the bullet
+
         transform.Translate(direction * speed * Time.deltaTime, Space.World);
-        
-        // Check if we've moved to a new grid position
-        Vector2Int newGridPosition = tileGrid.GetGridPosition(transform.position);
-        
-        // If we changed grid cells, check for hits
+
+        // Adjust for center alignment
+        float tileCenterYOffset = tileGrid.GetTileHeight() * 0.5f;
+        Vector3 adjusted = transform.position - new Vector3(0, tileCenterYOffset, 0);
+        Vector2Int newGridPosition = tileGrid.GetGridPosition(adjusted);
+
         if (newGridPosition != currentGridPosition)
         {
             currentGridPosition = newGridPosition;
-            
-            // Check for enemies at this position (would connect to your enemy system)
             CheckForEnemyHit(currentGridPosition);
-            
-            // Check if bullet has gone past the rightmost grid
             CheckIfPastRightmostGrid();
         }
     }
-    
+
     private void CheckForEnemyHit(Vector2Int gridPosition)
     {
         if (!IsEnemyTilePosition(gridPosition)) return;
 
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-
         foreach (GameObject enemy in enemies)
         {
-            Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
+            Vector3 enemyAdjusted = enemy.transform.position - new Vector3(0, tileGrid.GetTileHeight() * 0.5f, 0);
+            Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemyAdjusted);
+
             if (enemyGridPos == gridPosition)
             {
                 Enemy enemyComponent = enemy.GetComponent<Enemy>();
                 if (enemyComponent != null)
                 {
                     enemyComponent.TakeDamage(damage);
-                    Debug.Log("Hit enemy at tile: " + gridPosition);
-
-                    SpawnHitEffect();
+                    SpawnHitEffect(transform.position);
                     DestroyBullet();
                     break;
                 }
@@ -84,73 +71,60 @@ public class Bullet : MonoBehaviour
         }
     }
 
-    private void CheckIfPastRightmostGrid()
-    {
-        // If we're beyond the rightmost enemy grid column, destroy the bullet
-        if (currentGridPosition.x >= tileGrid.gridWidth)
-        {
-            DestroyBullet();
-            return;
-        }
-        
-        // Determine if we've passed the rightmost enemy column
-        // In your grid setup, enemies occupy the right half of the grid
-        int enemyStartColumn = tileGrid.gridWidth / 2;
-        
-        // If we're past the rightmost column, destroy the bullet
-        if (currentGridPosition.x > tileGrid.gridWidth - 1)
-        {
-            DestroyBullet();
-        }
-    }
-    
-    private bool IsEnemyTilePosition(Vector2Int gridPosition)
-    {
-        // Based on your TileGrid.cs, enemy tiles are on the right half
-        return tileGrid.IsValidGridPosition(gridPosition) && 
-               gridPosition.x >= tileGrid.gridWidth / 2;
-    }
-    
-    private void SpawnHitEffect()
+    private void SpawnHitEffect(Vector3 pos)
     {
         if (hitEffectPrefab != null)
         {
-            Instantiate(hitEffectPrefab, transform.position, Quaternion.identity);
+            Instantiate(hitEffectPrefab, pos, Quaternion.identity);
         }
     }
-    
+
+    private void CheckIfPastRightmostGrid()
+    {
+        if (currentGridPosition.x >= tileGrid.gridWidth || currentGridPosition.x > tileGrid.gridWidth - 1)
+        {
+            DestroyBullet();
+        }
+    }
+
+    private bool IsEnemyTilePosition(Vector2Int gridPosition)
+    {
+        return tileGrid.IsValidGridPosition(gridPosition) && gridPosition.x >= tileGrid.gridWidth / 2;
+    }
+
     private void DestroyBullet()
     {
         if (isDestroying) return;
         isDestroying = true;
-        
-        // Disable collider if present
+
         Collider2D collider = GetComponent<Collider2D>();
         if (collider != null)
         {
             collider.enabled = false;
         }
-        
-        // Start fade-out animation
+
         StartCoroutine(FadeOutAndDestroy());
     }
-    
+
     private IEnumerator FadeOutAndDestroy()
     {
         float startAlpha = 1f;
         float elapsedTime = 0;
-        
-        // Fade out the sprite
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+
         while (elapsedTime < fadeOutTime)
         {
             elapsedTime += Time.deltaTime;
             float alpha = Mathf.Lerp(startAlpha, 0f, elapsedTime / fadeOutTime);
-            
-            
+            if (sr != null)
+            {
+                Color color = sr.color;
+                color.a = alpha;
+                sr.color = color;
+            }
             yield return null;
         }
-        
-        // Destroy the gameObject
+
         Destroy(gameObject);
     }
 }

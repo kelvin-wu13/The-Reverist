@@ -1,10 +1,34 @@
 fileFormatVersion: 2
-guid: 90c2d1c41e6bdca478ab4c8723f47c6e
+guid: 2d3948a928bea114c82d94505c1b35b3
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6401380382863577544
-    second: HealthContainer_0
+      213: 5689686163183153533
+    second: Frame 9_0
+  - first:
+      213: 1613099689857113651
+    second: Frame 9_1
+  - first:
+      213: -1126510446263433172
+    second: Frame 9_2
+  - first:
+      213: -7205605870946448767
+    second: Frame 9_3
+  - first:
+      213: 7120294622420565253
+    second: Frame 9_4
+  - first:
+      213: -4585904893271933760
+    second: Frame 9_5
+  - first:
+      213: -8494986426743146377
+    second: Frame 9_6
+  - first:
+      213: 4765487274824842171
+    second: Frame 9_7
+  - first:
+      213: -3639697715002901603
+    second: Frame 9_8
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,23 +124,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: HealthContainer_0
+      name: Frame 9_0
       rect:
         serializedVersion: 2
-        x: 201
-        y: 753
-        width: 95
-        height: 101
+        x: 0
+        y: 833
+        width: 3570
+        height: 432
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 8c1dcb0da8546d850800000000000000
-      internalID: 6401380382863577544
+      spriteID: 6763171f2e378e54e961baf7cb905ea3
+      internalID: 907824886
       vertices: []
       indices: 
       edges: []
@@ -125,7 +149,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: a99475e1849418b47bbb311e1cffca6b
+    spriteID: 1270d946f9ba3c845a2e3aa76c0911a5
     internalID: 0
     vertices: []
     indices: 
@@ -133,9 +157,11 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":3570.0,"y":2048.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      HealthContainer_0: 6401380382863577544
+      Frame 9_0: 907824886
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -71,7 +71,7 @@ public class PlayerCrosshair : MonoBehaviour
         // Get current player grid position
         playerGridPosition = tileGrid.GetGridPosition(playerTransform.position);
         
-        targetGridPosition = playerGridPosition + (playerFacingDirection * distanceFromPlayer);
+        targetGridPosition = playerGridPosition + (playerFacingDirection * (distanceFromPlayer + 1));
 
         // Clamp to grid boundaries
         targetGridPosition.x = Mathf.Clamp(targetGridPosition.x, 0, tileGrid.gridWidth - 1);

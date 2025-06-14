@@ -93,9 +93,14 @@ public class PlayerMovement : MonoBehaviour
             
             if (moveDirection != Vector2Int.zero)
             {
-                lastDirection = moveDirection;
-                targetAnimDirection = new Vector2(moveDirection.x, moveDirection.y);
-                TryMove(moveDirection);
+                // Only update animation and direction if the move is valid
+                if (CanMove(moveDirection))
+                {
+                    lastDirection = moveDirection;
+                    targetAnimDirection = new Vector2(moveDirection.x, moveDirection.y);
+                    TryMove(moveDirection);
+                }
+                // If move is invalid, don't change animation direction
             }
         }
     }
@@ -119,6 +124,13 @@ public class PlayerMovement : MonoBehaviour
         }
         //Update animator
         UpdateAnimationParameters(isMoving);
+    }
+
+    // New method to check if a move is valid before attempting it
+    private bool CanMove(Vector2Int direction)
+    {
+        Vector2Int targetGridPosition = currentGridPosition + direction;
+        return tileGrid.IsValidPlayerPosition(targetGridPosition);
     }
 
     private void TryMove(Vector2Int direction)
@@ -158,7 +170,6 @@ public class PlayerMovement : MonoBehaviour
         targetAnimDirection = Vector2.zero;
         UpdateAnimationDirection(); // Immediately apply idle direction
     }
-
 
     
     private void UpdateAnimationParameters(bool moving)

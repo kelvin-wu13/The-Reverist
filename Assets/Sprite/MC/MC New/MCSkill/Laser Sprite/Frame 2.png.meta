@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 90c2d1c41e6bdca478ab4c8723f47c6e
+guid: 049f93d3d31177147adff048c706f631
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6401380382863577544
-    second: HealthContainer_0
+      213: 1295375760118286184
+    second: Frame 2_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: HealthContainer_0
+      name: Frame 2_0
       rect:
         serializedVersion: 2
-        x: 201
-        y: 753
-        width: 95
-        height: 101
+        x: 0
+        y: 833
+        width: 3570
+        height: 432
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8c1dcb0da8546d850800000000000000
-      internalID: 6401380382863577544
+      spriteID: 867808004691af110800000000000000
+      internalID: 1295375760118286184
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: a99475e1849418b47bbb311e1cffca6b
+    spriteID: 520194d184aef354cac381491db9e591
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      HealthContainer_0: 6401380382863577544
+      Frame 2_0: 1295375760118286184
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
