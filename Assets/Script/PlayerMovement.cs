@@ -65,7 +65,7 @@ public class PlayerMovement : MonoBehaviour
     {
         HandleInput();
         UpdateAnimationDirection();
-        UpdateAnimationParameters(true);
+        UpdateAnimationParameters(isMoving);
     }
 
     private void HandleInput()

@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections;
 using System.Linq;
 
 public class UIManager : MonoBehaviour
@@ -18,25 +17,19 @@ public class UIManager : MonoBehaviour
 
     [Header("Colors")]
     [SerializeField] private Color healthColor = Color.red;
-    [SerializeField] private Color enemyHealthColor = new Color(1f, 0.4f, 0.4f);
     [SerializeField] private Color manaColor = Color.blue;
-    [SerializeField] private Color flashColor = Color.white;
 
     [Header("Animation")]
     [SerializeField] private bool enableSmoothTransitions = true;
     [SerializeField] private float transitionSpeed = 5f;
-    [SerializeField] private float flashDuration = 0.2f;
 
     private PlayerStats playerStats;
     private float targetHealthValue, currentHealthDisplay;
     private float targetManaValue, currentManaDisplay;
     private float targetEnemyHealthValue, currentEnemyHealthDisplay;
-    private int totalMaxEnemyHealthCached = -1;
     private int lastHealth;
     private float lastMana;
-
-    private Coroutine playerFlashCoroutine;
-    private Coroutine enemyFlashCoroutine;
+    private int totalMaxEnemyHealthCached = -1;
 
     private Image playerHealthImage;
     private Image enemyHealthImage;
@@ -72,9 +65,6 @@ public class UIManager : MonoBehaviour
         currentHealthDisplay = targetHealthValue = 1f;
         currentManaDisplay = targetManaValue = 1f;
         currentEnemyHealthDisplay = targetEnemyHealthValue = 1f;
-
-        if (playerHealthImage != null) playerHealthImage.color = healthColor;
-        if (enemyHealthImage != null) enemyHealthImage.color = enemyHealthColor;
     }
 
     private void FindAndConnectToPlayerStats()
@@ -96,13 +86,6 @@ public class UIManager : MonoBehaviour
         if (playerStats.CurrentHealth != lastHealth)
         {
             OnHealthChanged(playerStats.CurrentHealth, playerStats.MaxHealth);
-
-            if (playerStats.CurrentHealth < lastHealth && playerHealthImage != null)
-            {
-                if (playerFlashCoroutine != null) StopCoroutine(playerFlashCoroutine);
-                playerFlashCoroutine = StartCoroutine(FlashHealthBar(playerHealthImage, healthColor));
-            }
-
             lastHealth = playerStats.CurrentHealth;
         }
 
@@ -142,25 +125,18 @@ public class UIManager : MonoBehaviour
         int totalCurrent = enemies.Sum(e => e != null ? e.currentHealth : 0);
         int totalMax = enemies.Sum(e => e != null ? e.maxHealth : 0);
 
-        if (totalMaxEnemyHealthCached <= 0) // Cache only once at full spawn
+        if (totalMaxEnemyHealthCached <= 0)
             totalMaxEnemyHealthCached = totalMax;
 
-        if (totalMaxEnemyHealthCached == 0) return; // avoid div/0
+        if (totalMaxEnemyHealthCached == 0) return;
 
         float percent = (float)totalCurrent / totalMaxEnemyHealthCached;
-
-        if (percent < currentEnemyHealthDisplay && enemyHealthImage != null)
-        {
-            if (enemyFlashCoroutine != null) StopCoroutine(enemyFlashCoroutine);
-            enemyFlashCoroutine = StartCoroutine(FlashHealthBar(enemyHealthImage, enemyHealthColor));
-        }
 
         if (enableSmoothTransitions)
             targetEnemyHealthValue = percent;
         else
             SetEnemyHealthSlider(percent);
     }
-
 
     private void HandleSmoothTransitions()
     {
@@ -199,13 +175,5 @@ public class UIManager : MonoBehaviour
     {
         currentEnemyHealthDisplay = value;
         if (enemyHealthSlider != null) enemyHealthSlider.value = value;
-    }
-
-    private IEnumerator FlashHealthBar(Image img, Color baseColor)
-    {
-        if (img == null) yield break;
-        img.color = flashColor;
-        yield return new WaitForSeconds(flashDuration);
-        img.color = baseColor;
     }
 }
