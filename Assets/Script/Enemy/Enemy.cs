@@ -82,8 +82,7 @@ public class Enemy : MonoBehaviour
     private void Start()
     {
         currentHealth = maxHealth;
-        
-        EnemyManager.Instance?.RegisterEnemy(this); // ✅ Register here
+        EnemyManager.Instance?.RegisterEnemy(this);
 
         currentGridPosition = tileGrid.GetGridPosition(transform.position);
         targetGridPosition = currentGridPosition;
@@ -94,6 +93,11 @@ public class Enemy : MonoBehaviour
         tileGrid.SetTileOccupied(currentGridPosition, true);
         moveTimer = moveInterval;
         shootTimer = Random.Range(0f, shootInterval);
+
+        if (animator != null)
+        {
+            animator.SetTrigger("Spawn");
+        }
     }
 
 

@@ -11,7 +11,8 @@ GameObject:
   - component: {fileID: 8726976874424586280}
   - component: {fileID: 6639566021678218826}
   - component: {fileID: 8249774073950612152}
-  m_Layer: 8
+  - component: {fileID: 8907933800541794756}
+  m_Layer: 9
   m_Name: WilloWispPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 6519382022992737161, guid: 0000000000000000d000000000000000, type: 0}
@@ -27,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 2888201447304451437}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.57107, y: -0.16193, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -76,8 +77,8 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_Sprite: {fileID: 6401380382863577544, guid: 90c2d1c41e6bdca478ab4c8723f47c6e, type: 3}
+  m_SortingOrder: 10
+  m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -85,7 +86,7 @@ SpriteRenderer:
   m_Size: {x: 0.95, y: 1.01}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!114 &8249774073950612152
@@ -108,6 +109,29 @@ MonoBehaviour:
   chargeTime: 1
   cooldownDuration: 2
   manaCost: 2
-  attackFlashColor: {r: 1, g: 0, b: 0, a: 1}
-  chargingColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  attackFlashColor: {r: 1, g: 1, b: 1, a: 1}
+  chargingColor: {r: 1, g: 1, b: 1, a: 1}
   flashDuration: 0.1
+  spawnYOffset: 2
+--- !u!95 &8907933800541794756
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2888201447304451437}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 5226eebc62c2434459bf7b561f743e6f, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

@@ -46,7 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lifetime: 2
   skillEffect: {fileID: 0}
-  bulletPrefab: {fileID: 5650957259287448328, guid: e0afd894e99b68e4e80cfe840e3249f3, type: 3}
+  bulletPrefab: {fileID: 3198313544001396864, guid: c24c74726464c774abba1cfcef3fb4a5, type: 3}
   bulletSpeed: 37
   bulletDamage: 10
   enemyStunDuration: 2

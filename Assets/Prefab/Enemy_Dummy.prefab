@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 5324340892500822706}
   - component: {fileID: 1585614132243571091}
   - component: {fileID: 2908745725130159088}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Enemy_Dummy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -224,7 +224,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8284318777044906900}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: ShootPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}

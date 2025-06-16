@@ -27,8 +27,8 @@ Transform:
   m_GameObject: {fileID: 3050193161615168865}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 17.6, y: -1, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 17.37, y: -0.2, z: 0}
+  m_LocalScale: {x: 1, y: 0.26277265, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3824842742021193128}
@@ -214,9 +214,6 @@ MonoBehaviour:
   lifetime: 100
   skillEffect: {fileID: 0}
   damage: 30
-  hitRadius: 0.4
   animDuration: 1
   cooldownDuration: 1.5
   manaCost: 1.5
-  spawnOffsetReference: {fileID: 0}
-  offsetFromReference: {x: 0, y: 0, z: 0}

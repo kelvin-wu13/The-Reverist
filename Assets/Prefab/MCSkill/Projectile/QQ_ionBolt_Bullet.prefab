@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: -7222237917361692518}
   - component: {fileID: -8291757321852883318}
   m_Layer: 0
-  m_Name: QQ_ionBolt
+  m_Name: QQ_ionBolt_Bullet
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
