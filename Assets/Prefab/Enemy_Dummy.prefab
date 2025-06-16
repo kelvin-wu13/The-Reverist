@@ -190,6 +190,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a1f145b1c27b66478ed3abf52a53590, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  stunEffectPrefab: {fileID: 3031415684111976967, guid: 4f989cbbcdde5ac41b5d21505a53e082, type: 3}
   maxHealth: 100
   currentHealth: 0
   isDying: 0

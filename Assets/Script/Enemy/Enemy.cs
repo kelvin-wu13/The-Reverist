@@ -5,6 +5,10 @@ using UnityEngine.Tilemaps;
 
 public class Enemy : MonoBehaviour
 {
+    [Header("Effects")]
+    [SerializeField] private GameObject stunEffectPrefab;
+
+
     [Header("Settings")]
     [SerializeField] public int maxHealth = 100;
     [SerializeField] public int currentHealth;
@@ -327,13 +331,25 @@ public class Enemy : MonoBehaviour
     private IEnumerator ApplyStun(float duration)
     {
         isStunned = true;
+
         if (spriteRenderer != null && !isBeingPulled)
             spriteRenderer.color = stunnedColor;
+
+        if (stunEffectPrefab != null)
+        {
+            GameObject stunVFX = Instantiate(stunEffectPrefab, transform.position, Quaternion.identity);
+            Destroy(stunVFX, duration);
+        }
+
+
         yield return new WaitForSeconds(duration);
+
         isStunned = false;
+
         if (spriteRenderer != null && !isDying && !isAfterPush && !isBeingPulled)
             spriteRenderer.color = originalColor;
     }
+
 
     public void SetPositionOffset(Vector2 newOffset)
     {
