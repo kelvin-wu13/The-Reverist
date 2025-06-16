@@ -6,8 +6,8 @@ using UnityEngine.Tilemaps;
 public class Enemy : MonoBehaviour
 {
     [Header("Settings")]
-    [SerializeField] private int maxHealth = 100;
-    [SerializeField] private int currentHealth;
+    [SerializeField] public int maxHealth = 100;
+    [SerializeField] public int currentHealth;
     [SerializeField] private bool isDying = false;
 
     [Header("Movement")]
@@ -37,6 +37,9 @@ public class Enemy : MonoBehaviour
     [SerializeField] private Transform shootPoint;
     [SerializeField] private float shootChance = 0.7f;
 
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+
     private TileGrid tileGrid;
     private Vector2Int currentGridPosition;
     private Vector2Int targetGridPosition;
@@ -55,44 +58,33 @@ public class Enemy : MonoBehaviour
         Vector2Int.right
     };
 
-    // Static method to clear all reservations - can be called by skills
-    public static void ClearAllReservations()
-    {
-        reservedPositions.Clear();
-        Debug.Log("All enemy position reservations cleared");
-    }
-    
-    // Static method to get current reservations count (for debugging)
-    public static int GetReservationCount()
-    {
-        return reservedPositions.Count;
-    }
+    public static void ClearAllReservations() => reservedPositions.Clear();
+    public static int GetReservationCount() => reservedPositions.Count;
 
     private void Awake()
     {
         if (spriteRenderer == null)
             spriteRenderer = GetComponent<SpriteRenderer>();
-
         if (spriteRenderer != null)
             originalColor = spriteRenderer.color;
 
         tileGrid = FindObjectOfType<TileGrid>();
-
-        if(tileGrid == null)
-        {
+        if (tileGrid == null)
             Debug.LogError("Enemy: Could not find TileGrid");
-        }
-        
-        // Create shoot point if not assigned
-        if(shootPoint == null)
-        {
+
+        if (shootPoint == null)
             shootPoint = transform;
-        }
+
+        if (animator == null)
+            animator = GetComponent<Animator>();
     }
 
     private void Start()
     {
         currentHealth = maxHealth;
+        
+        EnemyManager.Instance?.RegisterEnemy(this); // ✅ Register here
+
         currentGridPosition = tileGrid.GetGridPosition(transform.position);
         targetGridPosition = currentGridPosition;
         Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
@@ -102,9 +94,9 @@ public class Enemy : MonoBehaviour
         tileGrid.SetTileOccupied(currentGridPosition, true);
         moveTimer = moveInterval;
         shootTimer = Random.Range(0f, shootInterval);
-        //StartCoroutine(RandomMovement());
     }
-    
+
+
     private void Update()
     {
         if (isMoving && !isStunned && !isAfterPush && !isBeingPulled)
@@ -131,97 +123,66 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    
-    public TileGrid GetTileGrid()
+    private void LateUpdate()
     {
-        return tileGrid;
+        MatchCameraRotation();
     }
 
-    public bool IsMoving()
+    private void MatchCameraRotation()
     {
-        return isMoving;
+        if (Camera.main != null)
+        {
+            transform.rotation = Quaternion.Euler(0f, 0f, 0f); // Reset rotation (2D style)
+            // If 3D look-at-camera: transform.forward = Camera.main.transform.forward;
+        }
     }
 
-    // Method to check if enemy is being pulled
-    public bool IsBeingPulled()
-    {
-        return isBeingPulled;
-    }
+    public TileGrid GetTileGrid() => tileGrid;
+    public bool IsMoving() => isMoving;
+    public bool IsBeingPulled() => isBeingPulled;
 
-    // Method to interrupt movement for skill execution
     public void InterruptMovementForSkill()
     {
         if (isMoving && !isBeingPulled)
         {
-            // Stop current movement and snap to current target
             isMoving = false;
             transform.position = targetPosition;
             currentGridPosition = targetGridPosition;
-            
-            // Clear any reservations and update grid
             tileGrid.SetTileOccupied(currentGridPosition, true);
             ReserveGridPosition(currentGridPosition);
-            
-            Debug.Log($"Enemy movement interrupted at position {currentGridPosition}");
         }
     }
 
-    // Modified PrepareForPull method
     public void PrepareForPull(Vector2Int targetGridPos)
     {
-        // Stop all movement
         isMoving = false;
         isBeingPulled = true;
-        
-        // Stop the random movement coroutine
         StopCoroutine(nameof(RandomMovement));
-        
-        // Clear current position
         ReleaseGridPosition(currentGridPosition);
         tileGrid.SetTileOccupied(currentGridPosition, false);
-        
-        Debug.Log($"Enemy at {currentGridPosition} prepared for pull to {targetGridPos}");
     }
 
-    // New method to complete the pull
     public void CompletePull(Vector2Int newGridPosition, Vector3 finalPosition)
     {
-        // Update position data
         currentGridPosition = newGridPosition;
         targetGridPosition = newGridPosition;
-        
-        // Reserve new position
         ReserveGridPosition(currentGridPosition);
         tileGrid.SetTileOccupied(currentGridPosition, true);
-        
-        // Update target position with offset
         Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
         targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
-        
-        // Clear pull state
         isBeingPulled = false;
-        
-        // Resume normal behavior
-        //StartCoroutine(RandomMovement());
-        
-        Debug.Log($"Enemy pull completed at {currentGridPosition}");
     }
 
     private IEnumerator RandomMovement()
     {
         while (!isDying)
         {
-            // Wait for the move interval
             yield return new WaitForSeconds(moveInterval);
-
             if (!isMoving && !isStunned && !isAfterPush && !isBeingPulled)
-            {
-                // Try to move in a random direction
                 TryMove();
-            }
         }
     }
-    
+
     private void TryMove()
     {
         if (isBeingPulled)
@@ -241,139 +202,75 @@ public class Enemy : MonoBehaviour
         foreach (Vector2Int direction in prioritizedDirections)
         {
             Vector2Int newPosition = currentGridPosition + direction;
-            bool isValid = tileGrid.IsValidGridPosition(newPosition);
-            bool isEnemyTile = isValid && tileGrid.grid[newPosition.x, newPosition.y] == TileType.Enemy;
-            bool isReserved = IsPositionReserved(newPosition);
-            bool isOccupied = tileGrid.IsTileOccupied(newPosition);
-
-            if (isValid && isEnemyTile && !isReserved && !isOccupied)
+            if (tileGrid.IsValidGridPosition(newPosition) &&
+                tileGrid.grid[newPosition.x, newPosition.y] == TileType.Enemy &&
+                !IsPositionReserved(newPosition) &&
+                !tileGrid.IsTileOccupied(newPosition))
             {
                 ReleaseGridPosition(currentGridPosition);
                 tileGrid.SetTileOccupied(currentGridPosition, false);
-
                 ReserveGridPosition(newPosition);
                 tileGrid.SetTileOccupied(newPosition, true);
-
                 targetGridPosition = newPosition;
                 Vector3 basePosition = tileGrid.GetWorldPosition(targetGridPosition);
                 targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
-
                 isMoving = true;
                 return;
             }
         }
     }
-    
+
     private void ShootAtPlayer()
     {
         if (bulletPrefab == null) return;
-        
-        // Always shoot straight to the left (toward player side)
+
         Vector2 direction = Vector2.left;
-        
-        // Create the bullet
         GameObject bulletObj = Instantiate(bulletPrefab, shootPoint.position, Quaternion.identity);
         EnemyBullet bullet = bulletObj.GetComponent<EnemyBullet>();
-        
+
+        if (bullet == null)
+            bullet = bulletObj.AddComponent<EnemyBullet>();
+
         if (bullet != null)
         {
-            // Initialize bullet with parameters
             bullet.Initialize(direction, bulletSpeed, bulletDamage, tileGrid);
-            
-            // Play shoot sound/effect if needed
-            PlayShootEffect();
+
+            if (animator != null)
+                animator.SetTrigger("Attack");
         }
         else
         {
-            // If there's no EnemyBullet component, try to add one
-            bullet = bulletObj.AddComponent<EnemyBullet>();
-            if (bullet != null)
-            {
-                bullet.Initialize(direction, bulletSpeed, bulletDamage, tileGrid);
-                PlayShootEffect();
-            }
-            else
-            {
-                Debug.LogError("Enemy: Failed to add EnemyBullet component to bullet prefab");
-                Destroy(bulletObj);
-            }
+            Debug.LogError("Enemy: Failed to setup bullet");
+            Destroy(bulletObj);
         }
     }
-    
-    private void PlayShootEffect()
-    {
-        // Flash the sprite when shooting
-        StartCoroutine(ShootFlash());
-        
-        // You could play a sound effect or particle effect here
-    }
-    
-    private IEnumerator ShootFlash()
-    {
-        if (spriteRenderer == null) yield break;
-        
-        // Store the original color
-        Color originalFlashColor = spriteRenderer.color;
-        
-        // Set to yellow for shooting flash
-        spriteRenderer.color = Color.yellow;
-        
-        // Short flash duration
-        yield return new WaitForSeconds(0.05f);
-        
-        // Return to original color
-        spriteRenderer.color = originalFlashColor;
-    }
-    
-    // Reserve a grid position for this enemy
-    private void ReserveGridPosition(Vector2Int position)
-    {
-        reservedPositions[position] = gameObject;
-    }
-    
-    // Release a grid position reservation
+
+    private void ReserveGridPosition(Vector2Int position) => reservedPositions[position] = gameObject;
+
     private void ReleaseGridPosition(Vector2Int position)
     {
         if (reservedPositions.ContainsKey(position) && reservedPositions[position] == gameObject)
-        {
             reservedPositions.Remove(position);
-        }
     }
-    
-    // Check if a grid position is already reserved
-    private bool IsPositionReserved(Vector2Int position)
-    {
-        return reservedPositions.ContainsKey(position) && reservedPositions[position] != gameObject;
-    }
-    
-    // Physical collision check (can be used in addition to reservation system)
+
+    private bool IsPositionReserved(Vector2Int position) =>
+        reservedPositions.ContainsKey(position) && reservedPositions[position] != gameObject;
+
     private bool IsPositionOccupied(Vector2Int gridPosition)
     {
-        // Convert grid position to world position
         Vector3 worldPosition = tileGrid.GetWorldPosition(gridPosition);
-        
-        // Create a small overlap circle to check for collisions
-        float checkRadius = 0.4f; // Adjust based on your entity size
-        
-        // Check for overlapping colliders
+        float checkRadius = 0.4f;
         Collider2D[] colliders = Physics2D.OverlapCircleAll(worldPosition, checkRadius, obstacleLayer);
-        
-        // If we found any colliders that aren't our own, the position is occupied
         foreach (Collider2D collider in colliders)
         {
-            // Skip our own collider
             if (collider.gameObject != gameObject)
-            {
-                return true; // Position is occupied
-            }
+                return true;
         }
-        
-        return false; // Position is free
+        return false;
     }
-    
+
     private void ShuffleDirections()
     {
-        // Simple Fisher-Yates shuffle
         for (int i = directions.Length - 1; i > 0; i--)
         {
             int j = Random.Range(0, i + 1);
@@ -386,29 +283,16 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(int damage)
     {
         if (isDying) return;
-
         currentHealth -= damage;
-
         StartCoroutine(FlashColor());
-
-        if (currentHealth <= 0)
-        {
-            Die();
-        }
+        if (currentHealth <= 0) Die();
     }
 
     private IEnumerator FlashColor()
     {
-        // Don't proceed if no sprite renderer available
         if (spriteRenderer == null) yield break;
-        
-        // Change to hit color
         spriteRenderer.color = hitColor;
-        
-        // Wait for flash duration
         yield return new WaitForSeconds(hitFlashDuration);
-        
-        // Change back to original color or stunned color if currently stunned
         if (isStunned)
             spriteRenderer.color = stunnedColor;
         else if (isAfterPush)
@@ -426,6 +310,8 @@ public class Enemy : MonoBehaviour
         foreach (Collider2D c in GetComponents<Collider2D>())
             c.enabled = false;
         Destroy(gameObject);
+
+        EnemyManager.Instance?.UnregisterEnemy(this); //Unregister on death
     }
 
     public void Stun(float duration)
@@ -437,28 +323,17 @@ public class Enemy : MonoBehaviour
     private IEnumerator ApplyStun(float duration)
     {
         isStunned = true;
-
-        //Visual feedback
         if (spriteRenderer != null && !isBeingPulled)
             spriteRenderer.color = stunnedColor;
-
-        //Wait for stun duration
         yield return new WaitForSeconds(duration);
-
-        //Remove Stun effect
         isStunned = false;
-
-        //Restore original color
         if (spriteRenderer != null && !isDying && !isAfterPush && !isBeingPulled)
             spriteRenderer.color = originalColor;
     }
-    
-    // Method to set position offset at runtime
+
     public void SetPositionOffset(Vector2 newOffset)
     {
         positionOffset = newOffset;
-        
-        // Update current position with new offset if not moving
         if (!isMoving && !isBeingPulled)
         {
             Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
@@ -466,63 +341,43 @@ public class Enemy : MonoBehaviour
             transform.position = targetPosition;
         }
     }
-    
-    // Method to get current position offset
-    public Vector2 GetPositionOffset()
-    {
-        return positionOffset;
-    }
 
-    // Method to handle push/pull effects
+    public Vector2 GetPositionOffset() => positionOffset;
+
     public void ApplyPushEffect(Vector2Int newGridPosition, Vector3 newWorldPosition)
     {
         StopAllCoroutines();
         isMoving = false;
         isBeingPulled = false;
-
         tileGrid.SetTileOccupied(currentGridPosition, false);
         ReleaseGridPosition(currentGridPosition);
 
-        // Check again if the tile is still safe before committing pull
         if (tileGrid.IsTileOccupied(newGridPosition))
         {
-            Debug.LogWarning("Tile became occupied during pull! Aborting pull.");
-            // Optionally reset to previous position
             currentGridPosition = tileGrid.GetGridPosition(transform.position);
             ReserveGridPosition(currentGridPosition);
             tileGrid.SetTileOccupied(currentGridPosition, true);
             return;
         }
 
-        // Proceed with pull
         currentGridPosition = newGridPosition;
         targetGridPosition = newGridPosition;
         ReserveGridPosition(currentGridPosition);
         tileGrid.SetTileOccupied(currentGridPosition, true);
-
-
         Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
         targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
-
-        //StartCoroutine(RandomMovement()); // <-- This ensures movement resumes
     }
 
-    
-    // Method to set position with offset (for use with KineticShove)
     public void SetPositionWithOffset(Vector2Int newGridPosition)
     {
         StopAllCoroutines();
         isMoving = false;
-
         tileGrid.SetTileOccupied(currentGridPosition, false);
         ReleaseGridPosition(currentGridPosition);
-
         currentGridPosition = newGridPosition;
         targetGridPosition = newGridPosition;
-
         ReserveGridPosition(currentGridPosition);
         tileGrid.SetTileOccupied(currentGridPosition, true);
-
         Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
         targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
         transform.position = targetPosition;

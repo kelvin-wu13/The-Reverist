@@ -2,433 +2,210 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
+using System.Linq;
 
 public class UIManager : MonoBehaviour
 {
-    [Header("Health UI Elements")]
+    [Header("Health UI")]
     [SerializeField] private Slider healthSlider;
-    [SerializeField] private TextMeshProUGUI healthText;
-    [SerializeField] private Image healthFillImage;
-    
-    [Header("Mana UI Elements")]
+
+    [Header("Mana UI")]
     [SerializeField] private Slider manaSlider;
     [SerializeField] private TextMeshProUGUI manaText;
-    [SerializeField] private Image manaFillImage;
-    
-    [Header("UI Colors")]
+
+    [Header("Enemy Health UI")]
+    [SerializeField] private Slider enemyHealthSlider;
+
+    [Header("Colors")]
     [SerializeField] private Color healthColor = Color.red;
+    [SerializeField] private Color enemyHealthColor = new Color(1f, 0.4f, 0.4f);
     [SerializeField] private Color manaColor = Color.blue;
-    [SerializeField] private Color lowHealthColor = Color.yellow;
-    [SerializeField] private Color criticalHealthColor = new Color(1f, 0.3f, 0f); // Orange-red
-    
-    [Header("Health Thresholds")]
-    [SerializeField] private float lowHealthThreshold = 0.5f;
-    [SerializeField] private float criticalHealthThreshold = 0.25f;
-    
-    [Header("Animation Settings")]
+    [SerializeField] private Color flashColor = Color.white;
+
+    [Header("Animation")]
     [SerializeField] private bool enableSmoothTransitions = true;
     [SerializeField] private float transitionSpeed = 5f;
-    [SerializeField] private bool enableHealthFlashing = true;
-    [SerializeField] private float flashSpeed = 3f;
-    
-    [Header("Update Settings")]
-    [SerializeField] private float updateFrequency = 0.1f; // How often to check for changes (in seconds)
-    
-    // Private variables
+    [SerializeField] private float flashDuration = 0.2f;
+
     private PlayerStats playerStats;
-    private float targetHealthValue;
-    private float targetManaValue;
-    private float currentHealthDisplay;
-    private float currentManaDisplay;
-    private bool isFlashingHealth;
-    private float flashTimer;
-    private float updateTimer;
-    
-    // Cached values to detect changes
-    private int lastHealth = -1;
-    private float lastMana = -1f;
-    private int lastMaxHealth = -1;
-    private int lastMaxMana = -1;
-    private bool wasPlayerDead = false;
-    
-    // Cached original colors
-    private Color originalHealthColor;
-    private Color originalManaColor;
-    
+    private float targetHealthValue, currentHealthDisplay;
+    private float targetManaValue, currentManaDisplay;
+    private float targetEnemyHealthValue, currentEnemyHealthDisplay;
+    private int totalMaxEnemyHealthCached = -1;
+    private int lastHealth;
+    private float lastMana;
+
+    private Coroutine playerFlashCoroutine;
+    private Coroutine enemyFlashCoroutine;
+
+    private Image playerHealthImage;
+    private Image enemyHealthImage;
+
     private void Start()
     {
         InitializeUI();
         FindAndConnectToPlayerStats();
     }
-    
+
     private void Update()
     {
-        // Update timer for checking player stats changes
-        updateTimer += Time.deltaTime;
-        
-        if (updateTimer >= updateFrequency)
-        {
-            CheckForPlayerStatsChanges();
-            updateTimer = 0f;
-        }
-        
-        if (enableSmoothTransitions)
-        {
-            HandleSmoothTransitions();
-        }
-        
-        if (enableHealthFlashing && isFlashingHealth)
-        {
-            HandleHealthFlashing();
-        }
+        CheckForPlayerStatsChanges();
+        UpdateEnemyHealthBar();
+        if (enableSmoothTransitions) HandleSmoothTransitions();
     }
-    
+
     private void InitializeUI()
     {
-        // Cache original colors
-        originalHealthColor = healthColor;
-        originalManaColor = manaColor;
-        
-        // Set initial colors
-        SetHealthBarColor(healthColor);
-        SetManaBarColor(manaColor);
-        
-        // Initialize slider values
-        if (healthSlider != null)
+        if (healthSlider != null) healthSlider.value = 1f;
+        if (manaSlider != null) manaSlider.value = 1f;
+
+        if (enemyHealthSlider != null)
         {
-            healthSlider.minValue = 0f;
-            healthSlider.maxValue = 1f;
-            healthSlider.value = 1f;
+            enemyHealthSlider.minValue = 0f;
+            enemyHealthSlider.maxValue = 1f;
+            enemyHealthSlider.value = 1f;
         }
-        
-        if (manaSlider != null)
-        {
-            manaSlider.minValue = 0f;
-            manaSlider.maxValue = 1f;
-            manaSlider.value = 1f;
-        }
-        
-        // Initialize display values
-        currentHealthDisplay = 1f;
-        currentManaDisplay = 1f;
-        targetHealthValue = 1f;
-        targetManaValue = 1f;
+
+        playerHealthImage = healthSlider?.fillRect?.GetComponent<Image>();
+        enemyHealthImage = enemyHealthSlider?.fillRect?.GetComponent<Image>();
+
+        currentHealthDisplay = targetHealthValue = 1f;
+        currentManaDisplay = targetManaValue = 1f;
+        currentEnemyHealthDisplay = targetEnemyHealthValue = 1f;
+
+        if (playerHealthImage != null) playerHealthImage.color = healthColor;
+        if (enemyHealthImage != null) enemyHealthImage.color = enemyHealthColor;
     }
-    
+
     private void FindAndConnectToPlayerStats()
     {
-        // Try to find PlayerStats component in the scene
         playerStats = FindObjectOfType<PlayerStats>();
-        
-        if (playerStats == null)
+        if (playerStats != null)
         {
-            Debug.LogError("UIManager: PlayerStats component not found in the scene!");
-            return;
+            lastHealth = playerStats.CurrentHealth;
+            lastMana = playerStats.CurrentMana;
+            OnHealthChanged(playerStats.CurrentHealth, playerStats.MaxHealth);
+            OnManaChanged(playerStats.CurrentMana, playerStats.MaxMana);
         }
-        
-        Debug.Log("UIManager: Successfully connected to PlayerStats");
-        
-        // Initialize UI with current values
-        InitializeWithPlayerStats();
     }
-    
-    private void InitializeWithPlayerStats()
-    {
-        if (playerStats == null) return;
-        
-        // Set initial values
-        lastHealth = playerStats.CurrentHealth;
-        lastMana = playerStats.CurrentMana;
-        lastMaxHealth = playerStats.MaxHealth;
-        lastMaxMana = playerStats.MaxMana;
-        wasPlayerDead = playerStats.IsDead;
-        
-        // Update UI immediately
-        OnHealthChanged(playerStats.CurrentHealth, playerStats.MaxHealth);
-        OnManaChanged(playerStats.CurrentMana, playerStats.MaxMana);
-    }
-    
+
     private void CheckForPlayerStatsChanges()
     {
         if (playerStats == null) return;
-        
-        // Check for health changes
-        if (playerStats.CurrentHealth != lastHealth || playerStats.MaxHealth != lastMaxHealth)
+
+        if (playerStats.CurrentHealth != lastHealth)
         {
             OnHealthChanged(playerStats.CurrentHealth, playerStats.MaxHealth);
+
+            if (playerStats.CurrentHealth < lastHealth && playerHealthImage != null)
+            {
+                if (playerFlashCoroutine != null) StopCoroutine(playerFlashCoroutine);
+                playerFlashCoroutine = StartCoroutine(FlashHealthBar(playerHealthImage, healthColor));
+            }
+
             lastHealth = playerStats.CurrentHealth;
-            lastMaxHealth = playerStats.MaxHealth;
         }
-        
-        // Check for mana changes
-        if (!Mathf.Approximately(playerStats.CurrentMana, lastMana) || playerStats.MaxMana != lastMaxMana)
+
+        if (!Mathf.Approximately(playerStats.CurrentMana, lastMana))
         {
             OnManaChanged(playerStats.CurrentMana, playerStats.MaxMana);
             lastMana = playerStats.CurrentMana;
-            lastMaxMana = playerStats.MaxMana;
-        }
-        
-        // Check for death state changes
-        if (playerStats.IsDead != wasPlayerDead)
-        {
-            if (playerStats.IsDead)
-            {
-                OnPlayerDeath();
-            }
-            else
-            {
-                OnPlayerRespawn();
-            }
-            wasPlayerDead = playerStats.IsDead;
         }
     }
-    
-    private void OnHealthChanged(int currentHealth, int maxHealth)
+
+    private void OnHealthChanged(int current, int max)
     {
-        if (maxHealth == 0) return;
-        
-        float healthPercentage = (float)currentHealth / maxHealth;
-        
+        float percent = max == 0 ? 0f : (float)current / max;
         if (enableSmoothTransitions)
-        {
-            targetHealthValue = healthPercentage;
-        }
+            targetHealthValue = percent;
         else
-        {
-            UpdateHealthSlider(healthPercentage);
-        }
-        
-        UpdateHealthText(currentHealth, maxHealth);
-        UpdateHealthColor(healthPercentage);
+            UpdateHealthSlider(percent);
     }
-    
-    private void OnManaChanged(float currentMana, int maxMana)
+
+    private void OnManaChanged(float current, int max)
     {
-        if (maxMana == 0) return;
-        
-        float manaPercentage = currentMana / maxMana;
-        
+        float percent = max == 0 ? 0f : current / max;
         if (enableSmoothTransitions)
-        {
-            targetManaValue = manaPercentage;
-        }
+            targetManaValue = percent;
         else
-        {
-            UpdateManaSlider(manaPercentage);
-        }
-        
-        UpdateManaText(currentMana, maxMana);
-    }
-    
-    private void OnPlayerDeath()
-    {
-        // Stop any ongoing animations
-        isFlashingHealth = false;
-        
-        // You can add death UI effects here
-        Debug.Log("UIManager: Player has died!");
-        
-        // Example: Flash health bar red rapidly
-        StartCoroutine(DeathFlashEffect());
-    }
-    
-    private void OnPlayerRespawn()
-    {
-        // Stop death effects
-        StopAllCoroutines();
-        isFlashingHealth = false;
-        
-        // Reset UI colors
-        SetHealthBarColor(originalHealthColor);
-        
-        Debug.Log("UIManager: Player has respawned!");
-    }
-    
-    private void UpdateHealthSlider(float value)
-    {
-        currentHealthDisplay = value;
-        if (healthSlider != null)
-        {
-            healthSlider.value = value;
-        }
-    }
-    
-    private void UpdateManaSlider(float value)
-    {
-        currentManaDisplay = value;
-        if (manaSlider != null)
-        {
-            manaSlider.value = value;
-        }
-    }
-    
-    private void UpdateHealthText(int current, int max)
-    {
-        if (healthText != null)
-        {
-            healthText.text = $"{current}/{max}";
-        }
-    }
-    
-    private void UpdateManaText(float current, int max)
-    {
+            UpdateManaSlider(percent);
+
         if (manaText != null)
-        {
-            // Show one decimal place for mana since it can be fractional
             manaText.text = $"{current:F1}/{max}";
-        }
     }
-    
-    private void UpdateHealthColor(float healthPercentage)
+
+    private void UpdateEnemyHealthBar()
     {
-        Color targetColor;
-        
-        if (healthPercentage <= criticalHealthThreshold)
+        var enemies = EnemyManager.Instance?.GetAllEnemies();
+        if (enemies == null || enemies.Count == 0) return;
+
+        int totalCurrent = enemies.Sum(e => e != null ? e.currentHealth : 0);
+        int totalMax = enemies.Sum(e => e != null ? e.maxHealth : 0);
+
+        if (totalMaxEnemyHealthCached <= 0) // Cache only once at full spawn
+            totalMaxEnemyHealthCached = totalMax;
+
+        if (totalMaxEnemyHealthCached == 0) return; // avoid div/0
+
+        float percent = (float)totalCurrent / totalMaxEnemyHealthCached;
+
+        if (percent < currentEnemyHealthDisplay && enemyHealthImage != null)
         {
-            targetColor = criticalHealthColor;
-            if (enableHealthFlashing)
-            {
-                isFlashingHealth = true;
-            }
+            if (enemyFlashCoroutine != null) StopCoroutine(enemyFlashCoroutine);
+            enemyFlashCoroutine = StartCoroutine(FlashHealthBar(enemyHealthImage, enemyHealthColor));
         }
-        else if (healthPercentage <= lowHealthThreshold)
-        {
-            targetColor = lowHealthColor;
-            isFlashingHealth = false;
-        }
+
+        if (enableSmoothTransitions)
+            targetEnemyHealthValue = percent;
         else
-        {
-            targetColor = originalHealthColor;
-            isFlashingHealth = false;
-        }
-        
-        if (!isFlashingHealth)
-        {
-            SetHealthBarColor(targetColor);
-        }
+            SetEnemyHealthSlider(percent);
     }
-    
-    private void SetHealthBarColor(Color color)
-    {
-        if (healthFillImage != null)
-        {
-            healthFillImage.color = color;
-        }
-    }
-    
-    private void SetManaBarColor(Color color)
-    {
-        if (manaFillImage != null)
-        {
-            manaFillImage.color = color;
-        }
-    }
-    
+
+
     private void HandleSmoothTransitions()
     {
-        // Smooth health transition
         if (!Mathf.Approximately(currentHealthDisplay, targetHealthValue))
         {
             float newValue = Mathf.Lerp(currentHealthDisplay, targetHealthValue, transitionSpeed * Time.deltaTime);
             UpdateHealthSlider(newValue);
         }
-        
-        // Smooth mana transition
+
         if (!Mathf.Approximately(currentManaDisplay, targetManaValue))
         {
             float newValue = Mathf.Lerp(currentManaDisplay, targetManaValue, transitionSpeed * Time.deltaTime);
             UpdateManaSlider(newValue);
         }
-    }
-    
-    private void HandleHealthFlashing()
-    {
-        flashTimer += Time.deltaTime * flashSpeed;
-        float flashIntensity = (Mathf.Sin(flashTimer) + 1f) * 0.5f; // Normalize to 0-1
-        
-        Color flashColor = Color.Lerp(criticalHealthColor, Color.white, flashIntensity * 0.3f);
-        SetHealthBarColor(flashColor);
-    }
-    
-    private IEnumerator DeathFlashEffect()
-    {
-        float duration = 1f;
-        float elapsed = 0f;
-        
-        while (elapsed < duration)
+
+        if (!Mathf.Approximately(currentEnemyHealthDisplay, targetEnemyHealthValue))
         {
-            float intensity = Mathf.Sin(elapsed * 20f); // Fast flashing
-            Color flashColor = intensity > 0 ? Color.red : Color.black;
-            SetHealthBarColor(flashColor);
-            
-            elapsed += Time.deltaTime;
-            yield return null;
+            float newValue = Mathf.Lerp(currentEnemyHealthDisplay, targetEnemyHealthValue, transitionSpeed * Time.deltaTime);
+            SetEnemyHealthSlider(newValue);
         }
     }
-    
-    /// <summary>
-    /// Manually set UI references if not assigned in inspector
-    /// </summary>
-    public void SetUIReferences(Slider healthSlider, Slider manaSlider, 
-                               TextMeshProUGUI healthText = null, TextMeshProUGUI manaText = null,
-                               Image healthFill = null, Image manaFill = null)
+
+    private void UpdateHealthSlider(float value)
     {
-        this.healthSlider = healthSlider;
-        this.manaSlider = manaSlider;
-        this.healthText = healthText;
-        this.manaText = manaText;
-        this.healthFillImage = healthFill;
-        this.manaFillImage = manaFill;
-        
-        InitializeUI();
+        currentHealthDisplay = value;
+        if (healthSlider != null) healthSlider.value = value;
     }
-    
-    /// <summary>
-    /// Force refresh the UI with current player stats
-    /// </summary>
-    public void RefreshUI()
+
+    private void UpdateManaSlider(float value)
     {
-        if (playerStats != null)
-        {
-            OnHealthChanged(playerStats.CurrentHealth, playerStats.MaxHealth);
-            OnManaChanged(playerStats.CurrentMana, playerStats.MaxMana);
-        }
+        currentManaDisplay = value;
+        if (manaSlider != null) manaSlider.value = value;
     }
-    
-    /// <summary>
-    /// Enable or disable smooth transitions
-    /// </summary>
-    public void SetSmoothTransitions(bool enabled)
+
+    private void SetEnemyHealthSlider(float value)
     {
-        enableSmoothTransitions = enabled;
+        currentEnemyHealthDisplay = value;
+        if (enemyHealthSlider != null) enemyHealthSlider.value = value;
     }
-    
-    /// <summary>
-    /// Enable or disable health flashing when critical
-    /// </summary>
-    public void SetHealthFlashing(bool enabled)
+
+    private IEnumerator FlashHealthBar(Image img, Color baseColor)
     {
-        enableHealthFlashing = enabled;
-        if (!enabled)
-        {
-            isFlashingHealth = false;
-        }
-    }
-    
-    /// <summary>
-    /// Set how frequently the UI checks for player stat changes
-    /// </summary>
-    public void SetUpdateFrequency(float frequency)
-    {
-        updateFrequency = Mathf.Max(0.01f, frequency); // Minimum 0.01 seconds
-    }
-    
-    /// <summary>
-    /// Manually assign a PlayerStats reference
-    /// </summary>
-    public void SetPlayerStats(PlayerStats stats)
-    {
-        playerStats = stats;
-        InitializeWithPlayerStats();
+        if (img == null) yield break;
+        img.color = flashColor;
+        yield return new WaitForSeconds(flashDuration);
+        img.color = baseColor;
     }
 }

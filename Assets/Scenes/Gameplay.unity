@@ -996,23 +996,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b330c2df8dfa70c47b5b1be743ad0804, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  healthSlider: {fileID: 0}
-  healthText: {fileID: 0}
-  healthFillImage: {fileID: 0}
-  manaSlider: {fileID: 0}
+  healthSlider: {fileID: 1414140818}
+  manaSlider: {fileID: 376624394}
   manaText: {fileID: 0}
-  manaFillImage: {fileID: 0}
-  healthColor: {r: 1, g: 0, b: 0, a: 1}
+  enemyHealthSlider: {fileID: 1605456748}
+  healthColor: {r: 1, g: 1, b: 1, a: 1}
+  enemyHealthColor: {r: 1, g: 1, b: 1, a: 1}
   manaColor: {r: 0, g: 0, b: 1, a: 1}
-  lowHealthColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  criticalHealthColor: {r: 1, g: 0.3, b: 0, a: 1}
-  lowHealthThreshold: 0.3
-  criticalHealthThreshold: 0.25
+  flashColor: {r: 1, g: 0.028301716, b: 0.028301716, a: 1}
   enableSmoothTransitions: 1
   transitionSpeed: 5
-  enableHealthFlashing: 1
-  flashSpeed: 3
-  updateFrequency: 0.1
+  flashDuration: 0.2
 --- !u!1 &1030595139
 GameObject:
   m_ObjectHideFlags: 0
@@ -1268,7 +1262,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 9188396617555358448, guid: 34f167f6eac706742920ca23adb1dc31, type: 3}
+  m_Sprite: {fileID: 8715977895637372003, guid: 0f88a4a2f14dcc84f94258e4d1714b1c, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1323,7 +1317,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -362.9, y: 312.7}
-  m_SizeDelta: {x: 776.3, y: 306.02}
+  m_SizeDelta: {x: 798.7, y: 264}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1414140818
 MonoBehaviour:
@@ -1938,7 +1932,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 395.1, y: 313.1}
-  m_SizeDelta: {x: 736.8, y: 351.3}
+  m_SizeDelta: {x: 736.2, y: 296}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1605456748
 MonoBehaviour:
@@ -1987,7 +1981,7 @@ MonoBehaviour:
   m_MinValue: 0
   m_MaxValue: 1
   m_WholeNumbers: 0
-  m_Value: 0
+  m_Value: 0.674
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
