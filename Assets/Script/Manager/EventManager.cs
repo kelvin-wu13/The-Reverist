@@ -24,16 +24,13 @@ public class EventManager : MonoBehaviour
 
     [Header("UI References")]
     [SerializeField] private GameObject dialogPanel;
-    [SerializeField] private GameObject dialogTextObject;
     [SerializeField] private GameObject skillPopupPanel;
-    [SerializeField] private GameObject skillPopupHowToText;
     [SerializeField] private GameObject battlePanel;
-    [SerializeField] private GameObject trainingRoomPanel;
     [SerializeField] private GameObject bossButton;
     [SerializeField] private GameObject skillDescButton;
     [SerializeField] private GameObject openSkillPopupButton;
     [SerializeField] private DialogueManager dialogueManager;
-    [SerializeField] private DialogueTrigger dialogueTrigger; // ✅ Added reference
+    [SerializeField] private DialogueTrigger dialogueTrigger;
 
     [Header("Game Flow Settings")]
     [SerializeField] private float delayBetweenSteps = 1f;
@@ -71,7 +68,7 @@ public class EventManager : MonoBehaviour
     public void StartGameFlow()
     {
         if (dialogueTrigger != null)
-            dialogueTrigger.TriggerDialogue(); // ✅ Replaces missing StartInspectorDialogue()
+            dialogueTrigger.TriggerDialogue();
     }
 
     public void ProceedAfterDialogue()
@@ -88,31 +85,30 @@ public class EventManager : MonoBehaviour
         OnSkillSelected?.Invoke(skillName);
 
         skillPopupPanel.SetActive(true);
-        SetSkillPopupText("Press Q twice (QQ), Q then W (QW), or Q then E (QE) to cast skills.");
 
-        yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.Space));
+        // No text changes, just waits for key
+        yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Mouse1));
 
         skillPopupPanel.SetActive(false);
         Time.timeScale = 1f;
         OnSkillPopupHide?.Invoke();
-        yield return new WaitForSecondsRealtime(delayBetweenSteps);
 
+        yield return new WaitForSecondsRealtime(delayBetweenSteps);
         yield return StartBattle();
     }
+
 
     private IEnumerator StartBattle()
     {
         battleOver = false;
         currentState = GameState.BattleQ;
-        //FindObjectOfType<SkillSystem.SkillCast>().SetAllowedSkillSet("Q");
+        FindObjectOfType<SkillSystem.SkillCast>().SetAllowedSkillSet("Q");
 
         OnBattleStart?.Invoke();
-        battlePanel.SetActive(true);
         openSkillPopupButton.SetActive(true);
 
         yield return new WaitUntil(() => battleOver);
 
-        battlePanel.SetActive(false);
         openSkillPopupButton.SetActive(false);
         OnBattleEnd?.Invoke();
         yield return new WaitForSeconds(delayBetweenSteps);
@@ -122,36 +118,8 @@ public class EventManager : MonoBehaviour
 
     public void ToggleSkillPopupDuringBattle()
     {
-        if (skillPopupOpen)
-        {
-            skillPopupPanel.SetActive(false);
-            Time.timeScale = 1f;
-            skillPopupOpen = false;
-        }
-        else
-        {
-            skillPopupPanel.SetActive(true);
-            Time.timeScale = 0f;
-            SetSkillPopupText("Use QQ, QW, or QE to activate different Q skills.");
-            skillPopupOpen = true;
-        }
-    }
-
-    public void SetVNDialog(string message)
-    {
-        if (dialogTextObject != null)
-        {
-            dialogPanel.SetActive(true);
-            dialogTextObject.GetComponent<Text>().text = message;
-        }
-    }
-
-    public void SetSkillPopupText(string message)
-    {
-        if (skillPopupHowToText != null)
-        {
-            skillPopupHowToText.SetActive(true);
-            skillPopupHowToText.GetComponent<Text>().text = message;
-        }
+        skillPopupOpen = !skillPopupOpen;
+        skillPopupPanel.SetActive(skillPopupOpen);
+        Time.timeScale = skillPopupOpen ? 0f : 1f;
     }
 }

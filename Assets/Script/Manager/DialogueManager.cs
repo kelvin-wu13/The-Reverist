@@ -7,6 +7,7 @@ using UnityEngine.UI;
 
 public class DialogueManager : MonoBehaviour
 {
+    [SerializeField] private GameObject dialoguePanel;
     public static DialogueManager Instance;
 
     public Image characterIcon;
@@ -17,22 +18,30 @@ public class DialogueManager : MonoBehaviour
 
     public bool isDialogueActive = false;
     public float isTypingSpeed = 0.2f;
-    public Animator animator;
+    //public Animator animator;
 
     public UnityEvent OnDialogueFinished; // ⬅ Add this for callback
 
-    private void Start()
+    private void Awake()
     {
         if (Instance == null)
             Instance = this;
     }
+
+    private void Update()
+    {
+        if (isDialogueActive && (Input.GetKeyDown(KeyCode.Space)) || (Input.GetMouseButtonDown(0)))
+        {
+            DisplayNextDialogueLine();
+        }
+    } 
 
     public void StartDialogue(Dialogue dialogue)
     {
         Time.timeScale = 0f; // ⏸ pause game
         isDialogueActive = true;
 
-        animator.Play("show");
+        //animator.Play("show");
         lines.Clear();
 
         foreach (DialogueLine dialogueLine in dialogue.dialogueLines)
@@ -72,7 +81,12 @@ public class DialogueManager : MonoBehaviour
     void EndDialogue()
     {
         isDialogueActive = false;
-        animator.Play("hide");
+        //animator.Play("hide");
+
+        if (dialoguePanel.activeSelf)
+            dialoguePanel.SetActive(false);
+
+            
         Time.timeScale = 1f; // ▶ resume game
 
         OnDialogueFinished?.Invoke(); // 🔁 trigger next step
