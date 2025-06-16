@@ -1,151 +1,157 @@
-// using System.Collections;
-// using UnityEngine;
-// using UnityEngine.Events;
-// using UnityEngine.UI;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.UI;
 
-// public class EventManager : MonoBehaviour
-// {
-//     public static EventManager Instance { get; private set; }
+public class EventManager : MonoBehaviour
+{
+    public static EventManager Instance { get; private set; }
 
-//     [Header("Game Flow Events")]
-//     public UnityEvent OnGameStart;
-//     public UnityEvent OnDialogStart;
-//     public UnityEvent OnDialogEnd;
-//     public UnityEvent OnSkillPopupShow;
-//     public UnityEvent OnSkillPopupHide;
-//     public UnityEvent OnBattleStart;
-//     public UnityEvent OnBattleEnd;
-//     public UnityEvent OnTrainingRoomShow;
-//     public UnityEvent OnBossButtonShow;
-//     public UnityEvent OnSkillDescButtonShow;
+    [Header("Game Flow Events")]
+    public UnityEvent OnGameStart;
+    public UnityEvent OnDialogStart;
+    public UnityEvent OnDialogEnd;
+    public UnityEvent OnSkillPopupShow;
+    public UnityEvent OnSkillPopupHide;
+    public UnityEvent OnBattleStart;
+    public UnityEvent OnBattleEnd;
+    public UnityEvent OnTrainingRoomShow;
+    public UnityEvent OnBossButtonShow;
+    public UnityEvent OnSkillDescButtonShow;
 
-//     [Header("Skill Events")]
-//     public UnityEvent<string> OnSkillSelected;
+    [Header("Skill Events")]
+    public UnityEvent<string> OnSkillSelected;
 
-//     [Header("UI References")]
-//     [SerializeField] private GameObject dialogPanel;
-//     [SerializeField] private GameObject dialogTextObject;
-//     [SerializeField] private GameObject skillPopupPanel;
-//     [SerializeField] private GameObject skillPopupHowToText;
-//     [SerializeField] private GameObject battlePanel;
-//     [SerializeField] private GameObject trainingRoomPanel;
-//     [SerializeField] private GameObject bossButton;
-//     [SerializeField] private GameObject skillDescButton;
-//     [SerializeField] private GameObject openSkillPopupButton;
-//     [SerializeField] private DialogueManager dialogueManager;
+    [Header("UI References")]
+    [SerializeField] private GameObject dialogPanel;
+    [SerializeField] private GameObject dialogTextObject;
+    [SerializeField] private GameObject skillPopupPanel;
+    [SerializeField] private GameObject skillPopupHowToText;
+    [SerializeField] private GameObject battlePanel;
+    [SerializeField] private GameObject trainingRoomPanel;
+    [SerializeField] private GameObject bossButton;
+    [SerializeField] private GameObject skillDescButton;
+    [SerializeField] private GameObject openSkillPopupButton;
+    [SerializeField] private DialogueManager dialogueManager;
+    [SerializeField] private DialogueTrigger dialogueTrigger; // ✅ Added reference
 
-//     [Header("Game Flow Settings")]
-//     [SerializeField] private float delayBetweenSteps = 1f;
+    [Header("Game Flow Settings")]
+    [SerializeField] private float delayBetweenSteps = 1f;
 
-//     private enum GameState { Dialog, SkillQ, BattleQ, FinalDialog, TrainingRoom }
+    private enum GameState { Dialog, SkillQ, BattleQ, FinalDialog, TrainingRoom }
 
-//     private GameState currentState = GameState.Dialog;
-//     private bool battleOver = false;
-//     private bool skillPopupOpen = false;
+    private GameState currentState = GameState.Dialog;
+    private bool battleOver = false;
+    private bool skillPopupOpen = false;
 
-//     private void Awake()
-//     {
-//         if (Instance == null) Instance = this;
-//         else Destroy(gameObject);
-//     }
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+    }
 
-//     private void Start()
-//     {
-//         OnGameStart?.Invoke();
-//         StartGameFlow();
-//     }
+    private void Start()
+    {
+        OnGameStart?.Invoke();
 
-//     void Update()
-//     {
-//         if (Input.GetKeyDown(KeyCode.Escape))
-//         {
-//             ToggleSkillPopupDuringBattle();
-//         }
-//     }
+        if (dialogueManager != null)
+            dialogueManager.OnDialogueFinished.AddListener(ProceedAfterDialogue);
 
-//     public void StartGameFlow()
-//     {
-//         dialogueManager.StartInspectorDialogue();
-//     }
+        StartGameFlow();
+    }
 
-//     public void ProceedAfterDialogue()
-//     {
-//         StartCoroutine(ShowSkillPopup("Q"));
-//     }
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            ToggleSkillPopupDuringBattle();
+        }
+    }
 
-//     private IEnumerator ShowSkillPopup(string skillName)
-//     {
-//         currentState = GameState.SkillQ;
-//         Time.timeScale = 0f;
+    public void StartGameFlow()
+    {
+        if (dialogueTrigger != null)
+            dialogueTrigger.TriggerDialogue(); // ✅ Replaces missing StartInspectorDialogue()
+    }
 
-//         OnSkillPopupShow?.Invoke();
-//         OnSkillSelected?.Invoke(skillName);
+    public void ProceedAfterDialogue()
+    {
+        StartCoroutine(ShowSkillPopup("Q"));
+    }
 
-//         skillPopupPanel.SetActive(true);
-//         SetSkillPopupText("Press Q twice (QQ), Q then W (QW), or Q then E (QE) to cast skills.");
+    private IEnumerator ShowSkillPopup(string skillName)
+    {
+        currentState = GameState.SkillQ;
+        Time.timeScale = 0f;
 
-//         yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.Space));
+        OnSkillPopupShow?.Invoke();
+        OnSkillSelected?.Invoke(skillName);
 
-//         skillPopupPanel.SetActive(false);
-//         Time.timeScale = 1f;
-//         OnSkillPopupHide?.Invoke();
-//         yield return new WaitForSecondsRealtime(delayBetweenSteps);
+        skillPopupPanel.SetActive(true);
+        SetSkillPopupText("Press Q twice (QQ), Q then W (QW), or Q then E (QE) to cast skills.");
 
-//         yield return StartBattle();
-//     }
+        yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.Space));
 
-//     private IEnumerator StartBattle()
-//     {
-//         battleOver = false;
-//         currentState = GameState.BattleQ;
-//         FindObjectOfType<SkillSystem.SkillCast>().SetAllowedSkillSet("Q");
+        skillPopupPanel.SetActive(false);
+        Time.timeScale = 1f;
+        OnSkillPopupHide?.Invoke();
+        yield return new WaitForSecondsRealtime(delayBetweenSteps);
 
-//         OnBattleStart?.Invoke();
-//         battlePanel.SetActive(true);
-//         openSkillPopupButton.SetActive(true);
+        yield return StartBattle();
+    }
 
-//         yield return new WaitUntil(() => battleOver);
+    private IEnumerator StartBattle()
+    {
+        battleOver = false;
+        currentState = GameState.BattleQ;
+        //FindObjectOfType<SkillSystem.SkillCast>().SetAllowedSkillSet("Q");
 
-//         battlePanel.SetActive(false);
-//         openSkillPopupButton.SetActive(false);
-//         OnBattleEnd?.Invoke();
-//         yield return new WaitForSeconds(delayBetweenSteps);
-//     }
+        OnBattleStart?.Invoke();
+        battlePanel.SetActive(true);
+        openSkillPopupButton.SetActive(true);
 
-//     public void MarkBattleOver() => battleOver = true;
+        yield return new WaitUntil(() => battleOver);
 
-//     public void ToggleSkillPopupDuringBattle()
-//     {
-//         if (skillPopupOpen)
-//         {
-//             skillPopupPanel.SetActive(false);
-//             Time.timeScale = 1f;
-//             skillPopupOpen = false;
-//         }
-//         else
-//         {
-//             skillPopupPanel.SetActive(true);
-//             Time.timeScale = 0f;
-//             SetSkillPopupText("Use QQ, QW, or QE to activate different Q skills.");
-//             skillPopupOpen = true;
-//         }
-//     }
+        battlePanel.SetActive(false);
+        openSkillPopupButton.SetActive(false);
+        OnBattleEnd?.Invoke();
+        yield return new WaitForSeconds(delayBetweenSteps);
+    }
 
-//     public void SetVNDialog(string message)
-//     {
-//         if (dialogTextObject != null)
-//         {
-//             dialogPanel.SetActive(true);
-//             dialogTextObject.GetComponent<Text>().text = message;
-//         }
-//     }
+    public void MarkBattleOver() => battleOver = true;
 
-//     public void SetSkillPopupText(string message)
-//     {
-//         if (skillPopupHowToText != null)
-//         {
-//             skillPopupHowToText.SetActive(true);
-//             skillPopupHowToText.GetComponent<Text>().text = message;
-//         }
-//     }
-// }
+    public void ToggleSkillPopupDuringBattle()
+    {
+        if (skillPopupOpen)
+        {
+            skillPopupPanel.SetActive(false);
+            Time.timeScale = 1f;
+            skillPopupOpen = false;
+        }
+        else
+        {
+            skillPopupPanel.SetActive(true);
+            Time.timeScale = 0f;
+            SetSkillPopupText("Use QQ, QW, or QE to activate different Q skills.");
+            skillPopupOpen = true;
+        }
+    }
+
+    public void SetVNDialog(string message)
+    {
+        if (dialogTextObject != null)
+        {
+            dialogPanel.SetActive(true);
+            dialogTextObject.GetComponent<Text>().text = message;
+        }
+    }
+
+    public void SetSkillPopupText(string message)
+    {
+        if (skillPopupHowToText != null)
+        {
+            skillPopupHowToText.SetActive(true);
+            skillPopupHowToText.GetComponent<Text>().text = message;
+        }
+    }
+}
