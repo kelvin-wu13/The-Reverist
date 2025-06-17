@@ -1,9 +1,9 @@
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
-using static UnityEngine.Rendering.DebugUI;
-using Button = UnityEngine.UI.Button;
+//using UnityEngine.EventSystems;
+//using UnityEngine.UIElements;
+//using static UnityEngine.Rendering.DebugUI;
+//using Button = UnityEngine.UI.Button;
 
 public class GridMenuNavigator : MonoBehaviour
 //{
@@ -233,11 +233,12 @@ public class GridMenuNavigator : MonoBehaviour
     public Button[] buttons;
     private int currentIndex = 0;
 
-    public float initialDelay = 14.4f;
-    public float repeatRate = 4.8f;
+    public float initialDelay = 0.3f;
+    public float repeatRate = 0.1f;
 
     private float nextMoveTime = 0f;
-    private Vector2 lastInput = Vector2.zero;
+    private Vector2 heldInput = Vector2.zero;
+    private bool hasMoved = false;
 
     void Start()
     {
@@ -253,17 +254,18 @@ public class GridMenuNavigator : MonoBehaviour
 
         if (Input.GetKey(KeyCode.RightArrow)) input.x = 1;
         else if (Input.GetKey(KeyCode.LeftArrow)) input.x = -1;
+
         if (Input.GetKey(KeyCode.DownArrow)) input.y = 1;
         else if (Input.GetKey(KeyCode.UpArrow)) input.y = -1;
 
         if (input != Vector2.zero)
         {
-            if (input != lastInput)
+            if (!hasMoved || input != heldInput)
             {
-                // Direction changed or newly pressed ? move immediately
                 ProcessInput(input);
                 nextMoveTime = Time.unscaledTime + initialDelay;
-                lastInput = input;
+                hasMoved = true;
+                heldInput = input;
             }
             else if (Time.unscaledTime >= nextMoveTime)
             {
@@ -273,17 +275,15 @@ public class GridMenuNavigator : MonoBehaviour
         }
         else
         {
-            lastInput = Vector2.zero;
-            nextMoveTime = 0f;
+            hasMoved = false;
+            heldInput = Vector2.zero;
         }
     }
 
     void ProcessInput(Vector2 input)
     {
-        if (input.x != 0)
-            MoveHorizontal((int)input.x);
-        else if (input.y != 0)
-            MoveVertical((int)input.y);
+        if (input.x != 0) MoveHorizontal((int)input.x);
+        else if (input.y != 0) MoveVertical((int)input.y);
     }
 
     void MoveHorizontal(int direction)
@@ -310,7 +310,7 @@ public class GridMenuNavigator : MonoBehaviour
 
         if (direction == 1) // down
         {
-            if (currentIndex <= 3)
+            if (currentIndex >= 0 && currentIndex <= 3) // top row
             {
                 switch (currentIndex)
                 {
@@ -320,7 +320,7 @@ public class GridMenuNavigator : MonoBehaviour
                     case 3: newIndex = 6; break;
                 }
             }
-            else
+            else // wrap to top
             {
                 switch (currentIndex)
                 {
@@ -332,7 +332,7 @@ public class GridMenuNavigator : MonoBehaviour
         }
         else if (direction == -1) // up
         {
-            if (currentIndex >= 4)
+            if (currentIndex >= 4 && currentIndex <= 6) // bottom row
             {
                 switch (currentIndex)
                 {
@@ -341,7 +341,7 @@ public class GridMenuNavigator : MonoBehaviour
                     case 6: newIndex = 2; break;
                 }
             }
-            else
+            else // wrap to bottom
             {
                 switch (currentIndex)
                 {
