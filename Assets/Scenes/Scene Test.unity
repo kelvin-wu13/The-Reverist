@@ -618,7 +618,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &391166690
 RectTransform:
   m_ObjectHideFlags: 0
@@ -635,7 +635,6 @@ RectTransform:
   - {fileID: 394827749}
   - {fileID: 1476267442}
   - {fileID: 407930355}
-  - {fileID: 1479153321}
   - {fileID: 2015965991}
   m_Father: {fileID: 1576833477}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1368,7 +1367,6 @@ Transform:
   - {fileID: 1158238402}
   - {fileID: 1495877810}
   - {fileID: 1623681150}
-  - {fileID: 991615810}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &598368148
@@ -1405,8 +1403,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: -490}
-  m_SizeDelta: {x: 1820, y: 180}
+  m_AnchoredPosition: {x: -0.000015258789, y: -456}
+  m_SizeDelta: {x: 1448.5792, y: 164}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &598368150
 MonoBehaviour:
@@ -1429,7 +1427,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_Sprite: {fileID: -6351617318852302439, guid: ccd827529a62c8346a8a707da1b4274b, type: 3}
-  m_Type: 0
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -1473,14 +1471,14 @@ RectTransform:
   m_GameObject: {fileID: 603511952}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.5198058, y: 1.5198058, z: 1.5198058}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 800452823}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -894, y: -355.645}
+  m_AnchoredPosition: {x: -770, y: -336}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &603511954
@@ -1880,7 +1878,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -733, y: -368.645}
+  m_AnchoredPosition: {x: -572, y: -315}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &884532143
@@ -2109,67 +2107,6 @@ MonoBehaviour:
   manaColor: {r: 0, g: 0, b: 1, a: 1}
   enableSmoothTransitions: 1
   transitionSpeed: 5
---- !u!1 &991615809
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 991615810}
-  - component: {fileID: 991615811}
-  m_Layer: 0
-  m_Name: AudioManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &991615810
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 991615809}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 567551553}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &991615811
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 991615809}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4885b77aa9637b14cabed075db9d56a1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  backgroundMusic: {fileID: 0}
-  loopBGM: 1
-  playerSpawnSFX: {fileID: 0}
-  playerDeathSFX: {fileID: 0}
-  BasicShootSFX: {fileID: 0}
-  IonBoltSFX: {fileID: 0}
-  PlasmaSurgeSFX: {fileID: 0}
-  PulseFallSFX: {fileID: 0}
-  QuickSlashSFX: {fileID: 0}
-  SwiftStrikeSFX: {fileID: 0}
-  KineticShoveSFX: {fileID: 0}
-  WilloWispSFX: {fileID: 0}
-  MagneticPullSFX: {fileID: 0}
-  GridLockSFX: {fileID: 0}
-  enemySpawnSFX: {fileID: 0}
-  enemyShootSFX: {fileID: 0}
-  enemyDeathSFX: {fileID: 0}
 --- !u!1 &1024679081
 GameObject:
   m_ObjectHideFlags: 0
@@ -2373,7 +2310,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1158238402
 Transform:
   m_ObjectHideFlags: 0
@@ -2403,7 +2340,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   OnGameStart:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1158238403}
+        m_TargetAssemblyTypeName: EventManager, Assembly-CSharp
+        m_MethodName: StartGameFlow
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   OnDialogStart:
     m_PersistentCalls:
       m_Calls: []
@@ -2428,9 +2377,6 @@ MonoBehaviour:
   OnBossButtonShow:
     m_PersistentCalls:
       m_Calls: []
-  OnSkillDescButtonShow:
-    m_PersistentCalls:
-      m_Calls: []
   OnSkillSelected:
     m_PersistentCalls:
       m_Calls: []
@@ -2438,8 +2384,7 @@ MonoBehaviour:
   skillPopupPanel: {fileID: 391166689}
   battlePanel: {fileID: 0}
   bossButton: {fileID: 0}
-  skillDescButton: {fileID: 0}
-  SkillPopupButton: {fileID: 1479153320}
+  openSkillPopupButton: {fileID: 1479153320}
   dialogueManager: {fileID: 1495877811}
   dialogueTrigger: {fileID: 1623681151}
   delayBetweenSteps: 1
@@ -2721,11 +2666,11 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 391166690}
+  m_Father: {fileID: 1576833477}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 871, y: -452}
+  m_AnchoredPosition: {x: 871, y: -386}
   m_SizeDelta: {x: 160, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1479153322
@@ -2741,7 +2686,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 0
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
     m_SelectOnDown: {fileID: 0}
@@ -2877,7 +2822,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1158238403}
         m_TargetAssemblyTypeName: EventManager, Assembly-CSharp
-        m_MethodName: ProceedAfterDialogue
+        m_MethodName: ShowSkillPopup
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3403,6 +3348,7 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1479153321}
   - {fileID: 391166690}
   - {fileID: 800452823}
   m_Father: {fileID: 0}
