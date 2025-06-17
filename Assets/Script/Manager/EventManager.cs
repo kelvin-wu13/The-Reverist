@@ -33,7 +33,7 @@ public class EventManager : MonoBehaviour
     [Header("Game Flow Settings")]
     [SerializeField] private float delayBetweenSteps = 1f;
 
-    private enum GameState { Dialog, SkillQ, BattleQ, FinalDialog, TrainingRoom }
+    private enum GameState { Dialog, Skill, Battle, FinalDialog, TrainingRoom }
 
     private TileGrid tileGrid;
     private GameState currentState = GameState.Dialog;
@@ -43,8 +43,15 @@ public class EventManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // <-- Add this line
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
     private void Start()
@@ -63,7 +70,7 @@ public class EventManager : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape) && currentState == GameState.BattleQ)
+        if (Input.GetKeyDown(KeyCode.Escape) && currentState == GameState.Battle)
         {
             ToggleSkillPopupFromButton();
         }
@@ -89,9 +96,9 @@ public class EventManager : MonoBehaviour
     {
         Debug.Log("ShowSkillPopup() called manually or via button.");
 
-        if (currentState != GameState.SkillQ && currentState != GameState.Dialog)
+        if (currentState != GameState.Skill && currentState != GameState.Dialog)
         {
-            Debug.LogWarning("ShowSkillPopup blocked - not in Dialog or SkillQ state. Current state: " + currentState);
+            Debug.LogWarning("ShowSkillPopup blocked - not in Dialog or Skill state. Current state: " + currentState);
             return;
         }
 
@@ -100,7 +107,7 @@ public class EventManager : MonoBehaviour
 
     public void ConfirmSkillPopup()
     {
-        if (currentState == GameState.SkillQ && waitingForSkillPopupExit && skillPopupOpen)
+        if (currentState == GameState.Skill && waitingForSkillPopupExit && skillPopupOpen)
         {
             Debug.Log("ConfirmSkillPopup called by button.");
             waitingForSkillPopupExit = false; // this will allow the coroutine to proceed
@@ -110,7 +117,7 @@ public class EventManager : MonoBehaviour
     private IEnumerator ShowSkillPopupCoroutine(string skillName)
     {
         Debug.Log("Entering ShowSkillPopupCoroutine...");
-        currentState = GameState.SkillQ;
+        currentState = GameState.Skill;
         Time.timeScale = 0f;
 
         OnSkillPopupShow?.Invoke();
@@ -139,7 +146,7 @@ public class EventManager : MonoBehaviour
     {
         Debug.Log("Starting battle phase...");
         battleOver = false;
-        currentState = GameState.BattleQ;
+        currentState = GameState.Battle;
 
         TileGrid tileGrid = FindObjectOfType<TileGrid>();
         if (tileGrid != null)
@@ -165,31 +172,19 @@ public class EventManager : MonoBehaviour
             Debug.Log("Enemies spawned.");
         }
 
-        var skillCaster = FindObjectOfType<SkillSystem.SkillCast>();
-        if (skillCaster != null)
-        {
-            skillCaster.SetAllowedSkillSet("Q");
-            Debug.Log("Set Q skills for battle.");
-        }
-
         OnBattleStart?.Invoke();
 
         openSkillPopupButton.SetActive(true);
         EventSystem.current.SetSelectedGameObject(null);
 
-        // Wait a moment to allow enemies to register in EnemyManager
         yield return new WaitForSeconds(0.1f);
-
-        // First check if no enemies were actually spawned (fail-safe)
         CheckForBattleEnd();
     }
-
-
 
     // Modified to only allow button-controlled opening/closing
     public void ToggleSkillPopupFromButton()
     {
-        if (currentState == GameState.SkillQ)
+        if (currentState == GameState.Skill)
         {
             // Only allow closing the popup to proceed to battle during initial state
             if (waitingForSkillPopupExit && skillPopupOpen)
@@ -206,7 +201,7 @@ public class EventManager : MonoBehaviour
             return;
         }
 
-        if (currentState == GameState.BattleQ)
+        if (currentState == GameState.Battle)
         {
             // Allow normal pause/unpause toggle in battle phase
             skillPopupOpen = !skillPopupOpen;
@@ -232,7 +227,7 @@ public class EventManager : MonoBehaviour
         int remaining = EnemyManager.Instance.GetAllEnemies().Count;
         Debug.Log("Remaining enemies (via EnemyManager): " + remaining);
 
-        if (remaining <= 0 && currentState == GameState.BattleQ)
+        if (remaining <= 0 && currentState == GameState.Battle)
         {
             Debug.Log("All enemies defeated. Ending battle...");
             StartCoroutine(HandleBattleEndWithDelay(2f));

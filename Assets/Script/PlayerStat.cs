@@ -175,10 +175,10 @@ public class PlayerStats : MonoBehaviour
         StartCoroutine(FlashColor());
 
         // Play hit animation if available
-        if (playerAnimator != null)
-        {
-            playerAnimator.SetTrigger(hitAnimationTrigger);
-        }
+        // if (playerAnimator != null)
+        // {
+        //     playerAnimator.SetTrigger(hitAnimationTrigger);
+        // }
 
         // Check if player died
         if (currentHealth <= 0)
@@ -277,14 +277,7 @@ public class PlayerStats : MonoBehaviour
     
     protected virtual void HandlePostDeath()
     {
-        // Default behavior: destroy the game object
-        // You can change this to respawn, show game over screen, etc.
-        Destroy(gameObject);
-        
-        // Alternative examples:
-        // Respawn();
-        // GameManager.Instance.ShowGameOverScreen();
-        // SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        FindObjectOfType<DeathSceneManager>().HandlePlayerDeath();
     }
     
     /// <summary>

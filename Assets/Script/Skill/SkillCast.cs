@@ -8,6 +8,7 @@ namespace SkillSystem
         [Header("References")]
         [SerializeField] private PlayerCrosshair crosshair;
         [SerializeField] private TileGrid tileGrid;
+        [SerializeField] private string defaultAllowedSkillSet = "Q";
 
         [Header("Skill Prefabs")]
         [SerializeField] public GameObject IonBoltPrefab;
@@ -25,7 +26,7 @@ namespace SkillSystem
 
         private SkillType firstSkill = SkillType.None;
         private ComboTracker comboTracker;
-        private string allowedSkillSet = "Q";
+        private string allowedSkillSet;
 
 
         private Dictionary<SkillCombination, float> skillCooldowns = new();
@@ -40,6 +41,8 @@ namespace SkillSystem
         {
             crosshair ??= FindObjectOfType<PlayerCrosshair>();
             tileGrid ??= FindObjectOfType<TileGrid>();
+
+            SetAllowedSkillSet(defaultAllowedSkillSet);
         }
 
         private void Update()

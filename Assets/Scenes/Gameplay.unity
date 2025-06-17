@@ -288,7 +288,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 1207764161, guid: 8a99129d207b1af45b98bca316cffc0d, type: 3}
+  m_Sprite: {fileID: -305581076, guid: 97124c787f9c2b44ba0728ac1c7c0d89, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1441,6 +1441,7 @@ Transform:
   - {fileID: 969249090}
   - {fileID: 1644692755}
   - {fileID: 2112953272}
+  - {fileID: 1433917518}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &618704367
@@ -3310,6 +3311,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1418269202}
   m_CullTransparentMesh: 1
+--- !u!1 &1433917517
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1433917518}
+  - component: {fileID: 1433917519}
+  m_Layer: 0
+  m_Name: DeathManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1433917518
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1433917517}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 567551553}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1433917519
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1433917517}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9357000e6d982ff4fb2fae95fc1cfad6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  delayBeforeDeathScene: 1
 --- !u!1 &1532281401
 GameObject:
   m_ObjectHideFlags: 0
@@ -3770,6 +3816,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   crosshair: {fileID: 1557569857}
   tileGrid: {fileID: 334597318}
+  defaultAllowedSkillSet: Q
   IonBoltPrefab: {fileID: 7857377519010454379, guid: 65375e5fff78f2a41b9c30bfa03903c6, type: 3}
   PulseFallPrefab: {fileID: 186632132335026699, guid: d8fc575de34caa44a962c43647a7210e, type: 3}
   PlasmaSurgePrefab: {fileID: 6807551085002080405, guid: 8489bbb41cdfe0940afbf6d12228cfb1, type: 3}
@@ -3890,7 +3937,7 @@ MonoBehaviour:
   spawnAnimationDuration: 1.5
   currentHealth: 0
   currentMana: 0
-  spriteRenderer: {fileID: 0}
+  spriteRenderer: {fileID: 1573556182}
   hitFlashDuration: 0.1
   hitColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!114 &1573556193

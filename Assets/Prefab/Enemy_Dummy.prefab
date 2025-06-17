@@ -211,11 +211,11 @@ MonoBehaviour:
   stunnedColor: {r: 0, g: 0, b: 1, a: 1}
   pushedColor: {r: 1, g: 0.5, b: 0, a: 1}
   bulletPrefab: {fileID: 2133345011772533360, guid: 489b2fc9b138c0b4e8b2d2a0d29b05fc, type: 3}
-  shootInterval: 3
+  shootInterval: 2
   bulletSpeed: 5
   bulletDamage: 10
   shootPoint: {fileID: 8284318777044906900}
-  shootChance: 0.7
+  shootChance: 1
   animator: {fileID: 2591749229838255906}
 --- !u!1 &8580036065521005855
 GameObject:
