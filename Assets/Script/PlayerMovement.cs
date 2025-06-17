@@ -6,56 +6,41 @@ public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private float moveDuration = 0.2f;
     [SerializeField] private TileGrid tileGrid;
-    
+
     [Header("Animation")]
     [SerializeField] private Animator animator;
-    
-    // Animation parameter hash IDs for better performance
+
     private readonly int isMovingParam = Animator.StringToHash("IsMoving");
     private readonly int directionXParam = Animator.StringToHash("DirectionX");
     private readonly int directionYParam = Animator.StringToHash("DirectionY");
-    
+
     [Header("Position Offset")]
-    [SerializeField] private Vector2 positionOffset = new Vector2(0.5f, 0.5f); // Offset to center character on tile
+    [SerializeField] private Vector2 positionOffset = new Vector2(0.5f, 0.5f);
 
     [Header("Animation Settings")]
     [SerializeField] private bool smoothDirectionTransition = true;
     [SerializeField] private float directionSmoothTime = 0.1f;
 
-    // Smooth direction transition variables
     private Vector2 currentAnimDirection = Vector2.zero;
     private Vector2 targetAnimDirection = Vector2.zero;
     private Vector2 directionVelocity = Vector2.zero;
 
     private bool isMoving = false;
-    private Vector2Int currentGridPosition = new Vector2Int(0, 0);
-    private Vector2Int lastDirection = Vector2Int.down; // Default facing direction
-    
-    // Public getter for current grid position
-    public Vector2Int GetCurrentGridPosition()
-    {
-        return currentGridPosition;
-    }
-    
-    // Public getter for Skill position
-    public Vector2 GetPositionOffset()
-    {
-        return positionOffset;
-    }
+    private bool canMove = true; // ✅ NEW: Movement toggle
 
-    
+    private Vector2Int currentGridPosition = new Vector2Int(0, 0);
+    private Vector2Int lastDirection = Vector2Int.down;
+
+    public Vector2Int GetCurrentGridPosition() => currentGridPosition;
+    public Vector2 GetPositionOffset() => positionOffset;
+
     private void Start()
     {
-        // Initialize player position
         transform.position = GetAdjustedWorldPosition(currentGridPosition);
 
-        // If animator wasn't assigned in inspector, try to get it
         if (animator == null)
-        {
             animator = GetComponent<Animator>();
-        }
 
-        // Set initial animation state
         targetAnimDirection = Vector2.down;
         currentAnimDirection = Vector2.down;
         UpdateAnimationParameters(false);
@@ -63,9 +48,12 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        HandleInput();
-        UpdateAnimationDirection();
-        UpdateAnimationParameters(isMoving);
+        if (canMove)
+        {
+            HandleInput();
+            UpdateAnimationDirection();
+            UpdateAnimationParameters(isMoving);
+        }
     }
 
     private void HandleInput()
@@ -73,60 +61,30 @@ public class PlayerMovement : MonoBehaviour
         if (!isMoving)
         {
             Vector2Int moveDirection = Vector2Int.zero;
-            
-            if (Input.GetKeyDown(KeyCode.UpArrow))
+
+            if (Input.GetKeyDown(KeyCode.UpArrow)) moveDirection = Vector2Int.up;
+            else if (Input.GetKeyDown(KeyCode.DownArrow)) moveDirection = Vector2Int.down;
+            else if (Input.GetKeyDown(KeyCode.LeftArrow)) moveDirection = Vector2Int.left;
+            else if (Input.GetKeyDown(KeyCode.RightArrow)) moveDirection = Vector2Int.right;
+
+            if (moveDirection != Vector2Int.zero && CanMove(moveDirection))
             {
-                moveDirection = Vector2Int.up;
-            }
-            else if (Input.GetKeyDown(KeyCode.DownArrow))
-            {
-                moveDirection = Vector2Int.down;
-            }
-            else if (Input.GetKeyDown(KeyCode.LeftArrow))
-            {
-                moveDirection = Vector2Int.left;
-            }
-            else if (Input.GetKeyDown(KeyCode.RightArrow))
-            {
-                moveDirection = Vector2Int.right;
-            }
-            
-            if (moveDirection != Vector2Int.zero)
-            {
-                // Only update animation and direction if the move is valid
-                if (CanMove(moveDirection))
-                {
-                    lastDirection = moveDirection;
-                    targetAnimDirection = new Vector2(moveDirection.x, moveDirection.y);
-                    TryMove(moveDirection);
-                }
-                // If move is invalid, don't change animation direction
+                lastDirection = moveDirection;
+                targetAnimDirection = new Vector2(moveDirection.x, moveDirection.y);
+                TryMove(moveDirection);
             }
         }
     }
 
     private void UpdateAnimationDirection()
     {
-        if (smoothDirectionTransition)
-        {
-            //Smooth transition
-            currentAnimDirection = Vector2.SmoothDamp(
-                currentAnimDirection,
-                targetAnimDirection,
-                ref directionVelocity,
-                directionSmoothTime
-            );
-        }
-        else
-        {
-            //Instant direction change
-            currentAnimDirection = targetAnimDirection;
-        }
-        //Update animator
+        currentAnimDirection = smoothDirectionTransition
+            ? Vector2.SmoothDamp(currentAnimDirection, targetAnimDirection, ref directionVelocity, directionSmoothTime)
+            : targetAnimDirection;
+
         UpdateAnimationParameters(isMoving);
     }
 
-    // New method to check if a move is valid before attempting it
     private bool CanMove(Vector2Int direction)
     {
         Vector2Int targetGridPosition = currentGridPosition + direction;
@@ -136,12 +94,8 @@ public class PlayerMovement : MonoBehaviour
     private void TryMove(Vector2Int direction)
     {
         Vector2Int targetGridPosition = currentGridPosition + direction;
-
-        // Check if the target position is valid
         if (tileGrid.IsValidPlayerPosition(targetGridPosition))
-        {
             StartCoroutine(Move(targetGridPosition));
-        }
     }
 
     private IEnumerator Move(Vector2Int targetGridPosition)
@@ -166,26 +120,20 @@ public class PlayerMovement : MonoBehaviour
         isMoving = false;
         animator.SetBool(isMovingParam, false);
 
-        // 👉 Reset direction to idle (important!)
         targetAnimDirection = Vector2.zero;
-        UpdateAnimationDirection(); // Immediately apply idle direction
+        UpdateAnimationDirection();
     }
 
-    
     private void UpdateAnimationParameters(bool moving)
     {
         if (animator != null)
         {
-            // Set movement state
             animator.SetBool(isMovingParam, moving);
-            
-            // Set direction parameters for blend tree
             animator.SetFloat(directionXParam, currentAnimDirection.x);
             animator.SetFloat(directionYParam, currentAnimDirection.y);
         }
     }
-    
-    // Method to manually set facing direction (useful for other systems)
+
     public void SetFacingDirection(Vector2Int direction)
     {
         if (direction != Vector2Int.zero)
@@ -194,27 +142,13 @@ public class PlayerMovement : MonoBehaviour
             targetAnimDirection = new Vector2(direction.x, direction.y);
         }
     }
-    
-    // Method to get current facing direction
-    public Vector2Int GetFacingDirection()
-    {
-        return lastDirection;
-    }
-    
-    // Method to check if player is currently moving
-    public bool IsMoving()
-    {
-        return isMoving;
-    }
-    
-    // New method to calculate adjusted world position with offset
+
+    public Vector2Int GetFacingDirection() => lastDirection;
+    public bool IsMoving() => isMoving;
+
     private Vector3 GetAdjustedWorldPosition(Vector2Int gridPosition)
     {
-        // Get the base position from TileGrid
         Vector3 basePosition = tileGrid.GetWorldPosition(gridPosition);
-
-        // Add the offset to center the character on the tile
-        // The offset is scaled by tile size
         float tileWidth = tileGrid.GetTileWidth();
         float tileHeight = tileGrid.GetTileHeight();
 
@@ -225,5 +159,10 @@ public class PlayerMovement : MonoBehaviour
         );
 
         return basePosition + offset;
+    }
+    
+    public void SetCanMove(bool state)
+    {
+        canMove = state;
     }
 }

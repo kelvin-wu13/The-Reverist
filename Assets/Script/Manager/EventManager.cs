@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class EventManager : MonoBehaviour
 {
@@ -28,7 +29,7 @@ public class EventManager : MonoBehaviour
     [SerializeField] private GameObject battlePanel;
     [SerializeField] private GameObject bossButton;
     [SerializeField] private GameObject skillDescButton;
-    [SerializeField] private GameObject openSkillPopupButton;
+    [SerializeField] private GameObject SkillPopupButton;
     [SerializeField] private DialogueManager dialogueManager;
     [SerializeField] private DialogueTrigger dialogueTrigger;
 
@@ -40,6 +41,8 @@ public class EventManager : MonoBehaviour
     private GameState currentState = GameState.Dialog;
     private bool battleOver = false;
     private bool skillPopupOpen = false;
+    private bool waitingForSkillPopupExit = false;
+
 
     private void Awake()
     {
@@ -49,6 +52,8 @@ public class EventManager : MonoBehaviour
 
     private void Start()
     {
+        skillPopupPanel.SetActive(false);
+
         OnGameStart?.Invoke();
 
         if (dialogueManager != null)
@@ -61,7 +66,7 @@ public class EventManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            ToggleSkillPopupDuringBattle();
+            ToggleSkillPopupFromButton();
         }
     }
 
@@ -85,20 +90,21 @@ public class EventManager : MonoBehaviour
         OnSkillSelected?.Invoke(skillName);
 
         skillPopupPanel.SetActive(true);
+        skillPopupOpen = true;
+        waitingForSkillPopupExit = true;
 
-        // No text changes, just waits for key
-        yield return new WaitForSecondsRealtime(0.2f); // 🔁 wait for input reset
-        yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Mouse1));
-
+        // ONLY wait for skill popup close button (ToggleSkillPopupFromButton)
+        yield return new WaitUntil(() => waitingForSkillPopupExit == false);
 
         skillPopupPanel.SetActive(false);
+        skillPopupOpen = false;
         Time.timeScale = 1f;
+
         OnSkillPopupHide?.Invoke();
 
         yield return new WaitForSecondsRealtime(delayBetweenSteps);
         yield return StartBattle();
     }
-
 
     private IEnumerator StartBattle()
     {
@@ -107,21 +113,67 @@ public class EventManager : MonoBehaviour
         FindObjectOfType<SkillSystem.SkillCast>().SetAllowedSkillSet("Q");
 
         OnBattleStart?.Invoke();
-        openSkillPopupButton.SetActive(true);
+        SkillPopupButton.SetActive(true);
 
         yield return new WaitUntil(() => battleOver);
 
-        openSkillPopupButton.SetActive(false);
+        SkillPopupButton.SetActive(false);
         OnBattleEnd?.Invoke();
         yield return new WaitForSeconds(delayBetweenSteps);
     }
 
-    public void MarkBattleOver() => battleOver = true;
-
-    public void ToggleSkillPopupDuringBattle()
+    public void ToggleSkillPopupFromButton()
     {
-        skillPopupOpen = !skillPopupOpen;
-        skillPopupPanel.SetActive(skillPopupOpen);
-        Time.timeScale = skillPopupOpen ? 0f : 1f;
+        // Handle different behavior based on current game state
+        switch (currentState)
+        {
+            case GameState.SkillQ:
+                // During initial skill popup phase - close popup and continue game flow
+                if (skillPopupOpen && waitingForSkillPopupExit)
+                {
+                    skillPopupOpen = false;
+                    skillPopupPanel.SetActive(false);
+                    Time.timeScale = 1f;
+                    waitingForSkillPopupExit = false;
+                }
+                break;
+
+            case GameState.BattleQ:
+                // During battle - DON'T allow skill popup to open from random clicks
+                // Only allow it to close if it's already open
+                if (skillPopupOpen)
+                {
+                    skillPopupOpen = false;
+                    skillPopupPanel.SetActive(false);
+                    Time.timeScale = 1f;
+                }
+                break;
+
+            default:
+                // For other states, maintain original behavior
+                skillPopupOpen = !skillPopupOpen;
+                skillPopupPanel.SetActive(skillPopupOpen);
+                Time.timeScale = skillPopupOpen ? 0f : 1f;
+                break;
+        }
     }
+
+    // Separate method specifically for opening skill popup during battle
+    public void OpenSkillPopupDuringBattle()
+    {
+        if (currentState == GameState.BattleQ && !skillPopupOpen)
+        {
+            skillPopupOpen = true;
+            skillPopupPanel.SetActive(true);
+            Time.timeScale = 0f;
+        }
+    }
+
+    public void ReturnToMainMenu()
+    {
+        Time.timeScale = 1f; // ensure game isn't paused
+        SceneManager.LoadScene(1); // assumes main menu is Scene 1
+    }
+
+    public void MarkBattleOver() => battleOver = true;
 }

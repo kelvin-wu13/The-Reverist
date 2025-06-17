@@ -18,6 +18,8 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private float deathAnimationDuration = 2f;  // How long to wait before destroying/respawning
     [SerializeField] private bool useDeathAnimation = true;  // Toggle death animation on/off
     [SerializeField] private string hitAnimationTrigger = "Hit";
+    [SerializeField] private string spawnAnimationTrigger = "Spawn";  // NEW
+    [SerializeField] private float spawnAnimationDuration = 1.5f;     // Duration of spawn animation
 
 
     [Header("Current Values")]
@@ -102,6 +104,31 @@ public class PlayerStats : MonoBehaviour
             skillComponent.enabled = true;
         }
 
+        // Play spawn animation
+        if (playerAnimator != null)
+        {
+            bool hasTrigger = false;
+            foreach (AnimatorControllerParameter param in playerAnimator.parameters)
+            {
+                if (param.name == spawnAnimationTrigger && param.type == AnimatorControllerParameterType.Trigger)
+                {
+                    hasTrigger = true;
+                    break;
+                }
+            }
+
+            if (hasTrigger)
+            {
+                playerAnimator.SetTrigger(spawnAnimationTrigger);
+            }
+            else
+            {
+                Debug.LogWarning($"Spawn animation trigger '{spawnAnimationTrigger}' not found in Animator!");
+            }
+        }
+        // Optionally wait for the spawn animation duration before allowing movement (Coroutine)
+        StartCoroutine(EnablePlayerAfterSpawn(spawnAnimationDuration));
+
         AudioManager.Instance?.PlayPlayerSpawnSFX();
     }
     
@@ -127,11 +154,22 @@ public class PlayerStats : MonoBehaviour
         }
     }
     
+    private IEnumerator EnablePlayerAfterSpawn(float delay)
+    {
+        // Disable movement during spawn animation
+        GetComponent<PlayerMovement>()?.SetCanMove(false);
+
+        yield return new WaitForSeconds(delay);
+
+        GetComponent<PlayerMovement>()?.SetCanMove(true);
+    }
+
+    
     // Deals damage to the player and updates health UI
     public void TakeDamage(int damage)
     {
         if (stats == null || isDead) return;  // Don't take damage if already dead
-        
+
         currentHealth = Mathf.Max(0, currentHealth - damage);
 
         StartCoroutine(FlashColor());
@@ -141,7 +179,7 @@ public class PlayerStats : MonoBehaviour
         {
             playerAnimator.SetTrigger(hitAnimationTrigger);
         }
-            
+
         // Check if player died
         if (currentHealth <= 0)
         {
