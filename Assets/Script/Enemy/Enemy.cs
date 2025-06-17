@@ -102,6 +102,8 @@ public class Enemy : MonoBehaviour
         {
             animator.SetTrigger("Spawn");
         }
+        
+        AudioManager.Instance?.PlayEnemySpawnSFX();
     }
 
 

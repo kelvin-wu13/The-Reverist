@@ -1366,6 +1366,7 @@ Transform:
   - {fileID: 1158238402}
   - {fileID: 1495877810}
   - {fileID: 1623681150}
+  - {fileID: 991615810}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &598368148
@@ -2106,6 +2107,65 @@ MonoBehaviour:
   manaColor: {r: 0, g: 0, b: 1, a: 1}
   enableSmoothTransitions: 1
   transitionSpeed: 5
+--- !u!1 &991615809
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 991615810}
+  - component: {fileID: 991615811}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &991615810
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 991615809}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 567551553}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &991615811
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 991615809}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4885b77aa9637b14cabed075db9d56a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  backgroundMusic: {fileID: 0}
+  loopBGM: 1
+  BasicShootSFX: {fileID: 0}
+  IonBoltSFX: {fileID: 0}
+  PlasmaSurgeSFX: {fileID: 0}
+  PulseFallSFX: {fileID: 0}
+  QuickSlashSFX: {fileID: 0}
+  SwiftStrikeSFX: {fileID: 0}
+  KineticShoveSFX: {fileID: 0}
+  WilloWispSFX: {fileID: 0}
+  MagneticPullSFX: {fileID: 0}
+  GridLockSFX: {fileID: 0}
+  enemySpawnSFX: {fileID: 8300000, guid: 8e55ae8682298fb4c9b46a45fa989b0e, type: 3}
+  enemyShootSFX: {fileID: 8300000, guid: 604f2708f650baf4db69ed3c15c7567a, type: 3}
+  enemyDeathSFX: {fileID: 8300000, guid: 36fe0e51927e27740bf3b3f648257dac, type: 3}
 --- !u!1 &1024679081
 GameObject:
   m_ObjectHideFlags: 0
