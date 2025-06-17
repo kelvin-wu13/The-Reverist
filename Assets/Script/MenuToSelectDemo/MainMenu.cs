@@ -3,7 +3,12 @@ using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
-    public void PlayDemo()
+    public void CharacterSelectDemo()
+    {
+        SceneManager.LoadSceneAsync(1);
+    }
+
+    public void SkillQTrainingDemo()
     {
         SceneManager.LoadSceneAsync(2);
     }

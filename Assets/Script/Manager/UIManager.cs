@@ -114,7 +114,7 @@ public class UIManager : MonoBehaviour
             UpdateManaSlider(percent);
 
         if (manaText != null)
-            manaText.text = $"{current:F1}/{max}";
+            manaText.text = $"{current:F1}";
     }
 
     private void UpdateEnemyHealthBar()

@@ -6,13 +6,16 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Gameplay.unity
-    guid: ea24bc158e62500428cdcffa5cefec08
-  - enabled: 1
     path: Assets/Scenes/Main Menu Demo.unity
     guid: 5b6eaed625808c248a34bf360c2dc66c
   - enabled: 1
     path: Assets/Scenes/Character Select Demo.unity
     guid: 0be10c2e44869b641a5342af761f51dd
+  - enabled: 1
+    path: Assets/Scenes/Gameplay.unity
+    guid: ea24bc158e62500428cdcffa5cefec08
+  - enabled: 1
+    path: Assets/Scenes/Scene Test.unity
+    guid: e47837737f17fb040926557a2681af95
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
