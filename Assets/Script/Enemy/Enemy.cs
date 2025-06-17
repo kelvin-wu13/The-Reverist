@@ -24,6 +24,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] private LayerMask obstacleLayer;
 
     [Header("Position Offset")]
+    [SerializeField] private Vector3 stunEffectOffset = new Vector3(0, 1.2f, 0); // You can tweak Y
     [SerializeField] private Vector2 positionOffset = Vector2.zero;
 
     [Header("Visual")]
@@ -104,6 +105,7 @@ public class Enemy : MonoBehaviour
         }
 
         AudioManager.Instance?.PlayEnemySpawnSFX();
+        StartCoroutine(RandomMovement());
     }
 
 
@@ -315,19 +317,42 @@ public class Enemy : MonoBehaviour
 
     private void Die()
     {
+        if (isDying) return;
         isDying = true;
+
         StopAllCoroutines();
         ReleaseGridPosition(currentGridPosition);
         tileGrid.SetTileOccupied(currentGridPosition, false);
+
         foreach (Collider2D c in GetComponents<Collider2D>())
             c.enabled = false;
 
-        AudioManager.Instance?.PlayEnemyDeathSFX();
-        
-        Destroy(gameObject);
+        if (animator != null)
+        {
+            animator.SetTrigger("Death");
+            StartCoroutine(DelayedDeath());
+        }
+        else
+        {
+            FinalizeDeath();
+        }
 
-        EnemyManager.Instance?.UnregisterEnemy(this); //Unregister on death
+        AudioManager.Instance?.PlayEnemyDeathSFX();
     }
+
+    private IEnumerator DelayedDeath()
+    {
+        yield return new WaitForSeconds(1f); // Adjust based on your animation length
+        FinalizeDeath();
+    }
+
+    private void FinalizeDeath()
+    {
+        EnemyManager.Instance?.UnregisterEnemy(this);
+        Destroy(gameObject);
+    }
+
+
 
     public void Stun(float duration)
     {
@@ -344,10 +369,10 @@ public class Enemy : MonoBehaviour
 
         if (stunEffectPrefab != null)
         {
-            GameObject stunVFX = Instantiate(stunEffectPrefab, transform.position, Quaternion.identity);
+            Vector3 effectPos = transform.position + stunEffectOffset;
+            GameObject stunVFX = Instantiate(stunEffectPrefab, effectPos, Quaternion.identity, transform);
             Destroy(stunVFX, duration);
         }
-
 
         yield return new WaitForSeconds(duration);
 

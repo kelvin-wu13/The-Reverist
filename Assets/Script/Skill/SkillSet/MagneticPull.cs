@@ -112,53 +112,69 @@ namespace SkillSystem
         private void ExecutePullLogic()
         {
             List<PullCandidate> pullCandidates = new List<PullCandidate>();
-            
-            // Find all valid pull candidates
-            for (int x = 0; x < tileGrid.gridWidth; x++)
+
+            for (int y = 0; y < tileGrid.gridHeight; y++)
             {
-                for (int y = 0; y < tileGrid.gridHeight; y++)
+                for (int x = 0; x < tileGrid.gridWidth; x++)
                 {
                     Vector2Int currentGridPos = new Vector2Int(x, y);
-
-                    if (tileGrid.IsValidGridPosition(currentGridPos) &&
-                        tileGrid.grid[x, y] == TileType.Enemy)
+                    if (tileGrid.grid[x, y] == TileType.Enemy)
                     {
                         FindPullCandidates(currentGridPos, tileGrid, pullCandidates);
                     }
                 }
             }
-            
-            // Sort candidates by X position (leftmost first)
-            pullCandidates.Sort((a, b) => a.currentPosition.x.CompareTo(b.currentPosition.x));
-            
-            // Process candidates and resolve conflicts
+
+            // Sort from right to left (so back pulls resolve before front)
+            pullCandidates.Sort((a, b) => b.currentPosition.x.CompareTo(a.currentPosition.x));
+
+            Dictionary<Vector2Int, PullCandidate> positionToCandidate = new();
+            foreach (var c in pullCandidates)
+            {
+                if (!positionToCandidate.ContainsKey(c.currentPosition))
+                    positionToCandidate[c.currentPosition] = c;
+            }
+
             HashSet<Vector2Int> reservedTargets = new HashSet<Vector2Int>();
             List<PullCandidate> validPulls = new List<PullCandidate>();
-            
+
             foreach (var candidate in pullCandidates)
             {
-                // Check if target position is already reserved by another pull
-                if (reservedTargets.Contains(candidate.targetPosition))
+                List<PullCandidate> chain = new();
+                if (ResolvePullChain(candidate, positionToCandidate, reservedTargets, chain))
                 {
-                    Debug.Log($"Enemy at {candidate.currentPosition} cannot pull to {candidate.targetPosition} - already reserved");
-                    continue;
-                }
-                
-                // Double check that target is still available
-                if (IsPositionAvailableForPull(candidate.targetPosition, candidate.enemy))
-                {
-                    reservedTargets.Add(candidate.targetPosition);
-                    validPulls.Add(candidate);
-                    Debug.Log($"Enemy at {candidate.currentPosition} will pull to {candidate.targetPosition}");
-                }
-                else
-                {
-                    Debug.Log($"Enemy at {candidate.currentPosition} cannot pull to {candidate.targetPosition} - position not available");
+                    foreach (var resolved in chain)
+                    {
+                        if (!reservedTargets.Contains(resolved.targetPosition))
+                        {
+                            reservedTargets.Add(resolved.targetPosition);
+                            validPulls.Add(resolved);
+                            Debug.Log($"[ChainPull] {resolved.enemy.name} → {resolved.targetPosition}");
+                        }
+                    }
                 }
             }
 
-            // Execute all valid pulls simultaneously
             ExecuteValidPulls(validPulls);
+        }
+
+        private bool ResolvePullChain(PullCandidate current, Dictionary<Vector2Int, PullCandidate> map, HashSet<Vector2Int> reserved, List<PullCandidate> chain)
+        {
+            if (reserved.Contains(current.targetPosition))
+                return false;
+
+            // Resolve blocker recursively
+            if (map.TryGetValue(current.targetPosition, out var blocker))
+            {
+                if (!ResolvePullChain(blocker, map, reserved, chain))
+                    return false;
+            }
+
+            if (!IsPositionAvailableForPull(current.targetPosition, current.enemy))
+                return false;
+
+            chain.Add(current);
+            return true;
         }
 
         private void ExecuteValidPulls(List<PullCandidate> validPulls)
@@ -178,37 +194,37 @@ namespace SkillSystem
 
         private bool IsPositionAvailableForPull(Vector2Int targetPos, Enemy excludeEnemy)
         {
-            // Check grid validity
             if (!tileGrid.IsValidGridPosition(targetPos))
                 return false;
-                
-            // Check tile type
-            if (tileGrid.grid[targetPos.x, targetPos.y] != TileType.Enemy)
-                return false;
-                
-            // Check if tile is broken or cracked
+
             TileType tileType = tileGrid.grid[targetPos.x, targetPos.y];
-            if (tileType == TileType.EnemyBroken || tileType == TileType.Broken)
+
+            if (tileType == TileType.Broken || tileType == TileType.EnemyBroken || tileType == TileType.PlayerBroken)
                 return false;
 
-            // Check for physical occupation by other enemies
+            if (tileType == TileType.Player || tileType == TileType.PlayerCracked)
+                return false;
+
+            if (tileGrid.IsTileOccupied(targetPos))
+                return false;
+
             Vector3 targetWorldPos = tileGrid.GetWorldPosition(targetPos);
             Collider2D[] overlaps = Physics2D.OverlapCircleAll(targetWorldPos, 0.3f);
-            
+
             foreach (Collider2D overlap in overlaps)
             {
-                if (overlap.CompareTag("Enemy") && overlap.gameObject != excludeEnemy.gameObject)
+                if (overlap.CompareTag("Enemy") && overlap.gameObject != excludeEnemy?.gameObject)
                 {
                     Enemy otherEnemy = overlap.GetComponent<Enemy>();
                     if (otherEnemy != null && !otherEnemy.IsBeingPulled())
-                    {
-                        return false; // Position is occupied by a stable enemy
-                    }
+                        return false;
                 }
             }
 
             return true;
         }
+
+
 
         private struct PullCandidate
         {
@@ -220,48 +236,42 @@ namespace SkillSystem
 
         private void FindPullCandidates(Vector2Int gridPos, TileGrid tileGrid, List<PullCandidate> candidates)
         {
-            // Pull direction is strictly LEFT (one tile)
             Vector2Int targetGridPos = new Vector2Int(gridPos.x - 1, gridPos.y);
 
-            // Basic validation
+            // Only continue if target is in bounds
             if (!tileGrid.IsValidGridPosition(targetGridPos))
                 return;
-                
-            if (tileGrid.grid[targetGridPos.x, targetGridPos.y] != TileType.Enemy)
-                return;
 
-            // Find enemies at the current position
-            Vector3 currentWorldPos = tileGrid.GetWorldPosition(gridPos);
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(currentWorldPos, 0.4f);
-
-            foreach (Collider2D col in colliders)
+            // Loop through all enemies in the scene
+            foreach (Enemy enemy in FindObjectsOfType<Enemy>())
             {
-                if (!col.CompareTag("Enemy")) continue;
+                if (enemy == null || enemy.IsBeingPulled()) continue;
 
-                Enemy enemy = col.GetComponent<Enemy>();
-                if (enemy == null) continue;
+                Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
 
-                // Skip if enemy is already being processed for pull
-                if (enemy.IsBeingPulled()) continue;
+                if (enemyGridPos != gridPos) continue;
 
                 Vector2 offset = enemy.GetPositionOffset();
 
-                // Check if target position will be available
-                if (IsPositionAvailableForPull(targetGridPos, enemy))
+                // Now check if THIS enemy can go to target
+                if (!IsPositionAvailableForPull(targetGridPos, enemy))
+                    continue;
+
+                PullCandidate candidate = new PullCandidate
                 {
-                    PullCandidate candidate = new PullCandidate
-                    {
-                        enemy = enemy,
-                        currentPosition = gridPos,
-                        targetPosition = targetGridPos,
-                        offset = offset
-                    };
-                    
-                    candidates.Add(candidate);
-                    Debug.Log($"Found valid pull candidate at {gridPos} to {targetGridPos}");
-                }
+                    enemy = enemy,
+                    currentPosition = gridPos,
+                    targetPosition = targetGridPos,
+                    offset = offset
+                };
+
+                candidates.Add(candidate);
+                Debug.Log($"Pull candidate at {gridPos} -> {targetGridPos}");
             }
         }
+
+
+
 
         private IEnumerator PullAnimation(Enemy enemy, Vector2Int currentPos, Vector2Int targetGridPos, Vector2 offset)
         {

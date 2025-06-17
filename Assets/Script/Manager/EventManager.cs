@@ -82,12 +82,14 @@ public class EventManager : MonoBehaviour
 
     public void ShowSkillPopup()
     {
+        Debug.Log("ShowSkillPopup() called manually or via button.");
+
         if (currentState != GameState.SkillQ && currentState != GameState.Dialog)
         {
             Debug.LogWarning("ShowSkillPopup blocked - not in Dialog or SkillQ state. Current state: " + currentState);
             return;
         }
-        
+
         StartCoroutine(ShowSkillPopupCoroutine("Q"));
     }
 

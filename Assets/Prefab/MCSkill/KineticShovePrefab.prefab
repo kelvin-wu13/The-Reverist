@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 2662175865863555289}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -12.7, y: 3.4, z: 0}
+  m_LocalPosition: {x: -7.5, y: 3.4, z: 0}
   m_LocalScale: {x: 1.1158195, y: 1.1158195, z: 1.1158195}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4948,17 +4948,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b72510066c983c4ab7a26508dea7a53, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lifetime: 1
+  lifetime: 0.9
   skillEffect: {fileID: 0}
   damageAmount: 10
   knockbackForce: 1
   manaCost: 1.5
   cooldownDuration: 2
   stunDuration: 2
-  hitEffect: {fileID: 0}
-  collisionEffect: {fileID: 0}
-  hitSound: {fileID: 0}
-  collisionSound: {fileID: 0}
-  aoeIndicatorPrefab: {fileID: 0}
-  indicatorDuration: 0.5
-  indicatorColor: {r: 0, g: 1, b: 1, a: 0.5}
