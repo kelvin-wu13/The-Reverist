@@ -1,13 +1,15 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using System.Collections;
+
 
 public class DeathSceneInput : MonoBehaviour
 {
+    public FadeController fadeController;
     private bool canContinue = false;
 
     void Start()
     {
-        // Optional: delay input for dramatic effect
+        fadeController.FadeIn();
         Invoke(nameof(EnableContinue), 1.5f);
     }
 
@@ -20,7 +22,7 @@ public class DeathSceneInput : MonoBehaviour
     {
         if (canContinue && Input.anyKeyDown)
         {
-            SceneManager.LoadScene("MainMenu");
+            fadeController.FadeOutAndLoadScene("0");
         }
     }
 }

@@ -123,7 +123,7 @@ public class Enemy : MonoBehaviour
             }
         }
 
-        if (!isDying && !isBeingPulled)
+        if (!isDying && !isBeingPulled && !PlayerStats.IsPlayerDead)
         {
             shootTimer -= Time.deltaTime;
             if (shootTimer <= 0)
@@ -190,7 +190,7 @@ public class Enemy : MonoBehaviour
         while (!isDying)
         {
             yield return new WaitForSeconds(moveInterval);
-            if (!isMoving && !isStunned && !isAfterPush && !isBeingPulled)
+            if (!PlayerStats.IsPlayerDead && !isMoving && !isStunned && !isAfterPush && !isBeingPulled)
                 TryMove();
         }
     }

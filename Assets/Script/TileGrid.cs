@@ -42,12 +42,6 @@ public class TileGrid : MonoBehaviour
     [SerializeField] private float horizontalSpacing = 0.1f;
     [SerializeField] private float verticalSpacing = 0.1f;
     
-    [Header("Grid Visualization")]
-    [SerializeField] private bool showGridInEditor = true;
-    [SerializeField] private Color gridLineColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-    [SerializeField] private Color playerAreaColor = new Color(0, 1, 0, 0.2f);
-    [SerializeField] private Color enemyAreaColor = new Color(1, 0, 0, 0.2f);
-    
     [Header("Tile Effect Durations")]
     [SerializeField] private float crackedTileDuration = 1.5f;
     [SerializeField] private float brokenTileDuration = 2.0f;

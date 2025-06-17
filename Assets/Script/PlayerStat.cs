@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class PlayerStats : MonoBehaviour
 {
+    public static bool IsPlayerDead = false;
+
     [Header("Stats Configuration")]
     [SerializeField] private Stats stats;
     
@@ -17,7 +19,7 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private string deathAnimationTrigger = "Death";  // Name of death animation trigger
     [SerializeField] private float deathAnimationDuration = 2f;  // How long to wait before destroying/respawning
     [SerializeField] private bool useDeathAnimation = true;  // Toggle death animation on/off
-    [SerializeField] private string hitAnimationTrigger = "Hit";
+    //[SerializeField] private string hitAnimationTrigger = "Hit";
     [SerializeField] private string spawnAnimationTrigger = "Spawn";  // NEW
     [SerializeField] private float spawnAnimationDuration = 1.5f;     // Duration of spawn animation
 
@@ -208,6 +210,7 @@ public class PlayerStats : MonoBehaviour
         if (isDead) return;  // Prevent multiple death calls
 
         isDead = true;
+        IsPlayerDead = true;
 
         // Disable player controls immediately
         PlayerShoot shootComponent = GetComponent<PlayerShoot>();
@@ -226,6 +229,12 @@ public class PlayerStats : MonoBehaviour
         if (skillComponent != null)
         {
             skillComponent.enabled = false;
+        }
+
+        Enemy enemy = GetComponent<Enemy>();
+        if (enemy != null)
+        {
+            enemy.enabled = false;
         }
 
         AudioManager.Instance?.PlayPlayerDeathSFX();
@@ -285,9 +294,10 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void Respawn()
     {
+        IsPlayerDead = false;
         // Reset to spawn position (you'll need to implement this based on your game)
         // transform.position = spawnPoint.position;
-        
+
         // Reset stats
         ResetToMaxStats();
         
