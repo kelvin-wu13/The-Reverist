@@ -17,4 +17,4 @@ MonoBehaviour:
   bulletSpeed: 19
   shootCooldown: 0.2
   maxMana: 10
-  manaRegenRate: 5
+  manaRegenRate: 2
