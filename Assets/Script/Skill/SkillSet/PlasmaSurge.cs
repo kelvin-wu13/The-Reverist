@@ -18,7 +18,7 @@ namespace SkillSystem
         private TileGrid tileGrid;
         private Transform player;
         private PlayerMovement playerMovement;
-        
+
         public override void Initialize(Vector2Int targetPosition, SkillCombination combo, Transform playerTransform)
         {
             base.Initialize(targetPosition, combo, playerTransform);
@@ -42,6 +42,7 @@ namespace SkillSystem
                 anim.Play("LaserAnimation", 0, 0f);
 
             StartCoroutine(ExecutePlasmaSurge());
+            AudioManager.Instance?.PlayPlasmaSurgeSFX();
         }
 
         private Vector3 GetFirepointPosition()

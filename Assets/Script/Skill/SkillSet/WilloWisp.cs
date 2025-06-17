@@ -54,7 +54,8 @@ public class WilloWisp : Skill
         {
             transform.position = tileGrid.GetWorldPosition(gridPos);
         }
-
+        
+        AudioManager.Instance?.PlayWilloWispSFX();
         StartCoroutine(FindAndEngageEnemies());
     }
 

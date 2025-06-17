@@ -79,17 +79,7 @@ namespace SkillSystem
                 // No longer need startPosition since bullet spawns at FirePoint
                 bulletScript.InitializeGridBased(bulletSpeed, bulletDamage, enemyStunDuration, tileGrid);
                 
-                if (showDebugPath)
-                {
-                    // Get player's current grid position for debug line
-                    Vector2Int playerGridPos = tileGrid.GetGridPosition(casterTransform.position);
-                    
-                    // Draw debug path from FirePoint position to the right edge of the grid
-                    Debug.DrawLine(
-                        spawnPosition,
-                        tileGrid.GetWorldPosition(new Vector2Int(tileGrid.gridWidth - 1, playerGridPos.y)),
-                        Color.cyan, 1.0f);
-                }
+                AudioManager.Instance?.PlayGridLockSFX();
                 
                 // Skill has been executed, consume resources and start cooldown
                 ConsumeResources();

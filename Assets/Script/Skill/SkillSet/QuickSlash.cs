@@ -24,6 +24,8 @@ namespace SkillSystem
             if (tileGrid == null || playerStats == null) return;
             if (!playerStats.TryUseMana(manaCost)) return;
 
+            AudioManager.Instance?.PlayQuickSlashSFX();
+
             Vector2Int playerGridPos = tileGrid.GetGridPosition(casterTransform.position);
 
             // Match SwiftStrike's vertical forward line

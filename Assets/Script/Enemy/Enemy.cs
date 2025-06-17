@@ -102,7 +102,7 @@ public class Enemy : MonoBehaviour
         {
             animator.SetTrigger("Spawn");
         }
-        
+
         AudioManager.Instance?.PlayEnemySpawnSFX();
     }
 
@@ -247,6 +247,8 @@ public class Enemy : MonoBehaviour
 
             if (animator != null)
                 animator.SetTrigger("Attack");
+
+            AudioManager.Instance?.PlayEnemyShootSFX();
         }
         else
         {
@@ -319,6 +321,9 @@ public class Enemy : MonoBehaviour
         tileGrid.SetTileOccupied(currentGridPosition, false);
         foreach (Collider2D c in GetComponents<Collider2D>())
             c.enabled = false;
+
+        AudioManager.Instance?.PlayEnemyDeathSFX();
+        
         Destroy(gameObject);
 
         EnemyManager.Instance?.UnregisterEnemy(this); //Unregister on death

@@ -52,6 +52,8 @@ namespace SkillSystem
             Enemy.ClearAllReservations();
             Debug.Log("All enemy reservations cleared for MagneticPull skill");
 
+            AudioManager.Instance?.PlayMagneticPullSFX();
+
             // Start the pull sequence with proper synchronization
             StartCoroutine(ExecutePullSequence());
         }

@@ -13,15 +13,6 @@ namespace SkillSystem
         [SerializeField] public float cooldownDuration = 2f;
         [SerializeField] private float stunDuration = 2f; // Duration to stun enemy when collision occurs
 
-        [Header("Effects")]
-        [SerializeField] private ParticleSystem hitEffect;
-        [SerializeField] private ParticleSystem collisionEffect; // Effect when enemy hits obstacle
-        [SerializeField] private AudioClip hitSound;
-        [SerializeField] private AudioClip collisionSound; // Sound when enemy hits obstacle
-        [SerializeField] private GameObject aoeIndicatorPrefab;
-        [SerializeField] private float indicatorDuration = 0.5f;
-        [SerializeField] private Color indicatorColor = new Color(0, 1, 1, 0.5f); // Cyan semi-transparent
-
         private TileGrid tileGrid;
         private PlayerStats playerStats;
 
@@ -48,6 +39,8 @@ namespace SkillSystem
                 Debug.Log("Not enough mana to cast KineticShove!");
                 return;
             }
+
+            AudioManager.Instance?.PlayKineticShoveSFX();
             
             Vector2Int casterPosition = tileGrid.GetGridPosition(casterTransform.position);
             Vector2Int direction = Vector2Int.right;
@@ -72,12 +65,6 @@ namespace SkillSystem
                     {
                         enemy.TakeDamage(damageAmount);
                         ProcessKnockbackOrStun(enemy, hitPos, direction);
-
-                        if (hitEffect != null)
-                            Instantiate(hitEffect, tileGrid.GetWorldPosition(hitPos), Quaternion.identity);
-
-                        if (hitSound != null)
-                            AudioSource.PlayClipAtPoint(hitSound, tileGrid.GetWorldPosition(hitPos));
                     }
                 }
             }
@@ -146,12 +133,6 @@ namespace SkillSystem
 
             // Create collision effects
             Vector3 collisionWorldPos = tileGrid.GetWorldPosition(currentPos);
-
-            if (collisionEffect != null)
-                Instantiate(collisionEffect, collisionWorldPos, Quaternion.identity);
-
-            if (collisionSound != null)
-                AudioSource.PlayClipAtPoint(collisionSound, collisionWorldPos);
 
             // Optional: Create a brief visual indication of the blocked movement
             StartCoroutine(ShowCollisionFeedback(enemy));

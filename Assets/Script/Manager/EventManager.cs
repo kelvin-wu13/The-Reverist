@@ -87,7 +87,9 @@ public class EventManager : MonoBehaviour
         skillPopupPanel.SetActive(true);
 
         // No text changes, just waits for key
+        yield return new WaitForSecondsRealtime(0.2f); // 🔁 wait for input reset
         yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Mouse1));
+
 
         skillPopupPanel.SetActive(false);
         Time.timeScale = 1f;

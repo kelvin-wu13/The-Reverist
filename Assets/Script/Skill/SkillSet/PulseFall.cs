@@ -51,12 +51,6 @@ public class PulseFall : Skill
         {
             Debug.LogError("QESkill: Could not find PlayerCrosshair in the scene!");
         }
-
-        audioSource = GetComponent<AudioSource>();
-        if (audioSource == null && impactSound != null)
-        {
-            audioSource = gameObject.AddComponent<AudioSource>();
-        }
     }
     
     // Override the ExecuteSkillEffect method from the base class
@@ -108,14 +102,6 @@ public class PulseFall : Skill
             float startTime = Time.time;
             float journeyLength = projectileDropHeight;
             
-            // Optional: Add a growing shadow beneath where the projectile will land
-            GameObject shadow = new GameObject("ProjectileShadow");
-            SpriteRenderer shadowRenderer = shadow.AddComponent<SpriteRenderer>();
-
-            // Create a simple circle sprite for the shadow
-            shadowRenderer.sprite = CreateShadowSprite();
-            shadow.transform.position = new Vector3(targetWorldPos.x, targetWorldPos.y, 0.1f);
-            shadow.transform.localScale = Vector3.zero;
             
             while (projectile != null && Time.time - startTime < journeyLength / projectileDropSpeed)
             {
@@ -134,18 +120,6 @@ public class PulseFall : Skill
                     projectile.transform.position = newPosition;
                 }
                 
-                // Grow the shadow as the projectile approaches
-                if (shadow != null)
-                {
-                    float shadowScale = fractionOfJourney * 0.5f;
-                    shadow.transform.localScale = new Vector3(shadowScale, shadowScale, 1);
-                    
-                    // Make shadow more transparent at the beginning and more opaque as it reaches the ground
-                    Color shadowColor = shadowRenderer.color;
-                    shadowColor.a = fractionOfJourney * 0.5f;
-                    shadowRenderer.color = shadowColor;
-                }
-                
                 yield return null;
             }
             
@@ -155,17 +129,7 @@ public class PulseFall : Skill
                 projectile.transform.position = targetWorldPos;
             }
             
-            // Destroy the shadow
-            if (shadow != null)
-            {
-                Destroy(shadow);
-            }
-            
-            // Play impact sound
-            if (audioSource != null && impactSound != null)
-            {
-                audioSource.PlayOneShot(impactSound);
-            }
+            AudioManager.Instance?.PlayPulseFallSFX();
             
             // Create impact effect
             if (impactEffectPrefab != null)
@@ -245,25 +209,6 @@ public class PulseFall : Skill
             // If no enemy, break the tile directly
             BreakTile(position);
         }
-    }
-    
-    private bool CheckForEnemyAtPosition(Vector2Int position)
-    {
-        // Find all colliders at this world position
-        Vector3 worldPos = tileGrid.GetWorldPosition(position);
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(worldPos + new Vector3(0.5f, 0.5f, 0), 0.4f);
-        
-        foreach (Collider2D collider in colliders)
-        {
-            // Check if it's an enemy
-            Enemy enemy = collider.GetComponent<Enemy>();
-            if (enemy != null)
-            {
-                return true;
-            }
-        }
-        
-        return false;
     }
     
     private void DealDamageAtPosition(Vector2Int position)
@@ -403,34 +348,5 @@ public class PulseFall : Skill
                 Destroy(child.gameObject);
             }
         }
-    }
-    
-    // Helper method to create a simple shadow sprite
-    private Sprite CreateShadowSprite()
-    {
-        int size = 32;
-        Texture2D texture = new Texture2D(size, size);
-        texture.filterMode = FilterMode.Bilinear;
-        
-        // Create a circular gradient for the shadow
-        for (int x = 0; x < size; x++)
-        {
-            for (int y = 0; y < size; y++)
-            {
-                float distanceFromCenter = Vector2.Distance(new Vector2(x, y), new Vector2(size/2, size/2));
-                float normalizedDistance = distanceFromCenter / (size/2);
-                
-                // Create a circular gradient that fades from black in center to transparent at edges
-                float alpha = Mathf.Clamp01(1 - normalizedDistance);
-                alpha = Mathf.Pow(alpha, 2); // Make the gradient more concentrated in the center
-                
-                texture.SetPixel(x, y, new Color(0, 0, 0, alpha));
-            }
-        }
-        
-        texture.Apply();
-        
-        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f);
-        return sprite;
     }
 }

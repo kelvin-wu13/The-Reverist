@@ -81,6 +81,7 @@ namespace SkillSystem
                     }
                     // Execute the dash immediately
                     StartCoroutine(ExecuteDash());
+                    AudioManager.Instance?.PlaySwiftStrikeSFX();
                 }
                 else
                 {

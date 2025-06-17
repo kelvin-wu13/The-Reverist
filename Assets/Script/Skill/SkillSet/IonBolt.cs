@@ -151,6 +151,8 @@ namespace SkillSystem
 
             // Instantiate projectile at the spawn point
             activeProjectile = Instantiate(projectilePrefab, spawnPosition, Quaternion.identity);
+
+            AudioManager.Instance?.PlayIonBoltSFX();
             
             // Set rotation to match direction (same as Bullet.cs)
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;

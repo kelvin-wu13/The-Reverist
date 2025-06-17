@@ -132,6 +132,7 @@ public class PlayerShoot : MonoBehaviour
         {
             // Still use tile-based grid logic for things like homing, AoE, or stacking effects
             bullet.Initialize(Vector2.right, stats.BulletSpeed, stats.BulletDamage, tileGrid);
+            AudioManager.Instance?.PlayBasicShootSFX();
         }
         else
         {

@@ -38,16 +38,16 @@ public class DialogueManager : MonoBehaviour
 
     public void StartDialogue(Dialogue dialogue)
     {
-        Time.timeScale = 0f; // ⏸ pause game
+        Time.timeScale = 0f;
         isDialogueActive = true;
 
-        //animator.Play("show");
-        lines.Clear();
+        if (dialoguePanel != null)
+            dialoguePanel.SetActive(true); // 👈 auto show panel
 
-        foreach (DialogueLine dialogueLine in dialogue.dialogueLines)
-        {
-            lines.Enqueue(dialogueLine);
-        }
+        lines.Clear();
+        foreach (DialogueLine line in dialogue.dialogueLines)
+            lines.Enqueue(line);
+
         DisplayNextDialogueLine();
     }
 
@@ -81,14 +81,11 @@ public class DialogueManager : MonoBehaviour
     void EndDialogue()
     {
         isDialogueActive = false;
-        //animator.Play("hide");
 
-        if (dialoguePanel.activeSelf)
-            dialoguePanel.SetActive(false);
+        if (dialoguePanel != null)
+            dialoguePanel.SetActive(false); // 👈 auto hide panel
 
-            
-        Time.timeScale = 1f; // ▶ resume game
-
-        OnDialogueFinished?.Invoke(); // 🔁 trigger next step
+        Time.timeScale = 1f;
+        OnDialogueFinished?.Invoke();
     }
 }

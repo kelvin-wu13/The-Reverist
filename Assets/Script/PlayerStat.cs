@@ -89,7 +89,7 @@ public class PlayerStats : MonoBehaviour
         {
             shootComponent.enabled = true;
         }
-        
+
         PlayerMovement moveComponent = GetComponent<PlayerMovement>();
         if (moveComponent != null)
         {
@@ -101,6 +101,8 @@ public class PlayerStats : MonoBehaviour
         {
             skillComponent.enabled = true;
         }
+
+        AudioManager.Instance?.PlayPlayerSpawnSFX();
     }
     
     private void Update()
@@ -187,6 +189,8 @@ public class PlayerStats : MonoBehaviour
         {
             skillComponent.enabled = false;
         }
+
+        AudioManager.Instance?.PlayPlayerDeathSFX();
 
         // Start death sequence
         StartCoroutine(DeathSequence());
