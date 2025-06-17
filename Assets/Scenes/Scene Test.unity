@@ -2453,8 +2453,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 42, y: -3.6400146}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchoredPosition: {x: 112.15442, y: -19}
+  m_SizeDelta: {x: 1033.6124, y: 107.8465}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &428038559
 MonoBehaviour:
@@ -2476,7 +2476,11 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: How to use skill dialog
+  m_text: 'To cast a skill, select a State by pressing Q (Ranged), W (Melee), or
+    E (Interrupt), then press Q, W, or E again to cast the corresponding skill based
+    on the State you chose. Each skill costs mana and has a short delay.
+
+'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d9dd5e05add562f4fb8989aae656fb3e, type: 2}
   m_sharedMaterial: {fileID: 1626602493717259790, guid: d9dd5e05add562f4fb8989aae656fb3e, type: 2}
@@ -2503,8 +2507,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 25
+  m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -8760,8 +8764,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 42, y: -3.6400146}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchoredPosition: {x: 112.1544, y: -19}
+  m_SizeDelta: {x: 1033.612, y: 107.8465}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1811362058
 MonoBehaviour:
@@ -8783,7 +8787,11 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: How to use skill dialog
+  m_text: 'To cast a skill, select a State by pressing Q (Ranged), W (Melee), or
+    E (Interrupt), then press Q, W, or E again to cast the corresponding skill based
+    on the State you chose. Each skill costs mana and has a short delay.
+
+'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d9dd5e05add562f4fb8989aae656fb3e, type: 2}
   m_sharedMaterial: {fileID: 1626602493717259790, guid: d9dd5e05add562f4fb8989aae656fb3e, type: 2}
@@ -8810,8 +8818,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 25
+  m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -9471,8 +9479,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 42, y: -3.6400146}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchoredPosition: {x: 112.1544, y: -19}
+  m_SizeDelta: {x: 1033.612, y: 107.8465}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2004119140
 MonoBehaviour:
@@ -9494,7 +9502,11 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: How to use skill dialog
+  m_text: 'To cast a skill, select a State by pressing Q (Ranged), W (Melee), or
+    E (Interrupt), then press Q, W, or E again to cast the corresponding skill based
+    on the State you chose. Each skill costs mana and has a short delay.
+
+'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d9dd5e05add562f4fb8989aae656fb3e, type: 2}
   m_sharedMaterial: {fileID: 1626602493717259790, guid: d9dd5e05add562f4fb8989aae656fb3e, type: 2}
@@ -9521,8 +9533,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 25
+  m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
