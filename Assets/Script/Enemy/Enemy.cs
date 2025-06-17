@@ -349,10 +349,9 @@ public class Enemy : MonoBehaviour
     private void FinalizeDeath()
     {
         EnemyManager.Instance?.UnregisterEnemy(this);
+        EventManager.Instance?.CheckForBattleEnd();
         Destroy(gameObject);
     }
-
-
 
     public void Stun(float duration)
     {

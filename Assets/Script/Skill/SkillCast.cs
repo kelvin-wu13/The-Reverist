@@ -25,7 +25,8 @@ namespace SkillSystem
 
         private SkillType firstSkill = SkillType.None;
         private ComboTracker comboTracker;
-        // private string allowedSkillSet = "Q";
+        private string allowedSkillSet = "Q";
+
 
         private Dictionary<SkillCombination, float> skillCooldowns = new();
         private Dictionary<SkillCombination, float> cooldownDurations = new();
@@ -78,15 +79,15 @@ namespace SkillSystem
 
         public void SetAllowedSkillSet(string allowed)
         {
-            //allowedSkillSet = allowed;
+            allowedSkillSet = allowed;
             if (showDebugLogs) Debug.Log("Allowed skills updated to: " + allowed);
         }
 
         private bool IsSkillAllowed(SkillType first, SkillType second)
         {
             string combo = first.ToString() + second.ToString();
-            //if (allowedSkillSet == "Q") return combo.StartsWith("Q");
-            //if (allowedSkillSet == "QW") return combo.StartsWith("Q") || combo.StartsWith("W");
+            if (allowedSkillSet == "Q") return combo.StartsWith("Q");
+            if (allowedSkillSet == "QW") return combo.StartsWith("Q") || combo.StartsWith("W");
             return true;
         }
 
