@@ -1,12 +1,15 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance;
 
     [Header("BGM Settings")]
-    [SerializeField] private AudioClip backgroundMusic;
+    [SerializeField] private AudioClip mainMenuBGM;
+    [SerializeField] private AudioClip gameplayBGM;
     [SerializeField] private bool loopBGM = true;
+
 
     [Header("UI SFX")]
     [SerializeField] private AudioClip buttonHoverSFX;
@@ -87,16 +90,26 @@ public class AudioManager : MonoBehaviour
 
     private void Start()
     {
-        PlayBGM();
+        string currentScene = SceneManager.GetActiveScene().name;
+
+        if (currentScene == "MainMenu") 
+        {
+            PlayBGM(mainMenuBGM);
+        }
+        else
+        {
+            PlayBGM(gameplayBGM);
+        }
     }
 
-    public void PlayBGM()
+
+    public void PlayBGM(AudioClip clip)
     {
-        if (backgroundMusic != null)
-        {
-            bgmSource.clip = backgroundMusic;
-            bgmSource.Play();
-        }
+        if (clip == null) return;
+        if (bgmSource.clip == clip && bgmSource.isPlaying) return; // avoid restarting same clip
+
+        bgmSource.clip = clip;
+        bgmSource.Play();
     }
 
     public void PlaySFX(AudioClip clip)
