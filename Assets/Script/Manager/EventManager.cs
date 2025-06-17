@@ -9,10 +9,11 @@ public class EventManager : MonoBehaviour
 {
     public static EventManager Instance { get; private set; }
 
+    [Header("Game Objects")]
+    [SerializeField] private GameObject player;
+
     [Header("Game Flow Events")]
     public UnityEvent OnGameStart;
-    public UnityEvent OnDialogStart;
-    public UnityEvent OnDialogEnd;
     public UnityEvent OnSkillPopupShow;
     public UnityEvent OnSkillPopupHide;
     public UnityEvent OnBattleStart;
@@ -24,10 +25,7 @@ public class EventManager : MonoBehaviour
     public UnityEvent<string> OnSkillSelected;
 
     [Header("UI References")]
-    [SerializeField] private GameObject dialogPanel;
     [SerializeField] private GameObject skillPopupPanel;
-    [SerializeField] private GameObject battlePanel;
-    [SerializeField] private GameObject bossButton;
     [SerializeField] private GameObject openSkillPopupButton;
     [SerializeField] private DialogueManager dialogueManager;
     [SerializeField] private DialogueTrigger dialogueTrigger;
@@ -37,6 +35,7 @@ public class EventManager : MonoBehaviour
 
     private enum GameState { Dialog, SkillQ, BattleQ, FinalDialog, TrainingRoom }
 
+    private TileGrid tileGrid;
     private GameState currentState = GameState.Dialog;
     private bool battleOver = false;
     private bool skillPopupOpen = false;
@@ -50,10 +49,16 @@ public class EventManager : MonoBehaviour
 
     private void Start()
     {
+        tileGrid = FindObjectOfType<TileGrid>();
+
+        if (player != null)
+        {
+            player.SetActive(false);
+            Debug.Log("Player hidden at start.");
+        }
+
         Debug.Log("Game started.");
         OnGameStart?.Invoke();
-
-        StartGameFlow();
     }
 
     private void Update()
@@ -136,6 +141,30 @@ public class EventManager : MonoBehaviour
         battleOver = false;
         currentState = GameState.BattleQ;
 
+        TileGrid tileGrid = FindObjectOfType<TileGrid>();
+        if (tileGrid != null)
+        {
+            tileGrid.SetupInitialPositions();
+            Debug.Log("TileGrid initial positions set.");
+        }
+
+        player.SetActive(true);
+        Debug.Log("Player activated for battle.");
+
+        PlayerStats stats = player.GetComponent<PlayerStats>();
+        if (stats != null)
+        {
+            stats.ResetToMaxStats();
+            Debug.Log("Player spawn stats and animation triggered.");
+        }
+
+        EnemySpawner enemySpawner = FindObjectOfType<EnemySpawner>();
+        if (enemySpawner != null)
+        {
+            enemySpawner.SpawnEnemies();
+            Debug.Log("Enemies spawned.");
+        }
+
         var skillCaster = FindObjectOfType<SkillSystem.SkillCast>();
         if (skillCaster != null)
         {
@@ -145,20 +174,17 @@ public class EventManager : MonoBehaviour
 
         OnBattleStart?.Invoke();
 
-        battlePanel.SetActive(true);
         openSkillPopupButton.SetActive(true);
+        EventSystem.current.SetSelectedGameObject(null);
 
-        EventSystem.current.SetSelectedGameObject(null); // Important
+        // Wait a moment to allow enemies to register in EnemyManager
+        yield return new WaitForSeconds(0.1f);
 
-        yield return new WaitUntil(() => battleOver);
-
-        Debug.Log("Battle ended.");
-        battlePanel.SetActive(false);
-        openSkillPopupButton.SetActive(false);
-        OnBattleEnd?.Invoke();
-
-        yield return new WaitForSecondsRealtime(delayBetweenSteps);
+        // First check if no enemies were actually spawned (fail-safe)
+        CheckForBattleEnd();
     }
+
+
 
     // Modified to only allow button-controlled opening/closing
     public void ToggleSkillPopupFromButton()
@@ -193,17 +219,32 @@ public class EventManager : MonoBehaviour
         Debug.Log("Popup toggle blocked in current state: " + currentState);
     }
 
-
-    public void ReturnToMainMenu()
-    {
-        Debug.Log("Returning to Main Menu...");
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(1);
-    }
-
     public void MarkBattleOver()
     {
         Debug.Log("MarkBattleOver called.");
         battleOver = true;
+    }
+
+    public void CheckForBattleEnd()
+    {
+        if (EnemyManager.Instance == null) return;
+
+        int remaining = EnemyManager.Instance.GetAllEnemies().Count;
+        Debug.Log("Remaining enemies (via EnemyManager): " + remaining);
+
+        if (remaining <= 0 && currentState == GameState.BattleQ)
+        {
+            Debug.Log("All enemies defeated. Ending battle...");
+            StartCoroutine(HandleBattleEndWithDelay(2f));
+        }
+    }
+
+    private IEnumerator HandleBattleEndWithDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        Debug.Log("Marking battle over and invoking OnBattleEnd...");
+        MarkBattleOver();
+        OnBattleEnd?.Invoke();
     }
 }

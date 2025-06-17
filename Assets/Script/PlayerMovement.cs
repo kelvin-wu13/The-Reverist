@@ -128,7 +128,6 @@ public class PlayerMovement : MonoBehaviour
     {
         if (animator != null)
         {
-            animator.SetBool(isMovingParam, moving);
             animator.SetFloat(directionXParam, currentAnimDirection.x);
             animator.SetFloat(directionYParam, currentAnimDirection.y);
         }

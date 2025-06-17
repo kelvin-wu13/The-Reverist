@@ -8,6 +8,11 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip backgroundMusic;
     [SerializeField] private bool loopBGM = true;
 
+    [Header("UI SFX")]
+    [SerializeField] private AudioClip buttonHoverSFX;
+    [SerializeField] private AudioClip buttonClickSFX;
+    [SerializeField] private AudioClip buttonSelectSFX;
+
     [Header("Player SFX")]
     [SerializeField] private AudioClip playerSpawnSFX;
     [SerializeField] private AudioClip playerDeathSFX;
@@ -75,6 +80,10 @@ public class AudioManager : MonoBehaviour
     public void PlayPlayerSpawnSFX() => PlaySFX(playerSpawnSFX);
     public void PlayPlayerDeathSFX() => PlaySFX(playerDeathSFX);
 
+    // UI Audio
+    public void PlayButtonHoverSFX() => PlaySFX(buttonHoverSFX);
+    public void PlayButtonClickSFX() => PlaySFX(buttonClickSFX);
+    public void PlayButtonSelectSFX() => PlaySFX(buttonSelectSFX);
 
     private void Start()
     {

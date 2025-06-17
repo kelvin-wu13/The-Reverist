@@ -216,7 +216,7 @@ public class TileGrid : MonoBehaviour
         CreateGrid();
         
         // Setup initial player and enemy positions
-        SetupInitialPositions();
+        //SetupInitialPositions();
     }
     
     private void CreateGrid()
@@ -320,7 +320,7 @@ public class TileGrid : MonoBehaviour
         }
     }
     
-    private void SetupInitialPositions()
+    public void SetupInitialPositions()
     {
         // Set left half for player (first half of columns)
         for (int x = 0; x < gridWidth / 2; x++)
