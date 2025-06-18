@@ -82,6 +82,16 @@ public class EventManager : MonoBehaviour
 
     private void Update()
     {
+        // Allow ESC to close skill popup if we're waiting for it
+        if (currentState == GameState.Skill && skillPopupOpen && waitingForSkillPopupExit)
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Debug.Log("ESC pressed to confirm skill popup.");
+                waitingForSkillPopupExit = false;
+            }
+        }
+        
         if (Input.GetKeyDown(KeyCode.Escape) && currentState == GameState.Battle)
         {
             ToggleSkillPopupFromButton();
