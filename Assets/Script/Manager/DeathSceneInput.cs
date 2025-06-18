@@ -1,16 +1,22 @@
 using UnityEngine;
-using System.Collections;
-
 
 public class DeathSceneInput : MonoBehaviour
 {
     public FadeController fadeController;
+    public float delayBeforeInput = 1.5f;
+
     private bool canContinue = false;
 
     void Start()
     {
-        fadeController.FadeIn();
-        Invoke(nameof(EnableContinue), 1.5f);
+        // Start with fade-in
+        if (fadeController != null)
+        {
+            fadeController.FadeIn();
+        }
+
+        // Allow input after a short delay
+        Invoke(nameof(EnableContinue), delayBeforeInput);
     }
 
     void EnableContinue()
@@ -22,7 +28,7 @@ public class DeathSceneInput : MonoBehaviour
     {
         if (canContinue && Input.anyKeyDown)
         {
-            fadeController.FadeOutAndLoadScene("0");
+            fadeController.FadeOutAndLoadScene("Main Menu Demo");
         }
     }
 }
