@@ -11437,7 +11437,7 @@ MonoBehaviour:
   OnSkillSelected:
     m_PersistentCalls:
       m_Calls: []
-  skillPopupPanel: {fileID: 775798654575231958}
+  skillPopupPanel: {fileID: 8266480561163636311}
   openSkillPopupButton: {fileID: 2842514260651611327}
   arrowLeftButton: {fileID: 0}
   arrowRightButton: {fileID: 0}
