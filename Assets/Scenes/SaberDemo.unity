@@ -2314,8 +2314,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4885b77aa9637b14cabed075db9d56a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainMenuBGM: {fileID: 8300000, guid: 2fd4029e96c35d84da09d3c6a8085682, type: 3}
-  gameplayBGM: {fileID: 8300000, guid: fe65748ad2f30574e80ee8863db12cba, type: 3}
+  mainMenuBGM: {fileID: 8300000, guid: 750f76a83ad29474594b9053f913d819, type: 3}
+  gameplayBGM: {fileID: 8300000, guid: 1f25477b4caed6f4e924ae911ba1fd3d, type: 3}
   loopBGM: 1
   buttonHoverSFX: {fileID: 8300000, guid: 197c4d147b01c734e9fad20b6c3f1b82, type: 3}
   buttonClickSFX: {fileID: 8300000, guid: 68b7bd1ee0076ff4a8e5d268064350d3, type: 3}
