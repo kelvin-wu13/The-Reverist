@@ -8,7 +8,6 @@ public class Enemy : MonoBehaviour
     [Header("Effects")]
     [SerializeField] private GameObject stunEffectPrefab;
 
-
     [Header("Settings")]
     [SerializeField] public int maxHealth = 100;
     [SerializeField] public int currentHealth;
@@ -52,6 +51,7 @@ public class Enemy : MonoBehaviour
     private Color originalColor;
     private float moveTimer;
     private float shootTimer;
+    private bool isTrainingScene = false;
 
     private static Dictionary<Vector2Int, GameObject> reservedPositions = new Dictionary<Vector2Int, GameObject>();
 
@@ -106,6 +106,14 @@ public class Enemy : MonoBehaviour
 
         AudioManager.Instance?.PlayEnemySpawnSFX();
         StartCoroutine(RandomMovement());
+
+        isTrainingScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Training");
+
+        if (isTrainingScene)
+        {
+            StopAllCoroutines(); // Disable movement
+            Debug.Log("Training dummy mode activated.");
+        }
     }
 
 
@@ -123,7 +131,7 @@ public class Enemy : MonoBehaviour
             }
         }
 
-        if (!isDying && !isBeingPulled && !PlayerStats.IsPlayerDead)
+        if (!isTrainingScene && !isDying && !isBeingPulled && !PlayerStats.IsPlayerDead)
         {
             shootTimer -= Time.deltaTime;
             if (shootTimer <= 0)
@@ -297,6 +305,14 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(int damage)
     {
         if (isDying) return;
+
+        if (isTrainingScene)
+        {
+            StartCoroutine(FlashColor());
+            Debug.Log("Training dummy hit. HP unchanged.");
+            return;
+        }
+
         currentHealth -= damage;
         StartCoroutine(FlashColor());
         if (currentHealth <= 0) Die();

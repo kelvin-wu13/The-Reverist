@@ -27,8 +27,15 @@ public class EventManager : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private GameObject skillPopupPanel;
     [SerializeField] private GameObject openSkillPopupButton;
+    [SerializeField] private GameObject arrowLeftButton;
+    [SerializeField] private GameObject arrowRightButton;
     [SerializeField] private DialogueManager dialogueManager;
     [SerializeField] private DialogueTrigger dialogueTrigger;
+
+    [Header("Skill Panels")]
+    public GameObject arsenalPanel;
+    public GameObject saberPanel;
+    public GameObject interferePanel;
 
     [Header("Game Flow Settings")]
     [SerializeField] private float delayBetweenSteps = 1f;
@@ -40,13 +47,15 @@ public class EventManager : MonoBehaviour
     private bool battleOver = false;
     private bool skillPopupOpen = false;
     private bool waitingForSkillPopupExit = false;
+    private int currentSkillTabIndex = 0;
+    private readonly string[] skillTabs = { "Arsenal", "Saber", "Interfere" };
 
     private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // <-- Add this line
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -63,6 +72,9 @@ public class EventManager : MonoBehaviour
             player.SetActive(false);
             Debug.Log("Player hidden at start.");
         }
+
+        if (arrowLeftButton != null) arrowLeftButton.SetActive(IsTrainingScene());
+        if (arrowRightButton != null) arrowRightButton.SetActive(IsTrainingScene());
 
         Debug.Log("Game started.");
         OnGameStart?.Invoke();
@@ -92,6 +104,28 @@ public class EventManager : MonoBehaviour
         ShowSkillPopup();
     }
 
+    public void ShowNextSkillTab()
+    {
+        if (!IsTrainingScene()) return;
+        currentSkillTabIndex = (currentSkillTabIndex + 1) % skillTabs.Length;
+        ShowSkillPopupTab(skillTabs[currentSkillTabIndex]);
+    }
+
+    public void ShowPreviousSkillTab()
+    {
+        if (!IsTrainingScene()) return;
+        currentSkillTabIndex = (currentSkillTabIndex - 1 + skillTabs.Length) % skillTabs.Length;
+        ShowSkillPopupTab(skillTabs[currentSkillTabIndex]);
+    }
+
+    public void ShowSkillPopupTab(string tabName)
+    {
+        arsenalPanel.SetActive(tabName == "Arsenal");
+        saberPanel.SetActive(tabName == "Saber");
+        interferePanel.SetActive(tabName == "Interfere");
+        Debug.Log("Switched to skill tab: " + tabName);
+    }
+
     public void ShowSkillPopup()
     {
         Debug.Log("ShowSkillPopup() called manually or via button.");
@@ -110,7 +144,7 @@ public class EventManager : MonoBehaviour
         if (currentState == GameState.Skill && waitingForSkillPopupExit && skillPopupOpen)
         {
             Debug.Log("ConfirmSkillPopup called by button.");
-            waitingForSkillPopupExit = false; // this will allow the coroutine to proceed
+            waitingForSkillPopupExit = false;
         }
     }
 
@@ -123,6 +157,31 @@ public class EventManager : MonoBehaviour
         OnSkillPopupShow?.Invoke();
         OnSkillSelected?.Invoke(skillName);
 
+        // Auto-select panel based on scene
+        string sceneName = SceneManager.GetActiveScene().name;
+
+        arsenalPanel.SetActive(false);
+        saberPanel.SetActive(false);
+        interferePanel.SetActive(false);
+
+        if (sceneName.Contains("Arsenal"))
+        {
+            arsenalPanel.SetActive(true);
+        }
+        else if (sceneName.Contains("Saber"))
+        {
+            saberPanel.SetActive(true);
+        }
+        else if (sceneName.Contains("Interfere"))
+        {
+            interferePanel.SetActive(true);
+        }
+        else if (IsTrainingScene()) // TrainingScene uses cycling
+        {
+            currentSkillTabIndex = 0;
+            ShowSkillPopupTab(skillTabs[currentSkillTabIndex]);
+        }
+
         skillPopupPanel.SetActive(true);
         skillPopupOpen = true;
         waitingForSkillPopupExit = true;
@@ -134,6 +193,12 @@ public class EventManager : MonoBehaviour
         skillPopupPanel.SetActive(false);
         skillPopupOpen = false;
         Time.timeScale = 1f;
+
+        // Deactivate all panels when battle starts
+        arsenalPanel.SetActive(false);
+        saberPanel.SetActive(false);
+        interferePanel.SetActive(false);
+
 
         Debug.Log("Skill popup closed. Proceeding to StartBattle.");
         OnSkillPopupHide?.Invoke();
@@ -181,12 +246,10 @@ public class EventManager : MonoBehaviour
         CheckForBattleEnd();
     }
 
-    // Modified to only allow button-controlled opening/closing
     public void ToggleSkillPopupFromButton()
     {
         if (currentState == GameState.Skill)
         {
-            // Only allow closing the popup to proceed to battle during initial state
             if (waitingForSkillPopupExit && skillPopupOpen)
             {
                 Debug.Log("Initial skill popup closed via SkillPopupButton. Proceeding to battle...");
@@ -203,7 +266,6 @@ public class EventManager : MonoBehaviour
 
         if (currentState == GameState.Battle)
         {
-            // Allow normal pause/unpause toggle in battle phase
             skillPopupOpen = !skillPopupOpen;
             skillPopupPanel.SetActive(skillPopupOpen);
             Time.timeScale = skillPopupOpen ? 0f : 1f;
@@ -241,5 +303,10 @@ public class EventManager : MonoBehaviour
         Debug.Log("Marking battle over and invoking OnBattleEnd...");
         MarkBattleOver();
         OnBattleEnd?.Invoke();
+    }
+
+    private bool IsTrainingScene()
+    {
+        return SceneManager.GetActiveScene().name.Contains("Training");
     }
 }

@@ -92,7 +92,7 @@ public class AudioManager : MonoBehaviour
     {
         string currentScene = SceneManager.GetActiveScene().name;
 
-        if (currentScene == "MainMenu") 
+        if (currentScene == "0") 
         {
             PlayBGM(mainMenuBGM);
         }

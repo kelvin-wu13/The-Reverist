@@ -12,8 +12,17 @@ EditorBuildSettings:
     path: Assets/Scenes/Character Select Demo.unity
     guid: 0be10c2e44869b641a5342af761f51dd
   - enabled: 1
-    path: Assets/Scenes/Gameplay.unity
-    guid: ea24bc158e62500428cdcffa5cefec08
+    path: Assets/Scenes/ArsenalDemo.unity
+    guid: 74a19365e42348c4dac8c8829e953148
+  - enabled: 1
+    path: Assets/Scenes/SaberDemo.unity
+    guid: 91dd9c610334a3c4bb04f0c6e6d2873b
+  - enabled: 1
+    path: Assets/Scenes/InterfereDemo.unity
+    guid: a6ff1b366d5abd443b3ec8e2201d0d7d
+  - enabled: 1
+    path: Assets/Scenes/TrainingScene.unity
+    guid: 36060cc58ea3727439e23321fbe42e41
   - enabled: 1
     path: Assets/Scenes/DeathScene.unity
     guid: 25c3914ccbf85784193bc459ba297c73

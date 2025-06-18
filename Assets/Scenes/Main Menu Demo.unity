@@ -269,6 +269,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 601986c587840724dbdfb9cb0d7028fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  fadeController: {fileID: 0}
 --- !u!1 &106776112
 GameObject:
   m_ObjectHideFlags: 0
@@ -1684,6 +1685,71 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 818843233}
   m_CullTransparentMesh: 1
+--- !u!1 &849454156
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 849454158}
+  - component: {fileID: 849454157}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &849454157
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 849454156}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4885b77aa9637b14cabed075db9d56a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainMenuBGM: {fileID: 8300000, guid: 2fd4029e96c35d84da09d3c6a8085682, type: 3}
+  gameplayBGM: {fileID: 0}
+  loopBGM: 1
+  buttonHoverSFX: {fileID: 0}
+  buttonClickSFX: {fileID: 0}
+  buttonSelectSFX: {fileID: 0}
+  playerSpawnSFX: {fileID: 8300000, guid: bc33ab732a4ea854a9d3a1d99c495631, type: 3}
+  playerDeathSFX: {fileID: 8300000, guid: aa2621c14628a484584be8c6fb878e60, type: 3}
+  BasicShootSFX: {fileID: 8300000, guid: d9540058fdccdec478a3d257bf2ec8c9, type: 3}
+  IonBoltSFX: {fileID: 8300000, guid: e862d93119cd89e4c9dbcb1ab07383ea, type: 3}
+  PlasmaSurgeSFX: {fileID: 8300000, guid: 3abe1afd1a1ee034da3a4a1196eba2a2, type: 3}
+  PulseFallSFX: {fileID: 8300000, guid: d6809f81475379f4ebcd5af4ce994072, type: 3}
+  QuickSlashSFX: {fileID: 8300000, guid: 7a817286d52f1c5468db34de892a88da, type: 3}
+  SwiftStrikeSFX: {fileID: 8300000, guid: baae7ecd6114dac43958b2509156c5d1, type: 3}
+  KineticShoveSFX: {fileID: 8300000, guid: eba2ee171d51b7248912897deaa272be, type: 3}
+  WilloWispSFX: {fileID: 8300000, guid: 0cd4cb5c0005f714894f875ff6eb313b, type: 3}
+  MagneticPullSFX: {fileID: 8300000, guid: 4f71484d3a8cbfc4fa74f0de58b70622, type: 3}
+  GridLockSFX: {fileID: 8300000, guid: ee9bce758c220ac4da8a1ee8400fcfd5, type: 3}
+  enemySpawnSFX: {fileID: 8300000, guid: 8e55ae8682298fb4c9b46a45fa989b0e, type: 3}
+  enemyShootSFX: {fileID: 8300000, guid: 604f2708f650baf4db69ed3c15c7567a, type: 3}
+  enemyDeathSFX: {fileID: 8300000, guid: 36fe0e51927e27740bf3b3f648257dac, type: 3}
+--- !u!4 &849454158
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 849454156}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 449.16147, y: 387.2465, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &969405574
 GameObject:
   m_ObjectHideFlags: 0
@@ -3293,3 +3359,4 @@ SceneRoots:
   - {fileID: 52287116}
   - {fileID: 489287527}
   - {fileID: 1092751047}
+  - {fileID: 849454158}

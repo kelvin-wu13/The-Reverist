@@ -25,18 +25,23 @@ public class MainMenu : MonoBehaviour
         fadeController.FadeOutAndLoadScene("1"); // update name if needed
     }
 
-    public void SkillArsenalTrainingDemo()
+    public void SkillArsenalDemo()
     {
         fadeController.FadeOutAndLoadScene("2"); // update name if needed
     }
 
-    public void SkillSaberTrainingDemo()
+    public void SkillSaberDemo()
     {
         fadeController.FadeOutAndLoadScene("3"); // update name if needed
     }
 
-    public void SkillInterfereTrainingDemo()
+    public void SkillInterfereDemo()
     {
         fadeController.FadeOutAndLoadScene("4"); // update name if needed
+    }
+
+    public void TrainingSceneDemo()
+    {
+        fadeController.FadeOutAndLoadScene("5"); // update name if needed
     }
 }
