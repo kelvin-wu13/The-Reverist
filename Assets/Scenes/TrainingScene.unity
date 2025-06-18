@@ -8277,61 +8277,42 @@ MonoBehaviour:
   dialogue:
     dialogueLines:
     - character:
-        name: Prodigy
-        icon: {fileID: -9127853037646847104, guid: d7718383620ce024c8b7049dadca632c, type: 3}
-      text: Wha.... Where am I?!!!
-    - character:
         name: Cybermancer
         icon: {fileID: 6714243186367649868, guid: d7718383620ce024c8b7049dadca632c, type: 3}
-      text: 'Connection established. '
-    - character:
-        name: Cybermancer
-        icon: {fileID: 6714243186367649868, guid: d7718383620ce024c8b7049dadca632c, type: 3}
-      text: 'Welcome to the Testing Grounds.  '
+      text: You have completed the trial sequence.
     - character:
         name: Prodigy
         icon: {fileID: -9127853037646847104, guid: d7718383620ce024c8b7049dadca632c, type: 3}
-      text: "Testing Grounds? I didn\u2019t sign up for this."
+      text: " Well\u2026 this isn\u2019t too bad."
     - character:
         name: Cybermancer
         icon: {fileID: 6714243186367649868, guid: d7718383620ce024c8b7049dadca632c, type: 3}
-      text: "This area is where you\u2019ll try out Reverist protocols. Completion
-        of this session is required to maintain your usage permit."
-    - character:
-        name: Cybermancer
-        icon: {fileID: 6714243186367649868, guid: d7718383620ce024c8b7049dadca632c, type: 3}
-      text: Under new regulation, only those who pass evaluation may be officially
-        recognized and we call it The Reverist.
-    - character:
-        name: Cybermancer
-        icon: {fileID: 6714243186367649868, guid: d7718383620ce024c8b7049dadca632c, type: 3}
-      text: 'Reverists are approved users of the Midas Gloves. These devices shape
-        Hardlight, solid objects formed from controlled light using thought.  '
+      text: All core states and skills are now unlocked.
     - character:
         name: Prodigy
         icon: {fileID: -9127853037646847104, guid: d7718383620ce024c8b7049dadca632c, type: 3}
-      text: ....
+      text: A non-hostile dummy has been deployed.
     - character:
         name: Cybermancer
         icon: {fileID: 6714243186367649868, guid: d7718383620ce024c8b7049dadca632c, type: 3}
-      text: "You\u2019ll be facing a combat bot for this test."
+      text: ' A test dummy, huh?'
     - character:
         name: Cybermancer
         icon: {fileID: 6714243186367649868, guid: d7718383620ce024c8b7049dadca632c, type: 3}
-      text: 'To become a Reverist, you must master the skills you hone across three
-        core states. Each state grants access to three unique skills.  '
+      text: Use this opportunity to freely test your abilities.
     - character:
         name: Cybermancer
         icon: {fileID: 6714243186367649868, guid: d7718383620ce024c8b7049dadca632c, type: 3}
-      text: 'Start by choosing a state, then use one of its available skills.  '
-    - character:
-        name: Cybermancer
-        icon: {fileID: 6714243186367649868, guid: d7718383620ce024c8b7049dadca632c, type: 3}
-      text: " First trial, let\u2019s try out your Arsenal state."
+      text: 'The tournament is approaching. Reverists will compete to prove who is
+        the best. Stay sharp. '
     - character:
         name: Prodigy
         icon: {fileID: -9127853037646847104, guid: d7718383620ce024c8b7049dadca632c, type: 3}
-      text: Alright. Time to test this out.
+      text: "So this is what it\u2019s all building up to... "
+    - character:
+        name: Prodigy
+        icon: {fileID: -9127853037646847104, guid: d7718383620ce024c8b7049dadca632c, type: 3}
+      text: Alright... time to see how this all comes together.
 --- !u!1 &2102181272025860026
 GameObject:
   m_ObjectHideFlags: 0
