@@ -92,9 +92,13 @@ public class AudioManager : MonoBehaviour
     {
         string currentScene = SceneManager.GetActiveScene().name;
 
-        if (currentScene == "0") 
+        if (currentScene.Contains("Main Menu"))
         {
             PlayBGM(mainMenuBGM);
+        }
+        else if (currentScene.Contains("CharacterSelect"))
+        {
+            ResumeBGM();
         }
         else
         {
@@ -102,6 +106,22 @@ public class AudioManager : MonoBehaviour
         }
     }
 
+    public void ResumeBGM()
+    {
+        if (bgmSource == null) return;
+
+        if (bgmSource.clip == null)
+        {
+            bgmSource.clip = mainMenuBGM;
+            bgmSource.loop = loopBGM;
+        }
+
+        if (!bgmSource.isPlaying)
+        {
+            bgmSource.Play();
+            Debug.Log("Resuming BGM...");
+        }
+    }
 
     public void PlayBGM(AudioClip clip)
     {

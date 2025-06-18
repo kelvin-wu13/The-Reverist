@@ -17,31 +17,36 @@ public class MainMenu : MonoBehaviour
     {
         Debug.Log("Returning to Main Menu...");
         Time.timeScale = 1f;
-        fadeController.FadeOutAndLoadScene("0");
+        fadeController.FadeOutAndLoadScene("Main Menu Demo");
     }
 
     public void CharacterSelectDemo()
     {
-        fadeController.FadeOutAndLoadScene("1"); // update name if needed
+        fadeController.FadeOutAndLoadScene("Character Select Demo"); // update name if needed
     }
 
     public void SkillArsenalDemo()
     {
-        fadeController.FadeOutAndLoadScene("2"); // update name if needed
+        fadeController.FadeOutAndLoadScene("ArsenalDemo"); // update name if needed
     }
 
     public void SkillSaberDemo()
     {
-        fadeController.FadeOutAndLoadScene("3"); // update name if needed
+        fadeController.FadeOutAndLoadScene("SaberDemo"); // update name if needed
     }
 
     public void SkillInterfereDemo()
     {
-        fadeController.FadeOutAndLoadScene("4"); // update name if needed
+        fadeController.FadeOutAndLoadScene("InterfereDemo"); // update name if needed
     }
 
     public void TrainingSceneDemo()
     {
-        fadeController.FadeOutAndLoadScene("5"); // update name if needed
+        fadeController.FadeOutAndLoadScene("TrainingScene"); // update name if needed
+    }
+
+    public void ExitGame()
+    {
+        Application.Quit();
     }
 }
