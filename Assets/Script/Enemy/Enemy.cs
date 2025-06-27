@@ -7,6 +7,7 @@ public class Enemy : MonoBehaviour
 {
     [Header("Effects")]
     [SerializeField] private GameObject stunEffectPrefab;
+    [SerializeField] private Vector3 stunEffectOffset = new Vector3(0, 1.2f, 0);
 
     [Header("Settings")]
     [SerializeField] public int maxHealth = 100;
@@ -22,9 +23,10 @@ public class Enemy : MonoBehaviour
     [SerializeField] private bool isBeingPulled = false;
     [SerializeField] private LayerMask obstacleLayer;
 
-    [Header("Position Offset")]
-    [SerializeField] private Vector3 stunEffectOffset = new Vector3(0, 1.2f, 0); // You can tweak Y
-    [SerializeField] private Vector2 positionOffset = Vector2.zero;
+    [Header("Offset Settings")]
+    [SerializeField] private Vector2 baseOffset = new Vector2(0f, 1.6f);
+    [SerializeField] private float xOffsetFalloffPerRow = 0.05f;
+    [SerializeField] private float yOffsetFalloffPerRow = 0.1f;
 
     [Header("Visual")]
     [SerializeField] private SpriteRenderer spriteRenderer;
@@ -91,19 +93,15 @@ public class Enemy : MonoBehaviour
 
         currentGridPosition = tileGrid.GetGridPosition(transform.position);
         targetGridPosition = currentGridPosition;
-        Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
-        targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
+        targetPosition = GetAdjustedWorldPosition(currentGridPosition);
         transform.position = targetPosition;
+
         ReserveGridPosition(currentGridPosition);
         tileGrid.SetTileOccupied(currentGridPosition, true);
         moveTimer = moveInterval;
         shootTimer = Random.Range(0f, shootInterval);
 
-        if (animator != null)
-        {
-            animator.SetTrigger("Spawn");
-        }
-
+        animator?.SetTrigger("Spawn");
         AudioManager.Instance?.PlayEnemySpawnSFX();
         StartCoroutine(RandomMovement());
 
@@ -111,11 +109,10 @@ public class Enemy : MonoBehaviour
 
         if (isTrainingScene)
         {
-            StopAllCoroutines(); // Disable movement
+            StopAllCoroutines();
             Debug.Log("Training dummy mode activated.");
         }
     }
-
 
     private void Update()
     {
@@ -145,21 +142,88 @@ public class Enemy : MonoBehaviour
 
     private void LateUpdate()
     {
-        MatchCameraRotation();
+        if (Camera.main != null)
+            transform.rotation = Quaternion.LookRotation(Camera.main.transform.forward, Vector3.up);
     }
 
-    private void MatchCameraRotation()
+    private IEnumerator RandomMovement()
     {
-        if (Camera.main != null)
+        while (!isDying)
         {
-            transform.rotation = Quaternion.Euler(0f, 0f, 0f); // Reset rotation (2D style)
-            // If 3D look-at-camera: transform.forward = Camera.main.transform.forward;
+            yield return new WaitForSeconds(moveInterval);
+            if (!PlayerStats.IsPlayerDead && !isMoving && !isStunned && !isAfterPush && !isBeingPulled)
+                TryMove();
         }
     }
 
-    public TileGrid GetTileGrid() => tileGrid;
-    public bool IsMoving() => isMoving;
-    public bool IsBeingPulled() => isBeingPulled;
+    private void TryMove()
+    {
+        foreach (Vector2Int direction in new[] { Vector2Int.left, Vector2Int.down, Vector2Int.up, Vector2Int.right })
+        {
+            Vector2Int newPosition = currentGridPosition + direction;
+            if (tileGrid.IsValidGridPosition(newPosition) &&
+                tileGrid.grid[newPosition.x, newPosition.y] == TileType.Enemy &&
+                !IsPositionReserved(newPosition) &&
+                !tileGrid.IsTileOccupied(newPosition))
+            {
+                ReleaseGridPosition(currentGridPosition);
+                tileGrid.SetTileOccupied(currentGridPosition, false);
+                ReserveGridPosition(newPosition);
+                tileGrid.SetTileOccupied(newPosition, true);
+                targetGridPosition = newPosition;
+                targetPosition = GetAdjustedWorldPosition(newPosition);
+                isMoving = true;
+                return;
+            }
+        }
+    }
+
+    public void CompletePull(Vector2Int newGridPosition, Vector3 finalPosition)
+    {
+        currentGridPosition = newGridPosition;
+        targetGridPosition = newGridPosition;
+        ReserveGridPosition(currentGridPosition);
+        tileGrid.SetTileOccupied(currentGridPosition, true);
+        targetPosition = GetAdjustedWorldPosition(currentGridPosition);
+        isBeingPulled = false;
+    }
+
+    public void ApplyPushEffect(Vector2Int newGridPosition, Vector3 newWorldPosition)
+    {
+        StopAllCoroutines();
+        isMoving = false;
+        isBeingPulled = false;
+        tileGrid.SetTileOccupied(currentGridPosition, false);
+        ReleaseGridPosition(currentGridPosition);
+
+        if (tileGrid.IsTileOccupied(newGridPosition))
+        {
+            currentGridPosition = tileGrid.GetGridPosition(transform.position);
+            ReserveGridPosition(currentGridPosition);
+            tileGrid.SetTileOccupied(currentGridPosition, true);
+            return;
+        }
+
+        currentGridPosition = newGridPosition;
+        targetGridPosition = newGridPosition;
+        ReserveGridPosition(currentGridPosition);
+        tileGrid.SetTileOccupied(currentGridPosition, true);
+        targetPosition = GetAdjustedWorldPosition(currentGridPosition);
+    }
+
+    public void SetPositionWithOffset(Vector2Int newGridPosition)
+    {
+        StopAllCoroutines();
+        isMoving = false;
+        tileGrid.SetTileOccupied(currentGridPosition, false);
+        ReleaseGridPosition(currentGridPosition);
+        currentGridPosition = newGridPosition;
+        targetGridPosition = newGridPosition;
+        ReserveGridPosition(currentGridPosition);
+        tileGrid.SetTileOccupied(currentGridPosition, true);
+        targetPosition = GetAdjustedWorldPosition(currentGridPosition);
+        transform.position = targetPosition;
+    }
 
     public void InterruptMovementForSkill()
     {
@@ -182,124 +246,16 @@ public class Enemy : MonoBehaviour
         tileGrid.SetTileOccupied(currentGridPosition, false);
     }
 
-    public void CompletePull(Vector2Int newGridPosition, Vector3 finalPosition)
-    {
-        currentGridPosition = newGridPosition;
-        targetGridPosition = newGridPosition;
-        ReserveGridPosition(currentGridPosition);
-        tileGrid.SetTileOccupied(currentGridPosition, true);
-        Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
-        targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
-        isBeingPulled = false;
-    }
-
-    private IEnumerator RandomMovement()
-    {
-        while (!isDying)
-        {
-            yield return new WaitForSeconds(moveInterval);
-            if (!PlayerStats.IsPlayerDead && !isMoving && !isStunned && !isAfterPush && !isBeingPulled)
-                TryMove();
-        }
-    }
-
-    private void TryMove()
-    {
-        if (isBeingPulled)
-        {
-            isMoving = false;
-            return;
-        }
-
-        Vector2Int[] prioritizedDirections = new Vector2Int[]
-        {
-            Vector2Int.left,
-            Vector2Int.down,
-            Vector2Int.up,
-            Vector2Int.right
-        };
-
-        foreach (Vector2Int direction in prioritizedDirections)
-        {
-            Vector2Int newPosition = currentGridPosition + direction;
-            if (tileGrid.IsValidGridPosition(newPosition) &&
-                tileGrid.grid[newPosition.x, newPosition.y] == TileType.Enemy &&
-                !IsPositionReserved(newPosition) &&
-                !tileGrid.IsTileOccupied(newPosition))
-            {
-                ReleaseGridPosition(currentGridPosition);
-                tileGrid.SetTileOccupied(currentGridPosition, false);
-                ReserveGridPosition(newPosition);
-                tileGrid.SetTileOccupied(newPosition, true);
-                targetGridPosition = newPosition;
-                Vector3 basePosition = tileGrid.GetWorldPosition(targetGridPosition);
-                targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
-                isMoving = true;
-                return;
-            }
-        }
-    }
-
     private void ShootAtPlayer()
     {
         if (bulletPrefab == null) return;
 
-        Vector2 direction = Vector2.left;
         GameObject bulletObj = Instantiate(bulletPrefab, shootPoint.position, Quaternion.identity);
-        EnemyBullet bullet = bulletObj.GetComponent<EnemyBullet>();
+        EnemyBullet bullet = bulletObj.GetComponent<EnemyBullet>() ?? bulletObj.AddComponent<EnemyBullet>();
+        bullet.Initialize(Vector2.left, bulletSpeed, bulletDamage, tileGrid);
 
-        if (bullet == null)
-            bullet = bulletObj.AddComponent<EnemyBullet>();
-
-        if (bullet != null)
-        {
-            bullet.Initialize(direction, bulletSpeed, bulletDamage, tileGrid);
-
-            if (animator != null)
-                animator.SetTrigger("Attack");
-
-            AudioManager.Instance?.PlayEnemyShootSFX();
-        }
-        else
-        {
-            Debug.LogError("Enemy: Failed to setup bullet");
-            Destroy(bulletObj);
-        }
-    }
-
-    private void ReserveGridPosition(Vector2Int position) => reservedPositions[position] = gameObject;
-
-    private void ReleaseGridPosition(Vector2Int position)
-    {
-        if (reservedPositions.ContainsKey(position) && reservedPositions[position] == gameObject)
-            reservedPositions.Remove(position);
-    }
-
-    private bool IsPositionReserved(Vector2Int position) =>
-        reservedPositions.ContainsKey(position) && reservedPositions[position] != gameObject;
-
-    private bool IsPositionOccupied(Vector2Int gridPosition)
-    {
-        Vector3 worldPosition = tileGrid.GetWorldPosition(gridPosition);
-        float checkRadius = 0.4f;
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(worldPosition, checkRadius, obstacleLayer);
-        foreach (Collider2D collider in colliders)
-        {
-            if (collider.gameObject != gameObject)
-                return true;
-        }
-        return false;
-    }
-
-    private void ShuffleDirections()
-    {
-        for (int i = directions.Length - 1; i > 0; i--)
-        {
-            int j = Random.Range(0, i + 1);
-            Vector2Int temp = directions[i];
-            directions[i] = directions[j];
-            directions[j] = temp;
-        }
+        animator?.SetTrigger("Attack");
+        AudioManager.Instance?.PlayEnemyShootSFX();
     }
 
     public void TakeDamage(int damage)
@@ -323,12 +279,7 @@ public class Enemy : MonoBehaviour
         if (spriteRenderer == null) yield break;
         spriteRenderer.color = hitColor;
         yield return new WaitForSeconds(hitFlashDuration);
-        if (isStunned)
-            spriteRenderer.color = stunnedColor;
-        else if (isAfterPush)
-            spriteRenderer.color = pushedColor;
-        else
-            spriteRenderer.color = originalColor;
+        spriteRenderer.color = isStunned ? stunnedColor : (isAfterPush ? pushedColor : originalColor);
     }
 
     private void Die()
@@ -343,22 +294,14 @@ public class Enemy : MonoBehaviour
         foreach (Collider2D c in GetComponents<Collider2D>())
             c.enabled = false;
 
-        if (animator != null)
-        {
-            animator.SetTrigger("Death");
-            StartCoroutine(DelayedDeath());
-        }
-        else
-        {
-            FinalizeDeath();
-        }
-
+        animator?.SetTrigger("Death");
+        StartCoroutine(DelayedDeath());
         AudioManager.Instance?.PlayEnemyDeathSFX();
     }
 
     private IEnumerator DelayedDeath()
     {
-        yield return new WaitForSeconds(1f); // Adjust based on your animation length
+        yield return new WaitForSeconds(1f);
         FinalizeDeath();
     }
 
@@ -378,75 +321,40 @@ public class Enemy : MonoBehaviour
     private IEnumerator ApplyStun(float duration)
     {
         isStunned = true;
-
         if (spriteRenderer != null && !isBeingPulled)
             spriteRenderer.color = stunnedColor;
 
         if (stunEffectPrefab != null)
         {
-            Vector3 effectPos = transform.position + stunEffectOffset;
-            GameObject stunVFX = Instantiate(stunEffectPrefab, effectPos, Quaternion.identity, transform);
+            GameObject stunVFX = Instantiate(stunEffectPrefab, transform.position + stunEffectOffset, Quaternion.identity, transform);
             Destroy(stunVFX, duration);
         }
 
         yield return new WaitForSeconds(duration);
 
         isStunned = false;
-
         if (spriteRenderer != null && !isDying && !isAfterPush && !isBeingPulled)
             spriteRenderer.color = originalColor;
     }
 
-
-    public void SetPositionOffset(Vector2 newOffset)
+    private Vector3 GetAdjustedWorldPosition(Vector2Int gridPosition)
     {
-        positionOffset = newOffset;
-        if (!isMoving && !isBeingPulled)
-        {
-            Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
-            targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
-            transform.position = targetPosition;
-        }
+        Vector3 basePos = tileGrid.GetCenteredWorldPosition(gridPosition);
+        float dynamicX = baseOffset.x - (gridPosition.y * xOffsetFalloffPerRow);
+        float dynamicY = baseOffset.y - (gridPosition.y * yOffsetFalloffPerRow);
+        return basePos + new Vector3(dynamicX, dynamicY, 0f);
     }
 
-    public Vector2 GetPositionOffset() => positionOffset;
-
-    public void ApplyPushEffect(Vector2Int newGridPosition, Vector3 newWorldPosition)
+    // Grid helper methods
+    private void ReserveGridPosition(Vector2Int pos) => reservedPositions[pos] = gameObject;
+    private void ReleaseGridPosition(Vector2Int pos)
     {
-        StopAllCoroutines();
-        isMoving = false;
-        isBeingPulled = false;
-        tileGrid.SetTileOccupied(currentGridPosition, false);
-        ReleaseGridPosition(currentGridPosition);
-
-        if (tileGrid.IsTileOccupied(newGridPosition))
-        {
-            currentGridPosition = tileGrid.GetGridPosition(transform.position);
-            ReserveGridPosition(currentGridPosition);
-            tileGrid.SetTileOccupied(currentGridPosition, true);
-            return;
-        }
-
-        currentGridPosition = newGridPosition;
-        targetGridPosition = newGridPosition;
-        ReserveGridPosition(currentGridPosition);
-        tileGrid.SetTileOccupied(currentGridPosition, true);
-        Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
-        targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
+        if (reservedPositions.ContainsKey(pos) && reservedPositions[pos] == gameObject)
+            reservedPositions.Remove(pos);
     }
+    private bool IsPositionReserved(Vector2Int pos) => reservedPositions.ContainsKey(pos) && reservedPositions[pos] != gameObject;
 
-    public void SetPositionWithOffset(Vector2Int newGridPosition)
-    {
-        StopAllCoroutines();
-        isMoving = false;
-        tileGrid.SetTileOccupied(currentGridPosition, false);
-        ReleaseGridPosition(currentGridPosition);
-        currentGridPosition = newGridPosition;
-        targetGridPosition = newGridPosition;
-        ReserveGridPosition(currentGridPosition);
-        tileGrid.SetTileOccupied(currentGridPosition, true);
-        Vector3 basePosition = tileGrid.GetWorldPosition(currentGridPosition);
-        targetPosition = basePosition + new Vector3(positionOffset.x, positionOffset.y, 0);
-        transform.position = targetPosition;
-    }
+    public TileGrid GetTileGrid() => tileGrid;
+    public bool IsMoving() => isMoving;
+    public bool IsBeingPulled() => isBeingPulled;
 }

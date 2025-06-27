@@ -78,6 +78,7 @@ public class TileGrid : MonoBehaviour
 
     private void Awake()
     {
+        transform.rotation = Quaternion.Euler(gridXRotation, gridYRotation, gridZRotation);
         InitializeGrid();
         InitializeObjectsInTilesDict();
     }
@@ -107,6 +108,12 @@ public class TileGrid : MonoBehaviour
     {
         return tileHeight;
     }
+    
+    public Vector3 GetCenteredWorldPosition(Vector2Int gridPosition, float fixedZ = -1f)
+    {
+        Vector3 pos = GetWorldPosition(gridPosition);
+        return new Vector3(pos.x, pos.y, fixedZ);
+    }
 
     private void OnValidate()
     {
@@ -129,10 +136,10 @@ public class TileGrid : MonoBehaviour
         }
 
         // If the grid is already initialized in play mode, update it
-            if (Application.isPlaying && grid != null)
-            {
-                UpdateGridLayout();
-            }
+        if (Application.isPlaying && grid != null)
+        {
+            UpdateGridLayout();
+        }
     }
     
     private void UpdateGridLayout()

@@ -15,7 +15,9 @@ public class PlayerMovement : MonoBehaviour
     private readonly int directionYParam = Animator.StringToHash("DirectionY");
 
     [Header("Position Offset")]
-    [SerializeField] private Vector2 positionOffset = new Vector2(0.5f, 0.5f);
+    [SerializeField] private Vector2 positionOffset = new Vector2(0f, 1.6f);
+    [SerializeField] private float yOffsetFalloffPerRow = 0.1f;
+    [SerializeField] private float xOffsetFalloffPerRow = 0.05f; // <-- New!
 
     [Header("Animation Settings")]
     [SerializeField] private bool smoothDirectionTransition = true;
@@ -26,7 +28,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 directionVelocity = Vector2.zero;
 
     private bool isMoving = false;
-    private bool canMove = true; // ✅ NEW: Movement toggle
+    private bool canMove = true;
 
     private Vector2Int currentGridPosition = new Vector2Int(0, 0);
     private Vector2Int lastDirection = Vector2Int.down;
@@ -147,19 +149,15 @@ public class PlayerMovement : MonoBehaviour
 
     private Vector3 GetAdjustedWorldPosition(Vector2Int gridPosition)
     {
-        Vector3 basePosition = tileGrid.GetWorldPosition(gridPosition);
-        float tileWidth = tileGrid.GetTileWidth();
-        float tileHeight = tileGrid.GetTileHeight();
+        Vector3 basePos = tileGrid.GetCenteredWorldPosition(gridPosition);
 
-        Vector3 offset = new Vector3(
-            positionOffset.x * tileWidth,
-            positionOffset.y * tileHeight,
-            0f
-        );
+        // Dynamic offset decreases per row
+        float dynamicYOffset = positionOffset.y - (gridPosition.y * yOffsetFalloffPerRow);
+        float dynamicXOffset = positionOffset.x - (gridPosition.y * xOffsetFalloffPerRow);
 
-        return basePosition + offset;
+        return basePos + new Vector3(dynamicXOffset, dynamicYOffset, 0f);
     }
-    
+
     public void SetCanMove(bool state)
     {
         canMove = state;
