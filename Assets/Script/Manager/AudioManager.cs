@@ -42,26 +42,27 @@ public class AudioManager : MonoBehaviour
 
     private void Awake()
     {
-        // Singleton
-        if (Instance == null)
+        if (Instance != null && Instance != this)
         {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-
-            // Setup audio sources
-            bgmSource = gameObject.AddComponent<AudioSource>();
-            bgmSource.loop = loopBGM;
-            bgmSource.playOnAwake = false;
-
-            sfxSource = gameObject.AddComponent<AudioSource>();
-            sfxSource.loop = false;
-            sfxSource.playOnAwake = false;
+            Destroy(gameObject); // this prevents duplicates
+            return;
         }
-        else
-        {
-            Destroy(gameObject);
-        }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
+        // Setup audio sources
+        bgmSource = gameObject.AddComponent<AudioSource>();
+        bgmSource.loop = loopBGM;
+        bgmSource.playOnAwake = false;
+
+        sfxSource = gameObject.AddComponent<AudioSource>();
+        sfxSource.loop = false;
+        sfxSource.playOnAwake = false;
+
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
+
     // Enemy Audio
     public void PlayEnemySpawnSFX() => PlaySFX(enemySpawnSFX);
     public void PlayEnemyShootSFX() => PlaySFX(enemyShootSFX);
@@ -136,5 +137,19 @@ public class AudioManager : MonoBehaviour
     {
         if (clip != null)
             sfxSource.PlayOneShot(clip);
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        string name = scene.name;
+
+        if (name.Contains("Main Menu"))
+            PlayBGM(mainMenuBGM);
+        else if (name.Contains("Character Select"))
+            ResumeBGM();
+        else
+        {
+            PlayBGM(gameplayBGM);
+        }
     }
 }
