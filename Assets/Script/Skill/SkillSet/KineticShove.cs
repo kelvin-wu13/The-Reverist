@@ -30,30 +30,44 @@ namespace SkillSystem
 
         public override void ExecuteSkillEffect(Vector2Int targetPosition, Transform casterTransform)
         {
-            if (playerStats == null || !playerStats.TryUseMana(manaCost))
-            {
-                Debug.Log("Not enough mana to cast KineticShove!");
-                return;
-            }
+            if (tileGrid == null || playerStats == null) return;
+            if (!playerStats.TryUseMana(manaCost)) return;
 
             AudioManager.Instance?.PlayKineticShoveSFX();
 
-            Vector2Int casterPos = tileGrid.GetGridPosition(casterTransform.position);
+            // Adjust Y position like QuickSlash
+            Vector3 adjustedPos = casterTransform.position;
+            adjustedPos.y -= 1.6f;
+            adjustedPos.y += 0.1f;
+            Vector2Int playerGridPos = tileGrid.GetGridPosition(adjustedPos);
 
-            PlayerMovement movement = casterTransform.GetComponent<PlayerMovement>();
-            Vector2Int dir = movement != null ? movement.GetFacingDirection() : Vector2Int.right;
+            Vector2Int dir = Vector2Int.right;
 
-            List<Vector2Int> hitPositions = new List<Vector2Int>
+            List<Vector2Int> damageGridPositions = new List<Vector2Int>();
+
+            for (int forward = 1; forward <= 2; forward++) // two tiles forward
             {
-                casterPos + dir,
-                casterPos + dir + Vector2Int.up,
-                casterPos + dir + Vector2Int.down,
-                casterPos + dir * 2,
-                casterPos + dir * 2 + Vector2Int.up,
-                casterPos + dir * 2 + Vector2Int.down
-            };
+                Vector2Int basePos = playerGridPos + dir * forward;
 
-            DamageEnemiesOnTiles(hitPositions, dir);
+                damageGridPositions.Add(new Vector2Int(basePos.x, basePos.y + 1)); // up
+                damageGridPositions.Add(basePos);                                  // mid
+                damageGridPositions.Add(new Vector2Int(basePos.x, basePos.y - 1)); // down
+            }
+
+            List<Vector2Int> validPositions = new List<Vector2Int>();
+
+            foreach (Vector2Int pos in damageGridPositions)
+            {
+                if (tileGrid.IsValidGridPosition(pos))
+                {
+                    validPositions.Add(pos);
+                    Vector3 worldPos = tileGrid.GetWorldPosition(pos);
+                    Debug.DrawLine(worldPos + Vector3.up * 0.5f, worldPos - Vector3.up * 0.5f, Color.yellow, 1f);
+                    Debug.DrawLine(worldPos + Vector3.left * 0.5f, worldPos + Vector3.right * 0.5f, Color.yellow, 1f);
+                }
+            }
+
+            DamageEnemiesOnTiles(validPositions, dir);
         }
 
         private void DamageEnemiesOnTiles(List<Vector2Int> gridPositions, Vector2Int dir)
@@ -62,8 +76,6 @@ namespace SkillSystem
 
             foreach (Vector2Int gridPos in gridPositions)
             {
-                if (!tileGrid.IsValidGridPosition(gridPos)) continue;
-
                 foreach (Enemy enemy in allEnemies)
                 {
                     if (enemy == null) continue;
@@ -105,6 +117,7 @@ namespace SkillSystem
 
         private void ApplyStun(Enemy enemy, Vector2Int fromPos, Vector2Int blockedPos)
         {
+            enemy.SetPositionWithOffset(fromPos); // keep position synced
             enemy.Stun(stunDuration);
             StartCoroutine(ShowCollisionFeedback(enemy));
         }
