@@ -130,9 +130,29 @@ public class PlayerMovement : MonoBehaviour
     {
         if (animator != null)
         {
-            animator.SetFloat(directionXParam, currentAnimDirection.x);
-            animator.SetFloat(directionYParam, currentAnimDirection.y);
+            if (moving)
+            {
+                animator.SetFloat(directionXParam, currentAnimDirection.x);
+                animator.SetFloat(directionYParam, currentAnimDirection.y);
+            }
+            else
+            {
+                animator.SetFloat(directionXParam, 0f);
+                animator.SetFloat(directionYParam, 0f);
+            }
         }
+    }
+
+    public void ForceIdle()
+    {
+        isMoving = false;
+        animator.SetBool(isMovingParam, false);
+
+        currentAnimDirection = Vector2.zero;
+        targetAnimDirection = Vector2.zero;
+
+        animator.SetFloat(directionXParam, 0f);
+        animator.SetFloat(directionYParam, 0f);
     }
 
     public void SetFacingDirection(Vector2Int direction)

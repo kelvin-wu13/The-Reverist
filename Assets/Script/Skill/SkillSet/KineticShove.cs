@@ -39,44 +39,45 @@ namespace SkillSystem
             AudioManager.Instance?.PlayKineticShoveSFX();
 
             Vector2Int casterPos = tileGrid.GetGridPosition(casterTransform.position);
-            Vector2Int dir = Vector2Int.right;
+
+            PlayerMovement movement = casterTransform.GetComponent<PlayerMovement>();
+            Vector2Int dir = movement != null ? movement.GetFacingDirection() : Vector2Int.right;
 
             List<Vector2Int> hitPositions = new List<Vector2Int>
             {
-                casterPos + dir + Vector2Int.up,
                 casterPos + dir,
+                casterPos + dir + Vector2Int.up,
                 casterPos + dir + Vector2Int.down,
-                casterPos + dir * 2 + Vector2Int.up,
                 casterPos + dir * 2,
+                casterPos + dir * 2 + Vector2Int.up,
                 casterPos + dir * 2 + Vector2Int.down
             };
 
-            foreach (Vector2Int hitPos in hitPositions)
+            DamageEnemiesOnTiles(hitPositions, dir);
+        }
+
+        private void DamageEnemiesOnTiles(List<Vector2Int> gridPositions, Vector2Int dir)
+        {
+            Enemy[] allEnemies = FindObjectsOfType<Enemy>();
+
+            foreach (Vector2Int gridPos in gridPositions)
             {
-                if (tileGrid.IsValidGridPosition(hitPos))
+                if (!tileGrid.IsValidGridPosition(gridPos)) continue;
+
+                foreach (Enemy enemy in allEnemies)
                 {
-                    Enemy enemy = FindEnemyAtPosition(hitPos);
-                    if (enemy != null)
+                    if (enemy == null) continue;
+
+                    Vector2Int enemyGridPos = enemy.GetCurrentGridPosition();
+
+                    if (enemyGridPos == gridPos)
                     {
                         enemy.TakeDamage(damageAmount);
-                        ProcessKnockbackOrStun(enemy, hitPos, dir);
+                        ProcessKnockbackOrStun(enemy, gridPos, dir);
+                        Debug.Log($"KineticShove HIT {enemy.name} at {enemyGridPos}");
                     }
                 }
             }
-        }
-
-        private Enemy FindEnemyAtPosition(Vector2Int gridPos)
-        {
-            Vector3 worldPos = tileGrid.GetWorldPosition(gridPos);
-            Collider2D[] hits = Physics2D.OverlapCircleAll(worldPos, 0.4f);
-
-            foreach (Collider2D col in hits)
-            {
-                Enemy enemy = col.GetComponent<Enemy>();
-                if (enemy != null) return enemy;
-            }
-
-            return null;
         }
 
         private void ProcessKnockbackOrStun(Enemy enemy, Vector2Int currentPos, Vector2Int direction)
@@ -99,7 +100,6 @@ namespace SkillSystem
         {
             if (!tileGrid.IsValidGridPosition(pos)) return false;
             if (tileGrid.IsTileOccupied(pos)) return false;
-            if (FindEnemyAtPosition(pos) != null) return false;
             return true;
         }
 

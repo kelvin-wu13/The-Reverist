@@ -842,10 +842,10 @@ MonoBehaviour:
     playerTileSprite: {fileID: -5872919544263459530, guid: c8bff40a12b67cd46a6976722d6ebde1, type: 3}
     enemyTileSprite: {fileID: -2130417973114974290, guid: c8bff40a12b67cd46a6976722d6ebde1, type: 3}
     emptyTileSprite: {fileID: 0}
-    playerCrackedTileSprite: {fileID: -1201933249770951465, guid: 48158806f9fe9dd4e80e6cfd6114a53e, type: 3}
-    playerBrokenTileSprite: {fileID: 8327558880362785926, guid: 48158806f9fe9dd4e80e6cfd6114a53e, type: 3}
-    enemyCrackedTileSprite: {fileID: -2003106352616278758, guid: 27e4fa8ece617dc4f93255aeee9b1ddf, type: 3}
-    enemyBrokenTileSprite: {fileID: 7979718756900307487, guid: 27e4fa8ece617dc4f93255aeee9b1ddf, type: 3}
+    playerCrackedTileSprite: {fileID: -2003106352616278758, guid: 27e4fa8ece617dc4f93255aeee9b1ddf, type: 3}
+    playerBrokenTileSprite: {fileID: -1201933249770951465, guid: 48158806f9fe9dd4e80e6cfd6114a53e, type: 3}
+    enemyCrackedTileSprite: {fileID: 7979718756900307487, guid: 27e4fa8ece617dc4f93255aeee9b1ddf, type: 3}
+    enemyBrokenTileSprite: {fileID: 8327558880362785926, guid: 48158806f9fe9dd4e80e6cfd6114a53e, type: 3}
   tileRenderingLayer: -1
   gridOffset: {x: -1.55, y: -0.12}
 --- !u!4 &334597319
@@ -856,13 +856,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 334597317}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.86602545, y: 0, z: 0, w: 0.49999994}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 120, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &344260778
 GameObject:
   m_ObjectHideFlags: 0
@@ -1945,6 +1945,50 @@ Transform:
   - {fileID: 1467133024}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &661798112
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 661798114}
+  - component: {fileID: 661798113}
+  m_Layer: 0
+  m_Name: GridDebug
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &661798113
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 661798112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af98e34df601c704a8e4db72a95ae1b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &661798114
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 661798112}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 12.97323, y: 1.44564, z: 7.21568}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &881030413
 GameObject:
   m_ObjectHideFlags: 0
@@ -2902,7 +2946,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93cc1806d1f48df43ab8b2d5df2df962, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numberOfEnemies: 10
+  numberOfEnemies: 16
   spawnOnStart: 0
   useRandomPositions: 1
   tileGrid: {fileID: 334597318}
@@ -3730,7 +3774,7 @@ Transform:
   m_GameObject: {fileID: 1557569855}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8.32, y: -0.5099, z: 0}
+  m_LocalPosition: {x: 12.47, y: -0.5099, z: 0}
   m_LocalScale: {x: 0.8209, y: 0.7214, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3751,7 +3795,8 @@ MonoBehaviour:
   playerTransform: {fileID: 344260779}
   tileGrid: {fileID: 334597318}
   crosshairVisual: {fileID: 1557569855}
-  distanceFromPlayer: 4
+  playerMovement: {fileID: 1573556186}
+  distanceFromPlayer: 3
 --- !u!212 &1557569858
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -3960,7 +4005,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   crosshair: {fileID: 1557569857}
   tileGrid: {fileID: 334597318}
-  defaultAllowedSkillSet: Q
+  defaultAllowedSkillSet: ALL
   IonBoltPrefab: {fileID: 7857377519010454379, guid: 65375e5fff78f2a41b9c30bfa03903c6, type: 3}
   PulseFallPrefab: {fileID: 186632132335026699, guid: d8fc575de34caa44a962c43647a7210e, type: 3}
   PlasmaSurgePrefab: {fileID: 6807551085002080405, guid: 8489bbb41cdfe0940afbf6d12228cfb1, type: 3}
@@ -13175,3 +13220,4 @@ SceneRoots:
   - {fileID: 368758682}
   - {fileID: 567551553}
   - {fileID: 4614732028567079101}
+  - {fileID: 661798114}

@@ -103,7 +103,7 @@ public class Enemy : MonoBehaviour
 
         animator?.SetTrigger("Spawn");
         AudioManager.Instance?.PlayEnemySpawnSFX();
-        StartCoroutine(RandomMovement());
+        //StartCoroutine(RandomMovement());
 
         isTrainingScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Training");
 
@@ -343,6 +343,10 @@ public class Enemy : MonoBehaviour
         float dynamicX = baseOffset.x - (gridPosition.y * xOffsetFalloffPerRow);
         float dynamicY = baseOffset.y - (gridPosition.y * yOffsetFalloffPerRow);
         return basePos + new Vector3(dynamicX, dynamicY, 0f);
+    }
+    public Vector2Int GetCurrentGridPosition()
+    {
+        return currentGridPosition;
     }
 
     // Grid helper methods

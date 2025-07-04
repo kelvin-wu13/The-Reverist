@@ -19,7 +19,7 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private string deathAnimationTrigger = "Death";  // Name of death animation trigger
     [SerializeField] private float deathAnimationDuration = 2f;  // How long to wait before destroying/respawning
     [SerializeField] private bool useDeathAnimation = true;  // Toggle death animation on/off
-    //[SerializeField] private string hitAnimationTrigger = "Hit";
+
     [SerializeField] private string spawnAnimationTrigger = "Spawn";  // NEW
     [SerializeField] private float spawnAnimationDuration = 1.5f;     // Duration of spawn animation
 
@@ -158,14 +158,16 @@ public class PlayerStats : MonoBehaviour
     
     private IEnumerator EnablePlayerAfterSpawn(float delay)
     {
-        // Disable movement during spawn animation
         GetComponent<PlayerMovement>()?.SetCanMove(false);
-
         yield return new WaitForSeconds(delay);
 
-        GetComponent<PlayerMovement>()?.SetCanMove(true);
+        var movement = GetComponent<PlayerMovement>();
+        if (movement != null)
+        {
+            movement.SetCanMove(true);
+            movement.ForceIdle();
+        }
     }
-
     
     // Deals damage to the player and updates health UI
     public void TakeDamage(int damage)

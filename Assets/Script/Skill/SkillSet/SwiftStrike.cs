@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 namespace SkillSystem
 {
     public class SwiftStrike : Skill
@@ -33,7 +32,7 @@ namespace SkillSystem
         private Vector3 originalWorldPosition;
         private bool isDashing = false;
         private PlayerStats playerStats;
-        private PlayerCrosshair playerCrosshair; // Add reference to crosshair
+        private PlayerCrosshair playerCrosshair;
 
         private void Start()
         {
@@ -123,41 +122,26 @@ namespace SkillSystem
         {
             if (playerTransform == null || tileGrid == null) yield break;
             
-            // Calculate position 1 tile behind the target position
-            Vector2Int playerPos = tileGrid.GetGridPosition(playerTransform.position);
-            Vector2Int direction = targetPosition - playerPos;
-            
-            // Normalize direction to get just the facing direction
-            if (direction.x != 0) direction.x = direction.x / Mathf.Abs(direction.x);
-            if (direction.y != 0) direction.y = direction.y / Mathf.Abs(direction.y);
-            
-            // Calculate the position 1 tile behind the target
-            Vector2Int dashPosition = targetPosition - direction;
-            
-            // Modified validation: Allow movement into enemy grid but not into broken tiles
-            if (!IsValidDashPosition(dashPosition))
+            // Get the actual target position from crosshair
+            Vector2Int actualTargetPos = targetPosition;
+            if (playerCrosshair != null)
             {
-                Debug.LogWarning("SwiftStrike: Dash target position is invalid, trying to find a valid position nearby");
+                actualTargetPos = playerCrosshair.GetTargetGridPosition();
+            }
+            
+            // Since player only moves right, calculate how far right to dash
+            Vector2Int playerPos = tileGrid.GetGridPosition(playerTransform.position);
+            
+            // Calculate the position 1 tile behind the target (to the left of target)
+            Vector2Int dashPosition = new Vector2Int(actualTargetPos.x - 1, actualTargetPos.y);
+            
+            // If that position is invalid or would put us behind our starting position, 
+            // dash to 1 tile right of current position instead
+            if (!IsValidDashPosition(dashPosition) || dashPosition.x <= playerPos.x)
+            {
+                dashPosition = new Vector2Int(playerPos.x + 1, playerPos.y);
                 
-                // Try to find a valid position nearby
-                List<Vector2Int> adjacentPositions = new List<Vector2Int>
-                {
-                    dashPosition + Vector2Int.up,
-                    dashPosition + Vector2Int.down,
-                    dashPosition + Vector2Int.left,
-                    dashPosition + Vector2Int.right
-                };
-                
-                foreach (Vector2Int pos in adjacentPositions)
-                {
-                    if (IsValidDashPosition(pos))
-                    {
-                        dashPosition = pos;
-                        break;
-                    }
-                }
-                
-                // If still invalid, cancel the dash and unfreeze crosshair
+                // If still invalid, try other positions
                 if (!IsValidDashPosition(dashPosition))
                 {
                     Debug.LogWarning("SwiftStrike: Could not find a valid dash position, canceling skill");
@@ -184,7 +168,11 @@ namespace SkillSystem
             
             // Store original position
             Vector3 startPosition = playerTransform.position;
-            Vector3 targetWorldPosition = tileGrid.GetWorldPosition(dashPosition) + new Vector3(0.5f, 0.5f, 0);
+            Vector3 targetWorldPosition = tileGrid.GetWorldPosition(dashPosition);
+            
+            // ONLY MODIFY X POSITION - keep Y and Z the same
+            targetWorldPosition.y = startPosition.y;
+            targetWorldPosition.z = startPosition.z;
             
             isDashing = true;
             
@@ -193,41 +181,23 @@ namespace SkillSystem
             while (elapsedTime < dashDuration)
             {
                 float t = dashCurve != null ? dashCurve.Evaluate(elapsedTime / dashDuration) : elapsedTime / dashDuration;
-                playerTransform.position = Vector3.Lerp(startPosition, targetWorldPosition, t);
+                
+                // Only lerp the X position, keep Y and Z unchanged
+                Vector3 currentPos = playerTransform.position;
+                currentPos.x = Mathf.Lerp(startPosition.x, targetWorldPosition.x, t);
+                playerTransform.position = currentPos;
                 
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
             
-            // Ensure player is at exactly the target position
-            playerTransform.position = targetWorldPosition;
+            // Ensure player is at exactly the target X position but keep original Y and Z
+            Vector3 finalPos = playerTransform.position;
+            finalPos.x = targetWorldPosition.x;
+            playerTransform.position = finalPos;
             
-            // Get the forward direction based on caster's facing direction
-            Vector2 forwardDirection = playerTransform.right;
-            
-            // Calculate the position 1 tile in front of the player after dashing
-            Vector2Int frontTile;
-            
-            // Determine which direction is "front" based on player's facing direction
-            if (Mathf.Abs(forwardDirection.x) > Mathf.Abs(forwardDirection.y))
-            {
-                // Facing horizontally (right or left)
-                frontTile = new Vector2Int(
-                    dashPosition.x + (forwardDirection.x > 0 ? 1 : -1),
-                    dashPosition.y
-                );
-            }
-            else
-            {
-                // Facing vertically (up or down)
-                frontTile = new Vector2Int(
-                    dashPosition.x,
-                    dashPosition.y + (forwardDirection.y > 0 ? 1 : -1)
-                );
-            }
-            
-            // Execute the skill effect 1 tile in front of the player's dash position
-            ExecuteWQStyleAttack(frontTile, playerTransform);
+            // Execute the attack - attack horizontally to the right after dashing
+            ExecuteHorizontalAttack(dashPosition, playerTransform);
             
             // Wait for the specified delay before returning
             yield return new WaitForSeconds(returnDelay);
@@ -277,60 +247,47 @@ namespace SkillSystem
                 tileGrid.grid[gridPosition.x, gridPosition.y] != TileType.Broken;
         }
         
-        // New method to execute the WQ-style attack (vertical 3-tile pattern)
-        private void ExecuteWQStyleAttack(Vector2Int _, Transform casterTransform)
+        // Updated method to execute horizontal attack to the right
+        private void ExecuteHorizontalAttack(Vector2Int dashPos, Transform casterTransform)
         {
             if (tileGrid == null || casterTransform == null) return;
 
-            Vector2Int playerGridPos = tileGrid.GetGridPosition(casterTransform.position);
+            // Adjust Y offset to match true tile base
+            Vector3 adjustedPos = casterTransform.position;
+            adjustedPos.y -= 1.6f; // match PlayerMovement vertical offset
+
+            Vector2Int playerGridPos = tileGrid.GetGridPosition(adjustedPos);
+            int frontX = playerGridPos.x + 1;
 
             List<Vector2Int> damageGridPositions = new List<Vector2Int>
             {
-                new Vector2Int(playerGridPos.x + 1, playerGridPos.y - 2),
-                new Vector2Int(playerGridPos.x + 1, playerGridPos.y),
-                new Vector2Int(playerGridPos.x + 1, playerGridPos.y -1)
+                new Vector2Int(frontX, playerGridPos.y + 1), // front-up
+                new Vector2Int(frontX, playerGridPos.y),     // front-mid
+                new Vector2Int(frontX, playerGridPos.y - 1)  // front-down
             };
 
-            float yOffset = 0f;
-            PlayerMovement move = casterTransform.GetComponent<PlayerMovement>();
-            if (move != null)
-                yOffset = move.GetPositionOffset().y;
+            Enemy[] allEnemies = FindObjectsOfType<Enemy>();
 
-            List<Vector2> damageWorldPositions = new List<Vector2>();
-            foreach (Vector2Int gridPos in damageGridPositions)
+            foreach (Vector2Int targetPos in damageGridPositions)
             {
-                if (tileGrid.IsValidGridPosition(gridPos))
-                {
-                    Vector3 basePos = tileGrid.GetWorldPosition(gridPos);
-                    Vector3 tileCenter = basePos + new Vector3(tileGrid.GetTileWidth(), tileGrid.GetTileHeight()) * 0.5f;
-                    tileCenter += new Vector3(0, yOffset, 0);
-                    damageWorldPositions.Add(tileCenter);
-                }
-            }
+                if (!tileGrid.IsValidGridPosition(targetPos)) continue;
 
-            foreach (Vector2 pos in damageWorldPositions)
-            {
-                Debug.DrawLine(casterTransform.position, pos, Color.red, 1f);
-                Collider2D[] hitColliders = Physics2D.OverlapCircleAll(pos, effectRadius);
-                foreach (Collider2D collider in hitColliders)
+                Vector3 worldPos = tileGrid.GetWorldPosition(targetPos);
+                Debug.DrawLine(worldPos + Vector3.up * 0.5f, worldPos - Vector3.up * 0.5f, Color.cyan, 1f);
+
+                foreach (Enemy enemy in allEnemies)
                 {
-                    if (collider.CompareTag("Enemy"))
+                    if (enemy == null) continue;
+
+                    Vector2Int enemyGridPos = enemy.GetCurrentGridPosition();
+                    if (enemyGridPos == targetPos)
                     {
-                        Enemy enemy = collider.GetComponent<Enemy>();
-                        if (enemy != null)
-                        {
-                            enemy.TakeDamage(damageAmount);
-                            Debug.Log($"SwiftStrike hit enemy: {collider.name} for {damageAmount} damage");
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"Enemy tag on {collider.name} but no Enemy script");
-                        }
+                        enemy.TakeDamage(damageAmount);
+                        Debug.Log($"SwiftStrike HIT: {enemy.name} at {enemyGridPos} for {damageAmount} damage");
                     }
                 }
             }
         }
-
         
         private IEnumerator ReturnToOriginalPosition()
         {
