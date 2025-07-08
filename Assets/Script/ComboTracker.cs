@@ -37,6 +37,11 @@ public class ComboTracker : MonoBehaviour
         // Removed IsShooting control - PlayerShoot handles animation timing
     }
 
+    public int GetCurrentComboIndex()
+    {
+        return currentComboIndex;
+    }
+
     // This method is no longer needed but keeping it for compatibility
     public void ResetShootingFlag()
     {

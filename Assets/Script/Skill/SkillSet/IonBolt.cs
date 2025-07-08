@@ -28,8 +28,7 @@ namespace SkillSystem
         private TileGrid tileGrid;
         private PlayerMovement playerMovement;
         private PlayerStats playerStats;
-
-        private Transform firePoint;
+        private PlayerShoot playerShoot;
 
         private void Awake()
         {
@@ -41,13 +40,7 @@ namespace SkillSystem
             if (tileGrid == null) tileGrid = FindObjectOfType<TileGrid>();
             if (playerMovement == null) playerMovement = FindObjectOfType<PlayerMovement>();
             if (playerStats == null) playerStats = FindObjectOfType<PlayerStats>();
-
-            // Attempt to find firePoint under player
-            if (firePoint == null && playerMovement != null)
-            {
-                Transform t = playerMovement.transform.Find("FirePoint");
-                if (t != null) firePoint = t;
-            }
+            if (playerShoot == null) playerShoot = FindObjectOfType<PlayerShoot>();
         }
 
         private void Update()
@@ -63,7 +56,13 @@ namespace SkillSystem
                 if (newGridPosition.x > currentGridPosition.x)
                 {
                     currentGridPosition.x = newGridPosition.x;
-                    HandleHitAtTile(currentGridPosition);
+                    
+                    // Check if there's an enemy on this tile before exploding
+                    if (CheckForEnemyOnTile(currentGridPosition))
+                    {
+                        HandleHitAtTile(currentGridPosition);
+                    }
+                    
                     CheckIfPastRightmostGrid();
                 }
             }
@@ -100,32 +99,42 @@ namespace SkillSystem
 
         private void FireProjectile()
         {
-            Vector3 spawnPos = playerMovement.transform.position;
+            // Use PlayerShoot's bullet spawn point for consistent positioning
+            Vector3 spawnPos = playerShoot != null && playerShoot.GetBulletSpawnPoint() != null 
+                ? playerShoot.GetBulletSpawnPoint().position 
+                : playerMovement.transform.position;
 
-            if (firePoint != null)
-            {
-                spawnPos = firePoint.position;
-            }
+            Vector2Int playerGridPos = playerMovement.GetCurrentGridPosition();
+            currentGridPosition = new Vector2Int(playerGridPos.x, playerGridPos.y);
 
-            // Correct the spawn position by removing playerMovement's visual Y offset
-            spawnPos.y -= playerMovement.GetPositionOffset().y;
-
-            currentGridPosition = tileGrid.GetGridPosition(spawnPos);
-
-            Vector3 centeredSpawn = tileGrid.GetCenteredWorldPosition(currentGridPosition);
-
-            activeProjectile = Instantiate(projectilePrefab, centeredSpawn, Quaternion.identity);
+            // Spawn the projectile at the proper FirePoint position (not centered on grid)
+            activeProjectile = Instantiate(projectilePrefab, spawnPos, Quaternion.identity);
             AudioManager.Instance?.PlayIonBoltSFX();
 
             isProjectileFired = true;
 
-            Debug.Log($"IonBolt: Fired at grid {currentGridPosition} at speed {projectileSpeed * speedMultiplier}");
+            Debug.Log($"IonBolt: Fired from FirePoint at world position {spawnPos}, player grid {currentGridPosition} at speed {projectileSpeed * speedMultiplier}");
+        }
+
+        private bool CheckForEnemyOnTile(Vector2Int gridPos)
+        {
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+
+            foreach (GameObject enemy in enemies)
+            {
+                Vector3 enemyAdjusted = enemy.transform.position - new Vector3(0, tileGrid.GetTileHeight() * 0.5f, 0);
+                Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemyAdjusted);
+
+                if (enemyGridPos == gridPos)
+                {
+                    return true; // Enemy found on this tile
+                }
+            }
+            return false; // No enemy found on this tile
         }
 
         private void HandleHitAtTile(Vector2Int gridPosition)
         {
-            if (!IsEnemyTilePosition(gridPosition)) return;
-
             DamageEnemiesOnTile(gridPosition);
 
             ExplodeAtGridPosition(gridPosition);
@@ -140,7 +149,8 @@ namespace SkillSystem
 
             foreach (GameObject enemy in enemies)
             {
-                Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
+                Vector3 enemyAdjusted = enemy.transform.position - new Vector3(0, tileGrid.GetTileHeight() * 0.5f, 0);
+                Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemyAdjusted);
 
                 if (enemyGridPos == gridPos)
                 {
@@ -182,7 +192,8 @@ namespace SkillSystem
 
             foreach (GameObject enemy in enemies)
             {
-                Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
+                Vector3 enemyAdjusted = enemy.transform.position - new Vector3(0, tileGrid.GetTileHeight() * 0.5f, 0);
+                Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemyAdjusted);
 
                 if (enemyGridPos == gridPos)
                 {
@@ -203,12 +214,6 @@ namespace SkillSystem
                 Destroy(activeProjectile);
                 isProjectileFired = false;
             }
-        }
-
-        private bool IsEnemyTilePosition(Vector2Int gridPosition)
-        {
-            return tileGrid.IsValidGridPosition(gridPosition) &&
-                   gridPosition.x >= tileGrid.gridWidth / 2;
         }
 
         private List<Vector2Int> GetAffectedTiles(Vector2Int centerPos, int radius)

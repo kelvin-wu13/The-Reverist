@@ -24,22 +24,36 @@ namespace SkillSystem
         
         private void Awake()
         {
-            tileGrid = FindObjectOfType<TileGrid>();
+            FindReferences();
+        }
+        
+        private void FindReferences()
+        {
             if (tileGrid == null)
             {
-                Debug.LogError("TileGrid not found in scene!");
+                tileGrid = FindObjectOfType<TileGrid>();
+                if (tileGrid == null)
+                {
+                    Debug.LogError("TileGrid not found in scene!");
+                }
             }
             
-            playerStats = FindObjectOfType<PlayerStats>();
             if (playerStats == null)
             {
-                Debug.LogError("PlayerStats not found in scene!");
+                playerStats = FindObjectOfType<PlayerStats>();
+                if (playerStats == null)
+                {
+                    Debug.LogError("PlayerStats not found in scene!");
+                }
             }
             
-            playerShoot = FindObjectOfType<PlayerShoot>();
             if (playerShoot == null)
             {
-                Debug.LogError("PlayerShoot not found in scene!");
+                playerShoot = FindObjectOfType<PlayerShoot>();
+                if (playerShoot == null)
+                {
+                    Debug.LogError("PlayerShoot not found in scene!");
+                }
             }
         }
         
@@ -61,11 +75,19 @@ namespace SkillSystem
         {
             base.ExecuteSkillEffect(targetPosition, casterTransform);
 
+            FindReferences();
+
             // Check if we can cast the skill
             if (!CanCastSkill() || bulletPrefab == null || tileGrid == null || playerShoot == null) return;
             
             // Get player's FirePoint position (same as regular bullets)
             Transform firePoint = playerShoot.GetBulletSpawnPoint();
+            if (firePoint == null)
+            {
+                Debug.LogError("FirePoint not found on PlayerShoot!");
+                return;
+            }
+            
             Vector3 spawnPosition = firePoint.position;
             
             // Create bullet at FirePoint position (same as regular bullets)
@@ -76,7 +98,6 @@ namespace SkillSystem
             if (bulletScript != null)
             {
                 // Initialize the bullet with properties - will always fire to the right (east)
-                // No longer need startPosition since bullet spawns at FirePoint
                 bulletScript.InitializeGridBased(bulletSpeed, bulletDamage, enemyStunDuration, tileGrid);
                 
                 AudioManager.Instance?.PlayGridLockSFX();
@@ -84,6 +105,8 @@ namespace SkillSystem
                 // Skill has been executed, consume resources and start cooldown
                 ConsumeResources();
                 StartCooldown();
+                
+                Debug.Log($"GridLock: Fired from FirePoint at world position {spawnPosition}");
             }
             else
             {

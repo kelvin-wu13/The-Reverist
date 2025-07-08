@@ -15,7 +15,7 @@ public class Bullet : MonoBehaviour
     private Vector2Int currentGridPosition;
     private bool isDestroying = false;
 
-    public void Initialize(Vector2 dir, float spd, int dmg, TileGrid grid)
+    public void Initialize(Vector2 dir, float spd, int dmg, TileGrid grid, Vector2Int spawnGridPos)
     {
         direction = dir.normalized;
         speed = spd;
@@ -25,7 +25,7 @@ public class Bullet : MonoBehaviour
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(0, 0, angle);
 
-        currentGridPosition = tileGrid.GetGridPosition(transform.position);
+        currentGridPosition = spawnGridPos;
     }
 
     private void Update()
@@ -34,24 +34,43 @@ public class Bullet : MonoBehaviour
 
         transform.Translate(direction * speed * Time.deltaTime, Space.World);
 
-        Vector2Int newGridPosition = tileGrid.GetGridPosition(transform.position);
+        Vector2Int newGridPosition = currentGridPosition;
+        newGridPosition.x = Mathf.RoundToInt(tileGrid.GetGridPosition(transform.position).x);
 
-        if (newGridPosition != currentGridPosition)
+        if (newGridPosition.x > currentGridPosition.x)
         {
-            currentGridPosition = newGridPosition;
-            CheckForEnemyHit(currentGridPosition);
+            currentGridPosition.x = newGridPosition.x;
+
+            if (CheckForEnemyOnTile(currentGridPosition))
+                CheckForEnemyHit(currentGridPosition);
+
             CheckIfPastRightmostGrid();
         }
     }
 
-    private void CheckForEnemyHit(Vector2Int gridPosition)
+    private bool CheckForEnemyOnTile(Vector2Int gridPosition)
     {
-        if (!IsEnemyTilePosition(gridPosition)) return;
+        if (!IsEnemyTilePosition(gridPosition)) return false;
 
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
         foreach (GameObject enemy in enemies)
         {
-            Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
+            Vector3 enemyAdjusted = enemy.transform.position - new Vector3(0, tileGrid.GetTileHeight() * 0.5f, 0);
+            Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemyAdjusted);
+
+            if (enemyGridPos == gridPosition)
+                return true;
+        }
+        return false;
+    }
+
+    private void CheckForEnemyHit(Vector2Int gridPosition)
+    {
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (GameObject enemy in enemies)
+        {
+            Vector3 enemyAdjusted = enemy.transform.position - new Vector3(0, tileGrid.GetTileHeight() * 0.5f, 0);
+            Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemyAdjusted);
 
             if (enemyGridPos == gridPosition)
             {
@@ -70,17 +89,13 @@ public class Bullet : MonoBehaviour
     private void SpawnHitEffect(Vector3 pos)
     {
         if (hitEffectPrefab != null)
-        {
             Instantiate(hitEffectPrefab, pos, Quaternion.identity);
-        }
     }
 
     private void CheckIfPastRightmostGrid()
     {
         if (currentGridPosition.x >= tileGrid.gridWidth || currentGridPosition.x > tileGrid.gridWidth - 1)
-        {
             DestroyBullet();
-        }
     }
 
     private bool IsEnemyTilePosition(Vector2Int gridPosition)
@@ -95,9 +110,7 @@ public class Bullet : MonoBehaviour
 
         Collider2D collider = GetComponent<Collider2D>();
         if (collider != null)
-        {
             collider.enabled = false;
-        }
 
         StartCoroutine(FadeOutAndDestroy());
     }

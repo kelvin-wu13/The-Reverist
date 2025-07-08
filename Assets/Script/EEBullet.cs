@@ -61,15 +61,36 @@ namespace SkillSystem
             if (newGridPosition != currentGridPosition)
             {
                 currentGridPosition = newGridPosition;
-                CheckForEnemyHit(currentGridPosition);
+                
+                // Only check for hit if there's an enemy on this tile
+                if (CheckForEnemyOnTile(currentGridPosition))
+                {
+                    CheckForEnemyHit(currentGridPosition);
+                }
+                
                 CheckIfPastRightmostGrid();
             }
         }
 
+        private bool CheckForEnemyOnTile(Vector2Int gridPosition)
+        {
+            if (!IsEnemyTilePosition(gridPosition)) return false;
+
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag(targetTag);
+            foreach (GameObject enemy in enemies)
+            {
+                Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
+
+                if (enemyGridPos == gridPosition)
+                {
+                    return true; // Enemy found on this tile
+                }
+            }
+            return false; // No enemy found on this tile
+        }
+
         private void CheckForEnemyHit(Vector2Int gridPosition)
         {
-            if (!IsEnemyTilePosition(gridPosition)) return;
-
             GameObject[] enemies = GameObject.FindGameObjectsWithTag(targetTag);
             foreach (GameObject enemy in enemies)
             {
