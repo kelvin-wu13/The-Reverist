@@ -34,10 +34,7 @@ public class Bullet : MonoBehaviour
 
         transform.Translate(direction * speed * Time.deltaTime, Space.World);
 
-        // Adjust for center alignment
-        float tileCenterYOffset = tileGrid.GetTileHeight() * 0.5f;
-        Vector3 adjusted = transform.position - new Vector3(0, tileCenterYOffset, 0);
-        Vector2Int newGridPosition = tileGrid.GetGridPosition(adjusted);
+        Vector2Int newGridPosition = tileGrid.GetGridPosition(transform.position);
 
         if (newGridPosition != currentGridPosition)
         {
@@ -54,8 +51,7 @@ public class Bullet : MonoBehaviour
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
         foreach (GameObject enemy in enemies)
         {
-            Vector3 enemyAdjusted = enemy.transform.position - new Vector3(0, tileGrid.GetTileHeight() * 0.5f, 0);
-            Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemyAdjusted);
+            Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
 
             if (enemyGridPos == gridPosition)
             {
