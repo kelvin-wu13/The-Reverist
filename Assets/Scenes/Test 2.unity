@@ -2946,7 +2946,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93cc1806d1f48df43ab8b2d5df2df962, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numberOfEnemies: 16
+  numberOfEnemies: 1
   spawnOnStart: 0
   useRandomPositions: 1
   tileGrid: {fileID: 334597318}
@@ -4114,8 +4114,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   stats: {fileID: 11400000, guid: 352217b1aa8a9be409913895a5844b87, type: 2}
-  manaRegenAmount: 1
-  manaRegenInterval: 0.5
+  manaRegenRatePerSecond: 2
   playerAnimator: {fileID: 1573556188}
   deathAnimationTrigger: Death
   deathAnimationDuration: 1

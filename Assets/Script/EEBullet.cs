@@ -23,31 +23,19 @@ namespace SkillSystem
         private Vector2Int currentGridPosition;
         private bool isDestroying = false;
 
-        public void InitializeGridBased(float movementSpeed, int bulletDamage, float enemyStunDuration, TileGrid grid)
-        {
-            direction = Vector2.right;
-            speed = movementSpeed;
-            damage = bulletDamage;
-            stunDuration = enemyStunDuration;
-            tileGrid = grid;
-
-            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-            transform.rotation = Quaternion.Euler(0, 0, angle);
-
-            currentGridPosition = tileGrid.GetGridPosition(transform.position);
-        }
-
-        public void Initialize(Vector2 dir, float spd, int dmg, TileGrid grid)
+        public void Initialize(Vector2 dir, float spd, int dmg, float stun, TileGrid grid, Vector2Int spawnGridPos)
         {
             direction = dir.normalized;
             speed = spd;
             damage = dmg;
+            stunDuration = stun;
             tileGrid = grid;
 
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Euler(0, 0, angle);
 
-            currentGridPosition = tileGrid.GetGridPosition(transform.position);
+            // FIX: Directly use the provided grid position, just like Bullet.cs, for perfect accuracy.
+            currentGridPosition = spawnGridPos;
         }
 
         private void Update()
@@ -56,22 +44,24 @@ namespace SkillSystem
 
             transform.Translate(direction * speed * Time.deltaTime, Space.World);
 
-            Vector2Int newGridPosition = tileGrid.GetGridPosition(transform.position);
+            Vector2Int newGridPosition = currentGridPosition;
+            newGridPosition.x = Mathf.RoundToInt(tileGrid.GetGridPosition(transform.position).x);
 
-            if (newGridPosition != currentGridPosition)
+            if (newGridPosition.x > currentGridPosition.x)
             {
-                currentGridPosition = newGridPosition;
-                
-                // Only check for hit if there's an enemy on this tile
+                currentGridPosition.x = newGridPosition.x;
+
                 if (CheckForEnemyOnTile(currentGridPosition))
                 {
                     CheckForEnemyHit(currentGridPosition);
                 }
-                
+
                 CheckIfPastRightmostGrid();
             }
         }
 
+        // NOTE: The enemy position adjustment is now CORRECT because the bullet's
+        // own starting position is also calculated correctly. This ensures consistency.
         private bool CheckForEnemyOnTile(Vector2Int gridPosition)
         {
             if (!IsEnemyTilePosition(gridPosition)) return false;
@@ -79,14 +69,15 @@ namespace SkillSystem
             GameObject[] enemies = GameObject.FindGameObjectsWithTag(targetTag);
             foreach (GameObject enemy in enemies)
             {
-                Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
+                Vector3 enemyAdjusted = enemy.transform.position - new Vector3(0, tileGrid.GetTileHeight() * 0.5f, 0);
+                Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemyAdjusted);
 
                 if (enemyGridPos == gridPosition)
                 {
-                    return true; // Enemy found on this tile
+                    return true;
                 }
             }
-            return false; // No enemy found on this tile
+            return false;
         }
 
         private void CheckForEnemyHit(Vector2Int gridPosition)
@@ -94,7 +85,8 @@ namespace SkillSystem
             GameObject[] enemies = GameObject.FindGameObjectsWithTag(targetTag);
             foreach (GameObject enemy in enemies)
             {
-                Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemy.transform.position);
+                Vector3 enemyAdjusted = enemy.transform.position - new Vector3(0, tileGrid.GetTileHeight() * 0.5f, 0);
+                Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemyAdjusted);
 
                 if (enemyGridPos == gridPosition)
                 {

@@ -11,8 +11,7 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private Stats stats;
 
     [Header("Mana Regeneration")]
-    [SerializeField] private float manaRegenAmount = 1f;
-    [SerializeField] private float manaRegenInterval = 0.5f;
+    [SerializeField] private float manaRegenRatePerSecond = 2f;
 
     [Header("Animation")]
     [SerializeField] private Animator playerAnimator;
@@ -34,7 +33,6 @@ public class PlayerStats : MonoBehaviour
 
     private Color originalColor;
 
-    private float manaRegenTimer;
     private bool isDead = false;
 
     public int CurrentHealth
@@ -122,13 +120,9 @@ public class PlayerStats : MonoBehaviour
 
         if (currentMana < stats.MaxMana)
         {
-            manaRegenTimer += Time.deltaTime;
-
-            if (manaRegenTimer >= manaRegenInterval)
-            {
-                currentMana = Mathf.Min(stats.MaxMana, currentMana + manaRegenAmount);
-                manaRegenTimer -= manaRegenInterval;
-            }
+            // Regenerate mana smoothly each frame instead of in chunks
+            currentMana += manaRegenRatePerSecond * Time.deltaTime;
+            currentMana = Mathf.Min(currentMana, stats.MaxMana); // Ensure it doesn't go over max
         }
     }
 

@@ -78,15 +78,15 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 10
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: -412345311, guid: a4e8038e0cca77f46bc4ac568511ce64, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.95, y: 1.01}
+  m_Size: {x: 3.55, y: 6.66}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!114 &8249774073950612152
@@ -112,7 +112,7 @@ MonoBehaviour:
   attackFlashColor: {r: 1, g: 1, b: 1, a: 1}
   chargingColor: {r: 1, g: 1, b: 1, a: 1}
   flashDuration: 0.1
-  spawnYOffset: 2
+  spawnYOffset: 0
 --- !u!95 &8907933800541794756
 Animator:
   serializedVersion: 7

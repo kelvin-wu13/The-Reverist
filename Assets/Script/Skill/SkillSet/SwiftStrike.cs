@@ -263,7 +263,7 @@ namespace SkillSystem
             {
                 new Vector2Int(frontX, playerGridPos.y + 1), // front-up
                 new Vector2Int(frontX, playerGridPos.y),     // front-mid
-                new Vector2Int(frontX, playerGridPos.y - 1)  // front-down
+                new Vector2Int(frontX, playerGridPos.y - 1),  // front-down
             };
 
             Enemy[] allEnemies = FindObjectsOfType<Enemy>();
