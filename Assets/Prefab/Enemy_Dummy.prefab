@@ -52,7 +52,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stunEffectPrefab: {fileID: 3031415684111976967, guid: 4f989cbbcdde5ac41b5d21505a53e082, type: 3}
   stunEffectOffset: {x: 0, y: -0.88, z: 0}
-  maxHealth: 1000
+  maxHealth: 100
   currentHealth: 0
   isDying: 0
   moveSpeed: 5
@@ -77,7 +77,7 @@ MonoBehaviour:
   bulletSpeed: 5
   bulletDamage: 10
   shootPoint: {fileID: 8284318777044906900}
-  shootChance: 0
+  shootChance: 1.5
   animator: {fileID: 2591749229838255906}
 --- !u!114 &-110073912865716390
 MonoBehaviour:

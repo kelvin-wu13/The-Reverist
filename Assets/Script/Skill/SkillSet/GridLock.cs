@@ -12,16 +12,15 @@ namespace SkillSystem
         [SerializeField] private float enemyStunDuration = 3f;
         [SerializeField] public float cooldownDuration = 2.5f;
         [SerializeField] private float manaCost = 1.5f;
+        [SerializeField] private float animDuration = 0.5f;
 
-        [Header("Visual Feedback")]
-        [SerializeField] private bool showDebugPath = true;
 
         private TileGrid tileGrid;
         private bool isOnCooldown = false;
         private float cooldownTimer = 0f;
         private PlayerStats playerStats;
         private PlayerShoot playerShoot;
-        private PlayerMovement playerMovement; // FIX: Added reference to PlayerMovement
+        private PlayerMovement playerMovement;
 
         private void Awake()
         {
@@ -44,8 +43,6 @@ namespace SkillSystem
             {
                 playerShoot = FindObjectOfType<PlayerShoot>();
             }
-
-            // FIX: Find the PlayerMovement component to get accurate grid position
             if (playerMovement == null)
             {
                 playerMovement = FindObjectOfType<PlayerMovement>();
@@ -80,8 +77,6 @@ namespace SkillSystem
             }
 
             Vector3 spawnPosition = firePoint.position;
-
-            // FIX: Get the player's logical grid position from PlayerMovement, just like PlayerShoot.cs does.
             Vector2Int spawnGridPos = playerMovement.GetCurrentGridPosition();
 
             GameObject bullet = Instantiate(bulletPrefab, spawnPosition, Quaternion.identity);
@@ -89,15 +84,13 @@ namespace SkillSystem
             EEBullet bulletScript = bullet.GetComponent<EEBullet>();
             if (bulletScript != null)
             {
-                // FIX: Call the new, unified Initialize method with all correct parameters.
-                bulletScript.Initialize(Vector2.right, bulletSpeed, bulletDamage, enemyStunDuration, tileGrid, spawnGridPos);
+                bulletScript.Initialize(Vector2.right, bulletSpeed, bulletDamage, enemyStunDuration, tileGrid, spawnGridPos, GetSkillType());
 
+                playerShoot?.TriggerSkillAnimation(animDuration);
                 AudioManager.Instance?.PlayGridLockSFX();
 
                 ConsumeResources();
                 StartCooldown();
-
-                Debug.Log($"GridLock: Fired from logical grid position {spawnGridPos}");
             }
             else
             {

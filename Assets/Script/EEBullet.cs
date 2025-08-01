@@ -1,13 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections;
 
 namespace SkillSystem
 {
-    public class EEBullet : MonoBehaviour
+    public class EEBullet : Skill
     {
         [Header("Bullet Properties")]
-        [SerializeField] private int damage = 15;
         [SerializeField] private float stunDuration = 3f;
         [SerializeField] private string targetTag = "Enemy";
 
@@ -19,22 +17,25 @@ namespace SkillSystem
 
         private Vector2 direction;
         private float speed;
+        private int bulletDamage;
         private TileGrid tileGrid;
         private Vector2Int currentGridPosition;
         private bool isDestroying = false;
 
-        public void Initialize(Vector2 dir, float spd, int dmg, float stun, TileGrid grid, Vector2Int spawnGridPos)
+
+        public void Initialize(Vector2 dir, float spd, int dmg, float stun, TileGrid grid, Vector2Int spawnGridPos, SkillCombination skillCombo)
         {
+            base.Initialize(spawnGridPos, skillCombo, null);
+
             direction = dir.normalized;
             speed = spd;
-            damage = dmg;
+            bulletDamage = dmg;
             stunDuration = stun;
             tileGrid = grid;
 
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Euler(0, 0, angle);
 
-            // FIX: Directly use the provided grid position, just like Bullet.cs, for perfect accuracy.
             currentGridPosition = spawnGridPos;
         }
 
@@ -60,8 +61,6 @@ namespace SkillSystem
             }
         }
 
-        // NOTE: The enemy position adjustment is now CORRECT because the bullet's
-        // own starting position is also calculated correctly. This ensures consistency.
         private bool CheckForEnemyOnTile(Vector2Int gridPosition)
         {
             if (!IsEnemyTilePosition(gridPosition)) return false;
@@ -93,7 +92,7 @@ namespace SkillSystem
                     Enemy enemyComponent = enemy.GetComponent<Enemy>();
                     if (enemyComponent != null)
                     {
-                        enemyComponent.TakeDamage(damage);
+                        DealDamageToEnemy(enemyComponent, bulletDamage);
                         enemyComponent.Stun(stunDuration);
 
                         SpawnHitEffect(transform.position);

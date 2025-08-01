@@ -12,14 +12,17 @@ namespace SkillSystem
         [SerializeField] private float manaCost = 1.5f;
         [SerializeField] public float cooldownDuration = 2f;
         [SerializeField] private float stunDuration = 2f;
+        [SerializeField] private float animDuration = 0.5f;
 
         private TileGrid tileGrid;
         private PlayerStats playerStats;
+        private PlayerShoot playerShoot;
 
         private void Awake()
         {
             tileGrid = FindObjectOfType<TileGrid>();
             playerStats = FindObjectOfType<PlayerStats>();
+            playerShoot = FindObjectOfType<PlayerShoot>();
 
             if (tileGrid == null)
                 Debug.LogError("KineticShove: TileGrid not found!");
@@ -33,9 +36,9 @@ namespace SkillSystem
             if (tileGrid == null || playerStats == null) return;
             if (!playerStats.TryUseMana(manaCost)) return;
 
+            playerShoot?.TriggerSkillAnimation(animDuration);
             AudioManager.Instance?.PlayKineticShoveSFX();
 
-            // Adjust Y position like QuickSlash
             Vector3 adjustedPos = casterTransform.position;
             adjustedPos.y -= 1.6f;
             adjustedPos.y += 0.1f;
@@ -45,13 +48,13 @@ namespace SkillSystem
 
             List<Vector2Int> damageGridPositions = new List<Vector2Int>();
 
-            for (int forward = 1; forward <= 2; forward++) // two tiles forward
+            for (int forward = 1; forward <= 2; forward++)
             {
                 Vector2Int basePos = playerGridPos + dir * forward;
 
-                damageGridPositions.Add(new Vector2Int(basePos.x, basePos.y + 1)); // up
-                damageGridPositions.Add(basePos);                                  // mid
-                damageGridPositions.Add(new Vector2Int(basePos.x, basePos.y - 1)); // down
+                damageGridPositions.Add(new Vector2Int(basePos.x, basePos.y + 1));
+                damageGridPositions.Add(basePos);                                  
+                damageGridPositions.Add(new Vector2Int(basePos.x, basePos.y - 1)); 
             }
 
             List<Vector2Int> validPositions = new List<Vector2Int>();
@@ -78,15 +81,20 @@ namespace SkillSystem
             {
                 foreach (Enemy enemy in allEnemies)
                 {
-                    if (enemy == null) continue;
+                    if (enemy == null || enemy.currentHealth <= 0) continue;
 
                     Vector2Int enemyGridPos = enemy.GetCurrentGridPosition();
 
                     if (enemyGridPos == gridPos)
                     {
                         enemy.TakeDamage(damageAmount);
-                        ProcessKnockbackOrStun(enemy, gridPos, dir);
                         Debug.Log($"KineticShove HIT {enemy.name} at {enemyGridPos}");
+
+                        
+                        if (enemy.currentHealth > 0)
+                        {
+                            ProcessKnockbackOrStun(enemy, gridPos, dir);
+                        }
                     }
                 }
             }
@@ -99,12 +107,10 @@ namespace SkillSystem
             if (CanKnockbackTo(knockbackPos))
             {
                 ApplyKnockback(enemy, currentPos, knockbackPos);
-                Debug.Log($"Enemy at {currentPos} knocked back to {knockbackPos}");
             }
             else
             {
                 ApplyStun(enemy, currentPos, knockbackPos);
-                Debug.Log($"Enemy at {currentPos} stunned due to obstacle at {knockbackPos}");
             }
         }
 
@@ -117,7 +123,7 @@ namespace SkillSystem
 
         private void ApplyStun(Enemy enemy, Vector2Int fromPos, Vector2Int blockedPos)
         {
-            enemy.SetPositionWithOffset(fromPos); // keep position synced
+            enemy.SetPositionWithOffset(fromPos);
             enemy.Stun(stunDuration);
             StartCoroutine(ShowCollisionFeedback(enemy));
         }

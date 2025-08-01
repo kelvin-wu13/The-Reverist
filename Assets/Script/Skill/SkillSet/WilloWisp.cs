@@ -11,6 +11,7 @@ public class WilloWisp : Skill
     [SerializeField] private float chargeTime = 1.0f;
     [SerializeField] public float cooldownDuration = 2.0f;
     [SerializeField] public float manaCost = 2.0f;
+    [SerializeField] public float animDuration = 0.5f;
 
     [Header("Visual Effects")]
     [SerializeField] private Color attackFlashColor = Color.red;
@@ -20,6 +21,7 @@ public class WilloWisp : Skill
 
     private TileGrid tileGrid;
     private PlayerStats playerStats;
+    private PlayerShoot playerShoot;
     private Transform targetEnemy;
     private Vector2Int currentGridPosition;
     private Vector2Int targetPositionAtChargeStart;
@@ -43,7 +45,6 @@ public class WilloWisp : Skill
         isCharging = false;
         currentGridPosition = gridPos;
 
-        // Find first target
         targetEnemy = FindNearestEnemy();
 
         if (targetEnemy != null)
@@ -54,7 +55,8 @@ public class WilloWisp : Skill
         {
             transform.position = tileGrid.GetWorldPosition(gridPos);
         }
-        
+
+        playerShoot?.TriggerSkillAnimation(animDuration);
         AudioManager.Instance?.PlayWilloWispSFX();
         StartCoroutine(FindAndEngageEnemies());
     }

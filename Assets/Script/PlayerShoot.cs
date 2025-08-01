@@ -15,58 +15,63 @@ public class PlayerShoot : MonoBehaviour
     private ComboTracker comboTracker;
 
     private readonly int isShootingParam = Animator.StringToHash("IsShooting");
+    private readonly int comboIndexParam = Animator.StringToHash("ComboIndex");
     [SerializeField] private float WaitTime = 1f;
 
     private float Time_elapsed;
     private float lastShootTime;
     private bool isHoldingFireButton = false;
 
+    private bool isSkillAnimating = false;
+    private float skillAnimationEndTime = 0f;
+
     private void Awake()
     {
-        // If not manually assigned, find FirePoint in the scene
         if (bulletSpawnPoint == null)
         {
             bulletSpawnPoint = transform.Find("FirePoint");
             if (bulletSpawnPoint == null)
             {
-                Debug.LogWarning("FirePoint not found! Defaulting to player transform.");
                 bulletSpawnPoint = transform;
             }
         }
-
-        if (tileGrid == null)
-            tileGrid = FindObjectOfType<TileGrid>();
-
-        if (animator == null)
-            animator = GetComponent<Animator>();
-
-        if (playerMovement == null)
-            playerMovement = GetComponent<PlayerMovement>();
-        
-        if (comboTracker == null)
-        comboTracker = GetComponent<ComboTracker>();
-
-        if (stats == null)
-            Debug.LogError("Stats scriptable object not assigned to PlayerShoot!");
+        if (tileGrid == null) tileGrid = FindObjectOfType<TileGrid>();
+        if (animator == null) animator = GetComponent<Animator>();
+        if (playerMovement == null) playerMovement = GetComponent<PlayerMovement>();
+        if (comboTracker == null) comboTracker = GetComponent<ComboTracker>();
     }
 
     private void Update()
     {
+        if (isSkillAnimating && Time.time > skillAnimationEndTime)
+        {
+            isSkillAnimating = false;
+        }
+
         isHoldingFireButton = Input.GetButton("Fire1") || Input.GetKey(KeyCode.Space);
 
         if (isHoldingFireButton)
             TryShoot();
 
-        // Always update Animator with IsShooting and current ComboIndex
-        animator.SetBool(isShootingParam, isHoldingFireButton);
+        bool isCurrentlyShooting = isHoldingFireButton || isSkillAnimating;
+        animator.SetBool(isShootingParam, isCurrentlyShooting);
 
-        // Also update ComboIndex here, based on ComboTracker
         if (comboTracker != null)
         {
             animator.SetInteger("ComboIndex", comboTracker.GetCurrentComboIndex());
         }
 
         UpdateShootTimer();
+    }
+    public void TriggerSkillAnimation(float duration)
+    {
+        isSkillAnimating = true;
+        skillAnimationEndTime = Time.time + duration;
+
+        if (comboTracker != null)
+        {
+            comboTracker.TriggerCombo();
+        }
     }
 
     public Transform GetBulletSpawnPoint()
@@ -76,16 +81,17 @@ public class PlayerShoot : MonoBehaviour
 
     private void TryShoot()
     {
+        if (isSkillAnimating) return;
         if (stats == null) return;
-
-        if (Time.time - lastShootTime < stats.ShootCooldown)
-            return;
+        if (Time.time - lastShootTime < stats.ShootCooldown) return;
 
         ShootBulletFromCurrentTile();
         lastShootTime = Time.time;
 
         if (comboTracker != null)
+        {
             comboTracker.TriggerCombo();
+        }
     }
 
     private void UpdateShootTimer()
@@ -95,14 +101,12 @@ public class PlayerShoot : MonoBehaviour
 
     private void ShootBulletFromCurrentTile()
     {
-        // Get current player grid position (logical row)
         Vector2Int playerGridPos = playerMovement != null
             ? playerMovement.GetCurrentGridPosition()
             : tileGrid.GetGridPosition(transform.position);
 
         Vector2Int spawnGridPos = new Vector2Int(playerGridPos.x, playerGridPos.y);
 
-        // Use FirePoint world position
         Vector3 spawnPosition = bulletSpawnPoint.position;
 
         GameObject bulletObject = Instantiate(bulletPrefab, spawnPosition, Quaternion.identity);

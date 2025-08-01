@@ -10,6 +10,7 @@ namespace SkillSystem
         [SerializeField] private int damage = 25;
         [SerializeField] private float animDuration = 1f;
 
+
         [Header("Cooldown")]
         [SerializeField] public float cooldownDuration = 2f;
         [SerializeField] public float manaCost = 1.5f;
@@ -30,10 +31,11 @@ namespace SkillSystem
             PlayerStats stats = player.GetComponent<PlayerStats>();
             if (stats != null && !stats.TryUseMana(manaCost))
             {
-                Debug.Log("Not enough mana to cast PlasmaSurge.");
                 Destroy(gameObject);
                 return;
             }
+
+            playerShoot?.TriggerSkillAnimation(animDuration);
 
             transform.position = GetFirepointPosition();
 
@@ -98,12 +100,10 @@ namespace SkillSystem
 
         private void DamageEnemiesOnTile(Vector2Int gridPos)
         {
-            // Use the same hit detection method as Bullet.cs and IonBolt.cs
             GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
             
             foreach (GameObject enemy in enemies)
             {
-                // Use the same center alignment adjustment as Bullet.cs
                 Vector3 enemyAdjusted = enemy.transform.position - new Vector3(0, tileGrid.GetTileHeight() * 0.5f, 0);
                 Vector2Int enemyGridPos = tileGrid.GetGridPosition(enemyAdjusted);
                 
@@ -112,8 +112,7 @@ namespace SkillSystem
                     Enemy enemyComponent = enemy.GetComponent<Enemy>();
                     if (enemyComponent != null)
                     {
-                        enemyComponent.TakeDamage(damage);
-                        Debug.Log($"PlasmaSurge: Hit enemy at tile {gridPos} for {damage} damage");
+                        DealDamageToEnemy(enemyComponent, damage);
                     }
                 }
             }
@@ -127,7 +126,6 @@ namespace SkillSystem
 
         private bool IsEnemyTilePosition(Vector2Int gridPosition)
         {
-            // Same enemy tile detection as Bullet.cs and IonBolt.cs
             return tileGrid.IsValidGridPosition(gridPosition) && 
                    gridPosition.x >= tileGrid.gridWidth / 2;
         }

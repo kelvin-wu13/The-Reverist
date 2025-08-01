@@ -56,3 +56,4 @@ MonoBehaviour:
   manaCost: 1.5
   cooldownDuration: 2
   speedMultiplier: 1
+  skillAnimationDuration: 0.2

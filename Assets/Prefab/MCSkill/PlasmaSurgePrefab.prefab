@@ -214,6 +214,6 @@ MonoBehaviour:
   lifetime: 1
   skillEffect: {fileID: 0}
   damage: 30
-  animDuration: 1
+  animDuration: 0.5
   cooldownDuration: 1.5
   manaCost: 1.5

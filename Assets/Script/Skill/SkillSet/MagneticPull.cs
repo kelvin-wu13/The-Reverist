@@ -12,13 +12,16 @@ namespace SkillSystem
         [SerializeField] public float cooldownDuration = 2.0f;
         [SerializeField] public float manaCost = 2.0f;
         [SerializeField] private float maxWaitTime = 1.0f;
+        [SerializeField] private float animDuration = 0.5f;
 
         private PlayerStats playerStats;
+        private PlayerShoot playerShoot;
         private TileGrid tileGrid;
 
         private void Awake()
         {
             playerStats = FindObjectOfType<PlayerStats>();
+            playerShoot = FindObjectOfType<PlayerShoot>();
             tileGrid = FindObjectOfType<TileGrid>();
 
             if (playerStats == null)
@@ -31,13 +34,12 @@ namespace SkillSystem
         {
             if (playerStats != null && !playerStats.TryUseMana(manaCost))
             {
-                Debug.Log("Not enough mana to cast MagneticPull!");
                 return;
             }
 
-            Debug.Log($"Magnetic Pull Skill activated at {targetPosition}");
 
             Enemy.ClearAllReservations();
+            playerShoot?.TriggerSkillAnimation(animDuration);
             AudioManager.Instance?.PlayMagneticPullSFX();
 
             StartCoroutine(ExecutePullSequence());

@@ -17,7 +17,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Position Offset")]
     [SerializeField] private Vector2 positionOffset = new Vector2(0f, 1.6f);
     [SerializeField] private float yOffsetFalloffPerRow = 0.1f;
-    [SerializeField] private float xOffsetFalloffPerRow = 0.05f; // <-- New!
+    [SerializeField] private float xOffsetFalloffPerRow = 0.05f;
 
     [Header("Animation Settings")]
     [SerializeField] private bool smoothDirectionTransition = true;
@@ -171,7 +171,6 @@ public class PlayerMovement : MonoBehaviour
     {
         Vector3 basePos = tileGrid.GetCenteredWorldPosition(gridPosition);
 
-        // Dynamic offset decreases per row
         float dynamicYOffset = positionOffset.y - (gridPosition.y * yOffsetFalloffPerRow);
         float dynamicXOffset = positionOffset.x - (gridPosition.y * xOffsetFalloffPerRow);
 

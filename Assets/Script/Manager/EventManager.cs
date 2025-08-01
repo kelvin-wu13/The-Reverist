@@ -31,6 +31,7 @@ public class EventManager : MonoBehaviour
     [SerializeField] private GameObject arrowRightButton;
     [SerializeField] private DialogueManager dialogueManager;
     [SerializeField] private DialogueTrigger dialogueTrigger;
+    [SerializeField] private GameObject battleSceneButton;
 
     [Header("Skill Panels")]
     public GameObject arsenalPanel;
@@ -73,16 +74,28 @@ public class EventManager : MonoBehaviour
             Debug.Log("Player hidden at start.");
         }
 
+        if (battleSceneButton != null)
+        {
+            battleSceneButton.SetActive(IsTrainingScene());
+        }
+
         if (arrowLeftButton != null) arrowLeftButton.SetActive(IsTrainingScene());
         if (arrowRightButton != null) arrowRightButton.SetActive(IsTrainingScene());
 
-        Debug.Log("Game started.");
+        if (IsBattleScene())
+        {
+            StartCoroutine(StartBattle());
+        }
+        else
+        {
+            OnGameStart?.Invoke();
+        }
+
         OnGameStart?.Invoke();
     }
 
     private void Update()
     {
-        // Allow ESC to close skill popup if we're waiting for it
         if (currentState == GameState.Skill && skillPopupOpen && waitingForSkillPopupExit)
         {
             if (Input.GetKeyDown(KeyCode.Escape))
@@ -96,6 +109,10 @@ public class EventManager : MonoBehaviour
         {
             ToggleSkillPopupFromButton();
         }
+    }
+    private bool IsBattleScene()
+    {
+        return SceneManager.GetActiveScene().name == "BattleScene";
     }
 
     public void StartGameFlow()
@@ -204,7 +221,6 @@ public class EventManager : MonoBehaviour
         skillPopupOpen = false;
         Time.timeScale = 1f;
 
-        // Deactivate all panels when battle starts
         arsenalPanel.SetActive(false);
         saberPanel.SetActive(false);
         interferePanel.SetActive(false);
@@ -313,6 +329,18 @@ public class EventManager : MonoBehaviour
         Debug.Log("Marking battle over and invoking OnBattleEnd...");
         MarkBattleOver();
         OnBattleEnd?.Invoke();
+        string currentScene = SceneManager.GetActiveScene().name;
+        if (currentScene == "BattleScene")
+        {
+            SceneManager.LoadScene("Main Menu Demo");
+        }
+    }
+    public void GoToBattleScene()
+    {
+        if (IsTrainingScene())
+        {
+            SceneManager.LoadScene("BattleScene");
+        }
     }
 
     private bool IsTrainingScene()

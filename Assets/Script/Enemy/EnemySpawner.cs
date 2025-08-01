@@ -14,7 +14,6 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private GameObject enemyPrefab;
     [SerializeField] private Transform enemyContainer;
 
-    // List of specific positions to use when not using random positions
     [SerializeField] private List<Vector2Int> specificSpawnPositions = new List<Vector2Int>();
 
     // Keep track of spawned enemies
@@ -38,6 +37,7 @@ public class EnemySpawner : MonoBehaviour
         if (spawnOnStart)
         {
             SpawnEnemies();
+            AudioManager.Instance?.PlayEnemySpawnSFX();
         }
     }
 
@@ -68,10 +68,8 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    // Spawn enemies at specific positions from the list
     private void SpawnAtSpecificPositions()
     {
-        // If we have specific positions, use them (limited by numberOfEnemies)
         int spawnCount = Mathf.Min(numberOfEnemies, specificSpawnPositions.Count);
 
         for (int i = 0; i < spawnCount; i++)
@@ -80,7 +78,6 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    // Get a list of random valid enemy positions
     private List<Vector2Int> GetRandomEnemyPositions(int count)
     {
         List<Vector2Int> validPositions = new List<Vector2Int>();
@@ -99,7 +96,6 @@ public class EnemySpawner : MonoBehaviour
             }
         }
 
-        // Shuffle and select positions
         ShuffleList(validPositions);
         int spawnCount = Mathf.Min(count, validPositions.Count);
 
@@ -111,15 +107,12 @@ public class EnemySpawner : MonoBehaviour
         return selectedPositions;
     }
 
-    // Check if a position is valid for spawning an enemy
     private bool IsValidEnemyPosition(Vector2Int position)
     {
-        // Check if position is within the grid and is an enemy tile
         return tileGrid.IsValidGridPosition(position) &&
                tileGrid.grid[position.x, position.y] == TileType.Enemy;
     }
 
-    // Spawn a single enemy at a specified position
     private GameObject SpawnSingleEnemy(Vector2Int gridPosition)
     {
         if (!IsValidEnemyPosition(gridPosition))
@@ -128,7 +121,13 @@ public class EnemySpawner : MonoBehaviour
             return null;
         }
 
+        // Get the center position of the tile
         Vector3 worldPosition = tileGrid.GetWorldPosition(gridPosition);
+
+        // Adjust the Y position to be at the bottom of the tile
+        float tileHeight = tileGrid.GetTileHeight();
+        worldPosition.y -= tileHeight / 2f;
+
         GameObject enemy = Instantiate(enemyPrefab, worldPosition, Quaternion.identity, enemyContainer);
         enemy.name = $"Enemy_{gridPosition.x}_{gridPosition.y}";
 

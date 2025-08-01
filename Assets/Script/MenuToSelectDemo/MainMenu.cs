@@ -22,27 +22,27 @@ public class MainMenu : MonoBehaviour
 
     public void CharacterSelectDemo()
     {
-        fadeController.FadeOutAndLoadScene("Character Select Demo"); // update name if needed
+        fadeController.FadeOutAndLoadScene("Character Select Demo");
     }
 
     public void SkillArsenalDemo()
     {
-        fadeController.FadeOutAndLoadScene("ArsenalDemo"); // update name if needed
+        fadeController.FadeOutAndLoadScene("ArsenalDemo");
     }
 
     public void SkillSaberDemo()
     {
-        fadeController.FadeOutAndLoadScene("SaberDemo"); // update name if needed
+        fadeController.FadeOutAndLoadScene("SaberDemo");
     }
 
     public void SkillInterfereDemo()
     {
-        fadeController.FadeOutAndLoadScene("InterfereDemo"); // update name if needed
+        fadeController.FadeOutAndLoadScene("InterfereDemo");
     }
 
     public void TrainingSceneDemo()
     {
-        fadeController.FadeOutAndLoadScene("TrainingScene"); // update name if needed
+        fadeController.FadeOutAndLoadScene("TrainingScene");
     }
 
     public void ExitGame()

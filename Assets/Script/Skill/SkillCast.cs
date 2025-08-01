@@ -8,7 +8,6 @@ namespace SkillSystem
         [Header("References")]
         [SerializeField] private PlayerCrosshair crosshair;
         [SerializeField] private TileGrid tileGrid;
-        [SerializeField] private string defaultAllowedSkillSet = "Q";
 
         [Header("Skill Prefabs")]
         [SerializeField] public GameObject IonBoltPrefab;
@@ -24,9 +23,8 @@ namespace SkillSystem
         [Header("UI Feedback")]
         public bool showDebugLogs = true;
 
-        private SkillType firstSkill = SkillType.None;
+        private SkillType[] skillQueue = new SkillType[2] { SkillType.None, SkillType.None };
         private ComboTracker comboTracker;
-        private string allowedSkillSet;
 
 
         private Dictionary<SkillCombination, float> skillCooldowns = new();
@@ -42,7 +40,6 @@ namespace SkillSystem
             crosshair ??= FindObjectOfType<PlayerCrosshair>();
             tileGrid ??= FindObjectOfType<TileGrid>();
 
-            SetAllowedSkillSet(defaultAllowedSkillSet);
         }
 
         private void Update()
@@ -58,49 +55,51 @@ namespace SkillSystem
             else if (Input.GetKeyDown(KeyCode.W)) input = SkillType.W;
             else if (Input.GetKeyDown(KeyCode.E)) input = SkillType.E;
 
-            if (input == SkillType.None) return;
-
-            if (firstSkill == SkillType.None)
+            if (input != SkillType.None)
             {
-                firstSkill = input;
-                if (showDebugLogs) Debug.Log($"First skill input: {firstSkill}");
+                AddSkillToQueue(input);
             }
-            else
-            {
-                if (!IsSkillAllowed(firstSkill, input))
-                {
-                    if (showDebugLogs) Debug.Log("Skill not allowed in this phase.");
-                    firstSkill = SkillType.None;
-                    return;
-                }
 
-                SkillCombination combo = GetSkillCombination(firstSkill, input);
-                CastSkill(combo);
-                firstSkill = SkillType.None;
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                CastQueuedSkill();
             }
         }
 
-        public void SetAllowedSkillSet(string allowed)
+        private void AddSkillToQueue(SkillType skill)
         {
-            allowedSkillSet = allowed;
-            if (showDebugLogs) Debug.Log("Allowed skills updated to: " + allowed);
-        }
-
-        private bool IsSkillAllowed(SkillType first, SkillType second)
-        {
-            string combo = first.ToString() + second.ToString();
-            if (allowedSkillSet == "Q") return combo.StartsWith("Q");
-            if (allowedSkillSet == "QW") return combo.StartsWith("Q") || combo.StartsWith("W");
-            return true;
+            skillQueue[0] = skillQueue[1];
+            skillQueue[1] = skill;
         }
 
         private void CancelSkillInput()
         {
-            if (firstSkill != SkillType.None)
+            if (skillQueue[0] != SkillType.None || skillQueue[1] != SkillType.None)
             {
-                if (showDebugLogs) Debug.Log("Skill input canceled.");
-                firstSkill = SkillType.None;
+                skillQueue[0] = SkillType.None;
+                skillQueue[1] = SkillType.None;
             }
+        }
+
+        private void CastQueuedSkill()
+        {
+            if (skillQueue[0] == SkillType.None || skillQueue[1] == SkillType.None)
+            {
+                return;
+            }
+
+            SkillCombination combo = GetSkillCombination(skillQueue[0], skillQueue[1]);
+
+            if (IsSkillOnCooldown(combo))
+            {
+                if (showDebugLogs) Debug.Log($"Skill {combo} is on cooldown!");
+                return;
+            }
+
+            CastSkill(combo);
+
+            skillQueue[0] = SkillType.None;
+            skillQueue[1] = SkillType.None;
         }
 
         private SkillCombination GetSkillCombination(SkillType first, SkillType second)
@@ -163,6 +162,11 @@ namespace SkillSystem
                 StartSkillCooldown(combo);
             }
 
+            if (ObjectiveManager.Instance != null)
+            {
+                ObjectiveManager.Instance.OnSkillCast(combo.ToString());
+            }
+
             if (comboTracker == null)
             {
                 GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -177,9 +181,6 @@ namespace SkillSystem
                 else
                     animator.SetBool("IsShooting", true);
             }
-
-            if (comboTracker != null)
-                comboTracker.TriggerCombo();
         }
 
         private void TriggerMeleeAnimation(SkillCombination combo, Animator animator)
@@ -209,6 +210,15 @@ namespace SkillSystem
 
             foreach (var combo in cooldownDurations.Keys)
                 skillCooldowns[combo] = 0f;
+        }
+
+        public SkillType[] GetSkillQueue()
+        {
+            return (SkillType[])skillQueue.Clone();
+        }
+        public bool IsQueueFull()
+        {
+            return skillQueue[0] != SkillType.None && skillQueue[1] != SkillType.None;
         }
     }
 }

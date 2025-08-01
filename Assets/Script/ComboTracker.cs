@@ -5,11 +5,10 @@ public class ComboTracker : MonoBehaviour
     private Animator animator;
     private int currentComboIndex = 0;
     private float timeElapsed;
-    [SerializeField] private float waitTime = 1.5f;
+    [SerializeField] private float waitTime = 1f;
     [SerializeField] private int comboAmount = 3;
 
     private readonly int ComboIndex = Animator.StringToHash("ComboIndex");
-    // Removed IsShooting - PlayerShoot now handles this
 
     private void Awake()
     {
@@ -22,7 +21,6 @@ public class ComboTracker : MonoBehaviour
         if (timeElapsed >= waitTime)
         {
             currentComboIndex = 0;
-            animator.SetInteger(ComboIndex, 0);
         }
     }
 
@@ -32,20 +30,10 @@ public class ComboTracker : MonoBehaviour
         currentComboIndex++;
         if (currentComboIndex > comboAmount)
             currentComboIndex = 1;
-
-        animator.SetInteger(ComboIndex, currentComboIndex);
-        // Removed IsShooting control - PlayerShoot handles animation timing
     }
 
     public int GetCurrentComboIndex()
     {
         return currentComboIndex;
-    }
-
-    // This method is no longer needed but keeping it for compatibility
-    public void ResetShootingFlag()
-    {
-        // Method kept for backwards compatibility but does nothing
-        // Animation control is now handled by PlayerShoot
     }
 }

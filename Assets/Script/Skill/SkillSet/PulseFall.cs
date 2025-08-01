@@ -13,6 +13,7 @@ public class PulseFall : Skill
     [SerializeField] private int damageAmount = 20;
     [SerializeField] private int horizontalRange = 1;
     [SerializeField] private float impactDelay = 0.5f;
+    [SerializeField] private float  animDuration = 0.5f;
 
     [Header("Visual Effects")]
     [SerializeField] private GameObject skillProjectilePrefab;
@@ -30,20 +31,15 @@ public class PulseFall : Skill
     private List<Vector2Int> crackedTilePositions = new List<Vector2Int>();
     private AudioSource audioSource;
     private PlayerStats playerStats;
+    private PlayerShoot playerShoot;
 
     private void Awake()
     {
         tileGrid = FindObjectOfType<TileGrid>();
-        if (tileGrid == null)
-            Debug.LogError("PulseFall: Could not find TileGrid in the scene!");
-
         playerStats = FindObjectOfType<PlayerStats>();
-        if (playerStats == null)
-            Debug.LogWarning("PulseFall: Could not find PlayerStats!");
-
         playerCrosshair = FindObjectOfType<PlayerCrosshair>();
-        if (playerCrosshair == null)
-            Debug.LogError("PulseFall: Could not find PlayerCrosshair in the scene!");
+        playerShoot = FindObjectOfType<PlayerShoot>();
+        
     }
 
     public override void ExecuteSkillEffect(Vector2Int targetPosition, Transform casterTransform)
@@ -54,7 +50,6 @@ public class PulseFall : Skill
 
         if (playerStats != null && !playerStats.TryUseMana(manaCost))
         {
-            Debug.Log("Not enough mana to cast PulseFall!");
             return;
         }
 
@@ -72,6 +67,7 @@ public class PulseFall : Skill
             targetWorldPos = tileGrid.GetWorldPosition(targetPosition) + new Vector3(0.5f, 0.5f, 0);
         }
 
+        playerShoot?.TriggerSkillAnimation(animDuration);
         StartCoroutine(DropProjectileAndCrackTiles(crosshairTargetPosition, targetWorldPos));
     }
 
@@ -146,8 +142,7 @@ public class PulseFall : Skill
 
             if (enemyGridPos == position)
             {
-                enemy.TakeDamage(damageAmount);
-                Debug.Log($"PulseFall: Damaged enemy at {position} for {damageAmount}");
+                DealDamageToEnemy(enemy, damageAmount);
             }
         }
     }

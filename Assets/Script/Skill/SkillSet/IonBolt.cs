@@ -20,6 +20,8 @@ namespace SkillSystem
         [Header("Manual Speed Adjustment")]
         [SerializeField] private float speedMultiplier = 1.0f;
 
+        [SerializeField] private float skillAnimationDuration = 0.8f;
+
         private GameObject activeProjectile;
         private bool isProjectileFired = false;
         private bool isOnCooldown = false;
@@ -29,6 +31,11 @@ namespace SkillSystem
         private PlayerMovement playerMovement;
         private PlayerStats playerStats;
         private PlayerShoot playerShoot;
+
+        private ComboTracker comboTracker;
+        private Animator playerAnimator;
+
+        private bool isSkillAnimationActive = false;
 
         private void Awake()
         {
@@ -41,6 +48,14 @@ namespace SkillSystem
             if (playerMovement == null) playerMovement = FindObjectOfType<PlayerMovement>();
             if (playerStats == null) playerStats = FindObjectOfType<PlayerStats>();
             if (playerShoot == null) playerShoot = FindObjectOfType<PlayerShoot>();
+
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null)
+            {
+                if (comboTracker == null) comboTracker = player.GetComponent<ComboTracker>();
+                if (playerAnimator == null) playerAnimator = player.GetComponent<Animator>();
+            }
+
         }
 
         private void Update()
@@ -57,7 +72,6 @@ namespace SkillSystem
                 {
                     currentGridPosition.x = newGridPosition.x;
                     
-                    // Check if there's an enemy on this tile before exploding
                     if (CheckForEnemyOnTile(currentGridPosition))
                     {
                         HandleHitAtTile(currentGridPosition);
@@ -65,6 +79,11 @@ namespace SkillSystem
                     
                     CheckIfPastRightmostGrid();
                 }
+            }
+
+            if (isSkillAnimationActive && playerAnimator != null)
+            {
+                playerAnimator.SetInteger("ComboIndex", comboTracker.GetCurrentComboIndex());
             }
         }
 
@@ -74,32 +93,38 @@ namespace SkillSystem
 
             if (isOnCooldown)
             {
-                Debug.Log("IonBolt is on cooldown!");
                 return;
             }
 
-            if (playerStats == null || playerStats.TryUseMana(Mathf.CeilToInt(manaCost)))
+            if (playerStats.TryUseMana(Mathf.CeilToInt(manaCost)))
             {
-                FireProjectile();
-                StartCoroutine(StartCooldown());
-            }
-            else
-            {
-                Debug.Log("IonBolt: Not enough mana to cast!");
+                StartCoroutine(ExecuteSkillFlow());
             }
         }
 
+        private IEnumerator ExecuteSkillFlow()
+        {
+            if (playerShoot != null)
+            {
+                playerShoot.TriggerSkillAnimation(skillAnimationDuration);
+            }
+
+            yield return new WaitForSeconds(0.1f);
+
+            FireProjectile();
+            StartCoroutine(StartCooldown());
+        }
+
+        
         private IEnumerator StartCooldown()
         {
             isOnCooldown = true;
             yield return new WaitForSeconds(cooldownDuration);
             isOnCooldown = false;
-            Debug.Log("IonBolt cooldown finished!");
         }
 
         private void FireProjectile()
         {
-            // Use PlayerShoot's bullet spawn point for consistent positioning
             Vector3 spawnPos = playerShoot != null && playerShoot.GetBulletSpawnPoint() != null 
                 ? playerShoot.GetBulletSpawnPoint().position 
                 : playerMovement.transform.position;
@@ -107,13 +132,10 @@ namespace SkillSystem
             Vector2Int playerGridPos = playerMovement.GetCurrentGridPosition();
             currentGridPosition = new Vector2Int(playerGridPos.x, playerGridPos.y);
 
-            // Spawn the projectile at the proper FirePoint position (not centered on grid)
             activeProjectile = Instantiate(projectilePrefab, spawnPos, Quaternion.identity);
             AudioManager.Instance?.PlayIonBoltSFX();
 
             isProjectileFired = true;
-
-            Debug.Log($"IonBolt: Fired from FirePoint at world position {spawnPos}, player grid {currentGridPosition} at speed {projectileSpeed * speedMultiplier}");
         }
 
         private bool CheckForEnemyOnTile(Vector2Int gridPos)
@@ -127,17 +149,25 @@ namespace SkillSystem
 
                 if (enemyGridPos == gridPos)
                 {
-                    return true; // Enemy found on this tile
+                    return true;
                 }
             }
-            return false; // No enemy found on this tile
+            return false;
         }
 
         private void HandleHitAtTile(Vector2Int gridPosition)
         {
             DamageEnemiesOnTile(gridPosition);
-
             ExplodeAtGridPosition(gridPosition);
+
+            if (comboTracker != null)
+            {
+                comboTracker.TriggerCombo();
+                if (playerAnimator != null)
+                {
+                    playerAnimator.SetInteger("ComboIndex", comboTracker.GetCurrentComboIndex());
+                }
+            }
 
             Destroy(activeProjectile);
             isProjectileFired = false;
@@ -157,8 +187,7 @@ namespace SkillSystem
                     Enemy enemyComponent = enemy.GetComponent<Enemy>();
                     if (enemyComponent != null)
                     {
-                        enemyComponent.TakeDamage(damage);
-                        Debug.Log($"IonBolt: Hit enemy at tile {gridPos} for {damage} damage");
+                        DealDamageToEnemy(enemyComponent, damage);
                     }
                 }
             }
@@ -166,8 +195,6 @@ namespace SkillSystem
 
         private void ExplodeAtGridPosition(Vector2Int centerGridPosition)
         {
-            Debug.Log($"IonBolt: Explosion at grid position {centerGridPosition}");
-
             Vector3 worldPosition = tileGrid.GetWorldPosition(centerGridPosition);
 
             if (explosionEffectPrefab != null)
@@ -200,8 +227,7 @@ namespace SkillSystem
                     Enemy enemyComponent = enemy.GetComponent<Enemy>();
                     if (enemyComponent != null)
                     {
-                        enemyComponent.TakeDamage(explosionDamage);
-                        Debug.Log($"IonBolt: Explosion dealt {explosionDamage} damage to enemy at tile {gridPos}");
+                        DealDamageToEnemy(enemyComponent, explosionDamage);
                     }
                 }
             }
@@ -233,17 +259,6 @@ namespace SkillSystem
                 }
             }
             return affectedTiles;
-        }
-
-        public void SetSpeedMultiplier(float multiplier)
-        {
-            speedMultiplier = Mathf.Max(0.1f, multiplier);
-            Debug.Log($"IonBolt: Speed multiplier set to {speedMultiplier}");
-        }
-
-        public float GetEffectiveSpeed()
-        {
-            return projectileSpeed * speedMultiplier;
         }
     }
 }

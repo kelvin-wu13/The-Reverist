@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Tilemaps;
+using UnityEngine.SceneManagement;
 
 public class Enemy : MonoBehaviour
 {
@@ -55,6 +55,9 @@ public class Enemy : MonoBehaviour
     private float shootTimer;
     private bool isTrainingScene = false;
 
+    private bool canMoveAndShoot = false;
+    private bool isDamageable = false;
+
     private static Dictionary<Vector2Int, GameObject> reservedPositions = new Dictionary<Vector2Int, GameObject>();
 
     private Vector2Int[] directions = new Vector2Int[]
@@ -102,15 +105,13 @@ public class Enemy : MonoBehaviour
         shootTimer = Random.Range(0f, shootInterval);
 
         animator?.SetTrigger("Spawn");
-        AudioManager.Instance?.PlayEnemySpawnSFX();
-        //StartCoroutine(RandomMovement());
+        StartCoroutine(RandomMovement());
 
         isTrainingScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Training");
 
         if (isTrainingScene)
         {
             StopAllCoroutines();
-            Debug.Log("Training dummy mode activated.");
         }
     }
 
@@ -128,7 +129,7 @@ public class Enemy : MonoBehaviour
             }
         }
 
-        if (!isTrainingScene && !isDying && !isBeingPulled && !PlayerStats.IsPlayerDead)
+        if (canMoveAndShoot && !isDying && !isBeingPulled && !PlayerStats.IsPlayerDead)
         {
             shootTimer -= Time.deltaTime;
             if (shootTimer <= 0)
@@ -137,6 +138,21 @@ public class Enemy : MonoBehaviour
                 if (Random.value <= shootChance)
                     ShootAtPlayer();
             }
+        }
+    }
+
+    public void SetBehavior(bool canMoveAndShoot, bool isDamageable)
+    {
+        this.canMoveAndShoot = canMoveAndShoot;
+        this.isDamageable = isDamageable;
+
+        if (this.canMoveAndShoot)
+        {
+            StartCoroutine(RandomMovement());
+        }
+        else
+        {
+            StopAllCoroutines();
         }
     }
 
@@ -158,7 +174,25 @@ public class Enemy : MonoBehaviour
 
     private void TryMove()
     {
-        foreach (Vector2Int direction in new[] { Vector2Int.left, Vector2Int.down, Vector2Int.up, Vector2Int.right })
+        List<Vector2Int> directions = new List<Vector2Int>
+    {
+        Vector2Int.left,
+        Vector2Int.down,
+        Vector2Int.up,
+        Vector2Int.right
+    };
+
+        System.Random rng = new System.Random();
+        int n = directions.Count;
+        while (n > 1)
+        {
+            n--;
+            int k = rng.Next(n + 1);
+            Vector2Int value = directions[k];
+            directions[k] = directions[n];
+            directions[n] = value;
+        }
+        foreach (Vector2Int direction in directions)
         {
             Vector2Int newPosition = currentGridPosition + direction;
             if (tileGrid.IsValidGridPosition(newPosition) &&
@@ -262,10 +296,9 @@ public class Enemy : MonoBehaviour
     {
         if (isDying) return;
 
-        if (isTrainingScene)
+        if (!isDamageable)
         {
             StartCoroutine(FlashColor());
-            Debug.Log("Training dummy hit. HP unchanged.");
             return;
         }
 
@@ -348,8 +381,6 @@ public class Enemy : MonoBehaviour
     {
         return currentGridPosition;
     }
-
-    // Grid helper methods
     private void ReserveGridPosition(Vector2Int pos) => reservedPositions[pos] = gameObject;
     private void ReleaseGridPosition(Vector2Int pos)
     {
